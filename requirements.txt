@@ -1,0 +1,12 @@
+streamlit
+python-dotenv
+google-generativeai
+langchain
+langchain-google-genai
+langchain_community
+pypdf
+faiss-cpu
+pypdfium2
+unstructured[local-inference]
+pdfminer.six==20221105
+pi_heif
