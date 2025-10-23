@@ -60,7 +60,7 @@ Proje, modern ve güçlü bir **Retrieval-Augmented Generation (RAG)** akışı 
 
 ### Teknoloji Seti
 
--   **Model ve API:** Google Gemini 1.5 Flash, Google AI Platform
+-   **Model ve API:** Google Gemini 2.5 Pro, Google AI Platform
 -   **RAG & LLM Orkestrasyonu:** LangChain
 -   **Vektör Veritabanı:** FAISS (Facebook AI Similarity Search)
 -   **Doküman İşleme:** `unstructured[local-inference]` (Tesseract, Poppler, Detectron2 ile)
