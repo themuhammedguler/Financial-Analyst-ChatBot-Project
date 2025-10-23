@@ -68,42 +68,61 @@ def get_conversational_chain():
     
     return chain
 
-# --- STREAMLIT WEB ARAYÜZÜ ---
+# --- STREAMLIT CHATBOT ARAYÜZÜ ---
 
-st.set_page_config(page_title="Finansal Analist Chatbot", page_icon="📈")
-st.header("📈 Finansal Analist Chatbot")
-st.write("Akbank, THY ve Tüpraş'ın finansal raporlarını kullanarak sorularınızı yanıtlar.")
+st.set_page_config(page_title="Finansal Analist Asistanı", page_icon="📈", layout="wide")
+st.title("📈 Finansal Analist Asistanı")
+st.divider()
 
 # Vektör veritabanını yükle
 vector_store = get_vector_store()
 
-if vector_store:
-    # Kullanıcıdan soru al
-    user_question = st.text_input(
-        "Lütfen sorunuzu buraya yazın:",
-        placeholder="Akbank'ın dijitalleşme vizyonu hakkında bilgi verir misin?" # Örnek metni ekledik
-    )
-
-    if user_question:
-        # Vektör veritabanından ilgili dokümanları bul (Similarity Search)
-        # Bu aşama, RAG'in "Retrieval" (Getirme) kısmıdır.
-        docs = vector_store.similarity_search(user_question, k=5) # En alakalı 5 parçayı getir
-        
-        # Soru-cevap zincirini al
-        chain = get_conversational_chain()
-        
-        # Zinciri çalıştırarak cevabı üret
-        # Bu aşama, RAG'in "Augmented Generation" (Zenginleştirilmiş Üretim) kısmıdır.
-        with st.spinner("Cevap oluşturuluyor..."):
-            response = chain({"input_documents": docs, "question": user_question}, return_only_outputs=True)
-            st.write("### Cevap")
-            st.write(response["output_text"])
-
-        # Cevabın hangi kaynaklardan üretildiğini göster
-        with st.expander("Cevap için kullanılan kaynak metinleri görmek için tıklayın"):
-            for i, doc in enumerate(docs):
-                st.write(f"**Kaynak {i+1} (Sayfa: {doc.metadata.get('page', 'Bilinmiyor')})**")
-                st.write(doc.page_content)
-                st.write("---")
-else:
+if not vector_store:
     st.warning("Uygulamanın başlayabilmesi için vektör veritabanının başarıyla yüklenmesi gerekmektedir.")
+    st.stop()
+
+# Adım 1: Sohbet geçmişini başlatma (DEĞİŞTİRİLMİŞ İLK MESAJ İLE)
+if "messages" not in st.session_state:
+    st.session_state.messages = [
+        {"role": "assistant", 
+         "content": "Merhaba! Ben sizin Finansal Analist Asistanınızım. **Akbank, THY ve Tüpraş**'a ait **finansal tablolar ve yıllık faaliyet raporları** hakkında istediğiniz soruyu sorabilirsiniz."}
+    ]
+
+# Adım 2: Geçmişteki tüm mesajları ekrana yazdırma
+# Bu döngü, her etkileşimde yeniden çalışarak geçmişi ekranda tutar.
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# Adım 3: Kullanıcıdan yeni bir girdi alma
+# st.chat_input, sayfanın altında sabit bir giriş kutusu oluşturur.
+if prompt := st.chat_input("Akbank'ın dijitalleşme vizyonu hakkında bilgi verir misin?"):
+    
+    # a. Kullanıcının mesajını sohbet geçmişine ekle
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    
+    # b. Kullanıcının mesajını ekrana anında yazdır
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    # c. Asistanın cevabını oluşturma (RAG süreci)
+    with st.chat_message("assistant"):
+        with st.spinner("Analiz ediliyor..."):
+            # RAG zincirini çalıştır (eski kodunuzdaki mantığın aynısı)
+            docs = vector_store.similarity_search(prompt, k=5)
+            chain = get_conversational_chain()
+            response = chain({"input_documents": docs, "question": prompt}, return_only_outputs=True)
+            
+            # Cevabı ve kaynakları ekrana yazdır
+            assistant_response = response["output_text"]
+            st.markdown(assistant_response)
+
+            # Kaynakları cevabın altına gizlenmiş bir şekilde ekle
+            with st.expander("Referans Alınan Kaynak Metinleri Gör"):
+                for i, doc in enumerate(docs):
+                    source_filename = os.path.basename(doc.metadata.get('source', 'Bilinmiyor'))
+                    st.info(f"**Kaynak {i+1}** | Dosya: `{source_filename}` | Sayfa: `{doc.metadata.get('page', 'Bilinmiyor')}`")
+                    st.text_area(label="", value=doc.page_content, height=150, key=f"expander_source_{i}")
+
+    # d. Asistanın cevabını da sohbet geçmişine ekle
+    st.session_state.messages.append({"role": "assistant", "content": assistant_response})
