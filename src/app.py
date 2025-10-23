@@ -71,7 +71,7 @@ def get_conversational_chain():
 # --- STREAMLIT WEB ARAYÜZÜ ---
 
 st.set_page_config(page_title="Finansal Analist Chatbot", page_icon="📈")
-st.header("📈 Akbank GenAI Bootcamp: Finansal Analist Chatbot")
+st.header("📈 Finansal Analist Chatbot")
 st.write("Akbank, THY ve Tüpraş'ın finansal raporlarını kullanarak sorularınızı yanıtlar.")
 
 # Vektör veritabanını yükle
@@ -79,7 +79,10 @@ vector_store = get_vector_store()
 
 if vector_store:
     # Kullanıcıdan soru al
-    user_question = st.text_input("Lütfen sorunuzu buraya yazın:")
+    user_question = st.text_input(
+        "Lütfen sorunuzu buraya yazın:",
+        placeholder="Akbank'ın dijitalleşme vizyonu hakkında bilgi verir misin?" # Örnek metni ekledik
+    )
 
     if user_question:
         # Vektör veritabanından ilgili dokümanları bul (Similarity Search)

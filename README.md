@@ -6,8 +6,6 @@ Bu proje, **Akbank GenAI Bootcamp** için geliştirilmiş, **Retrieval-Augmented
 
 ![Finansal Analist Chatbot Arayüzü](https://raw.githubusercontent.com/themuhammedguler/Financial-Analyst-ChatBot-Project/main/png/chatbot.png)
 
-*(Not: Resim linkiniz, dosyanın ham (raw) haline işaret edecek şekilde düzeltildi.)*
-
 ---
 
 ## 🔗 Canlı Demo
