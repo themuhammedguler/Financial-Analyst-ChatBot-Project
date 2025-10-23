@@ -1,4 +1,4 @@
-# Akbank GenAI Bootcamp: RAG Tabanlı Finansal Analist Chatbot 📈
+# RAG Tabanlı Finansal Analist Chatbot 📈
 
 Bu proje, **Akbank GenAI Bootcamp** için geliştirilmiş, **Retrieval-Augmented Generation (RAG)** mimarisine dayalı, son teknoloji bir Finansal Analist Chatbot'udur. Uygulama; Akbank, Türk Hava Yolları ve Tüpraş gibi Türkiye'nin önde gelen şirketlerinin Kamuyu Aydınlatma Platformu'nda (KAP) yayınladığı yüzlerce sayfalık finansal raporları analiz eder ve kullanıcıların doğal dilde sorduğu sorulara, doğrudan raporlardan alınan kanıtlara dayalı, tutarlı cevaplar üretir.
 
