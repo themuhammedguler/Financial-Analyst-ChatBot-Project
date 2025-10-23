@@ -106,7 +106,8 @@ Bu projeyi kendi bilgisayarınızda çalıştırmak için aşağıdaki adımlar�
 4.  **Google API Anahtarınızı Ayarlayın:**
     -   Proje ana dizininde `.env` adında bir dosya oluşturun.
     -   İçine [Google AI Studio](https://aistudio.google.com/)'dan aldığınız API anahtarınızı aşağıdaki gibi ekleyin:
-      ```      GOOGLE_API_KEY="YOUR_GOOGLE_API_KEY_HERE"
+      ```bash     
+      GOOGLE_API_KEY="YOUR_GOOGLE_API_KEY_HERE"
       ```
 
 5.  **Veri Hazırlama (Sadece İlk Seferde):**
