@@ -1,51 +1,82 @@
-# Akbank GenAI Bootcamp: RAG Tabanlı Finansal Analist Chatbot
+# Akbank GenAI Bootcamp: Finansal Analist Chatbot 📈
 
-Bu proje, Akbank GenAI Bootcamp kapsamında geliştirilmiş, Retrieval-Augmented Generation (RAG) mimarisine dayalı bir finansal analist chatbot'udur. Chatbot, belirtilen şirketlerin Kamuyu Aydınlatma Platformu'nda (KAP) yayınlanan finansal raporlarını kullanarak kullanıcıların sorularını yanıtlamaktadır.
+Bu proje, **Akbank GenAI Bootcamp** kapsamında geliştirilmiş, en güncel Yapay Zeka teknolojilerinden biri olan **Retrieval-Augmented Generation (RAG)** mimarisine dayalı bir Finansal Analist Chatbot'udur. Uygulama, Türkiye'nin önde gelen halka açık şirketlerinin Kamuyu Aydınlatma Platformu'nda (KAP) yayınlanan karmaşık ve hacimli finansal raporlarını analiz ederek, kullanıcıların doğal dilde sorduğu sorulara kanıta dayalı ve tutarlı cevaplar üretir.
 
----
-
-## 📖 Projenin Amacı
-
-Bu projenin temel amacı, büyük hacimli ve yapılandırılmamış finansal dokümanlar (yıllık faaliyet raporları, finansal tablolar vb.) içerisinden, doğal dil ile sorulan sorulara hızlı ve doğru cevaplar üretebilen bir yapay zeka asistanı geliştirmektir. Bu sayede finansal analistlerin, yatırımcıların veya öğrencilerin raporlar içinde manuel olarak bilgi arama zahmeti ortadan kaldırılmaktadır.
+![Chatbot Arayüzü](https-jumbo-com-tr-static-0-2-3-11-2311_1-1-900-505-jpg)
+*(Not: Buraya kendi uygulamanızın ekran görüntüsünü eklemeniz tavsiye edilir.)*
 
 ---
 
-## 📂 Veri Seti Hakkında Bilgi
+## 🎯 Projenin Amacı ve Çözdüğü Problem
 
-Chatbot'un bilgi kaynağı olarak Türkiye'nin önde gelen şirketlerinden olan **Akbank, Türk Hava Yolları ve Tüpraş**'ın KAP'ta yayınladığı resmi dokümanlar kullanılmıştır.
+Finansal analistler, yatırımcılar ve öğrenciler için şirketlerin yıllık faaliyet raporları ve finansal tabloları en değerli bilgi kaynaklarıdır. Ancak bu raporlar genellikle yüzlerce sayfadan oluşur, yapılandırılmamış metinler, karmaşık tablolar ve dipnotlar içerir. Bu durum, spesifik bir bilgiye ulaşmayı son derece zaman alıcı ve verimsiz bir hale getirir.
 
-*   **Veri Kaynağı:** Kamuyu Aydınlatma Platformu (KAP)
-*   **Doküman Türleri:** Yıllık Faaliyet Raporları ve Konsolide Finansal Tablolar
-*   **Kapsanan Yıllar:** 2020, 2021, 2022, 2023, 2024
-*   **Format:** PDF
+Bu proje, bu problemi çözmek amacıyla geliştirilmiştir:
 
-Bu dokümanlar, şirketlerin finansal performansı, operasyonel faaliyetleri, stratejileri, riskleri ve gelecek hedefleri hakkında zengin ve güvenilir bilgiler içermektedir.
-
----
-
-## 🛠️ Kullanılan Yöntemler ve Çözüm Mimarisi
-
-Proje, **Retrieval-Augmented Generation (RAG)** mimarisi üzerine kurulmuştur. Bu mimari, Büyük Dil Modelleri'nin (LLM) kendi iç bilgisine ek olarak, dış ve güncel bir bilgi kaynağından faydalanmasını sağlar.
-
-Projenin RAG akışı şu adımlardan oluşmaktadır:
-
-1.  **Veri Yükleme ve Parçalama (Load & Chunk):** PDF formatındaki tüm finansal raporlar sisteme yüklenir ve yönetilebilir küçük metin parçalarına (chunks) ayrılır.
-2.  **Gömme (Embedding):** Her bir metin parçası, Google'ın `embedding-001` modeli kullanılarak anlamsal olarak sayısal bir vektöre dönüştürülür.
-3.  **Vektör Depolama (Vector Store):** Elde edilen bu vektörler, verimli bir şekilde saklanmaları ve hızlıca sorgulanabilmeleri için bir **FAISS** vektör veritabanına kaydedilir.
-4.  **Sorgu ve Geri Getirme (Query & Retrieve):** Kullanıcı bir soru sorduğunda, bu soru da aynı embedding modeli ile bir vektöre çevrilir. Ardından FAISS veritabanında bu soru vektörüne en benzer (anlamsal olarak en yakın) metin parçaları bulunur.
-5.  **Zenginleştirilmiş Üretim (Augmented Generation):** Kullanıcının orijinal sorusu ve veritabanından geri getirilen en alakalı metin parçaları, bir prompt şablonu ile birleştirilerek **Google Gemini Pro** modeline sunulur. LLM, bu bağlamı kullanarak soruyu yanıtlar ve böylece cevabın yalnızca sağlanan dokümanlara dayanması sağlanır.
-6.  **Arayüz (UI):** Tüm bu süreç, kullanıcı dostu bir web arayüzü olan **Streamlit** üzerinden sunulur.
+-   **Hızlı Bilgi Erişimi:** Kullanıcıların saatlerce rapor taramak yerine, "Tüpraş'ın 2023 yılındaki sürdürülebilirlik yatırımları nelerdir?" gibi spesifik sorular sorarak saniyeler içinde cevap almasını sağlar.
+-   **Veri Odaklı Cevaplar:** Büyük Dil Modelleri'nin (LLM) "halüsinasyon" görme (bilgi uydurma) eğilimini, cevapları yalnızca sağlanan raporlardaki verilere dayandırarak ortadan kaldırır.
+-   **Verimlilik Artışı:** Finansal karar alma süreçlerinde ihtiyaç duyulan veri toplama ve analiz aşamasını dramatik bir şekilde hızlandırır.
 
 ---
 
-## 🚀 Kodun Çalışma Kılavuzu
+## 📂 Veri Seti
 
-Projeyi lokal makinenizde çalıştırmak için aşağıdaki adımları izleyebilirsiniz:
+Chatbot'un bilgi tabanı, Türkiye'nin farklı sektörlerdeki en büyük şirketlerinden bazılarının Kamuyu Aydınlatma Platformu'nda (KAP) kamuya açıkladığı resmi dokümanlardan oluşmaktadır.
+
+-   **Şirketler:** Akbank, Türk Hava Yolları, Tüpraş
+-   **Doküman Türleri:** Yıllık Faaliyet Raporları, Konsolide Finansal Tablolar ve Dipnotlar
+-   **Kapsanan Yıllar:** 2020 - 2024
+-   **Veri Kaynağı:** [Kamuyu Aydınlatma Platformu (KAP)](https://www.kap.org.tr/)
+-   **Format:** PDF
+
+---
+
+## 🛠️ Teknik Mimari ve Kullanılan Teknolojiler
+
+Proje, modern ve güçlü bir **Retrieval-Augmented Generation (RAG)** akışı üzerine inşa edilmiştir. Bu mimari, LLM'lerin yaratıcılığını, harici bir bilgi tabanının doğruluğu ve güncelliği ile birleştirir.
+
+### Çözüm Mimarisi
+
+1.  **Veri Hazırlama (Ingestion - Çevrimdışı İşlem):**
+    -   **Yükleme & Ayrıştırma (Load & Parse):** Tüm PDF raporları, `unstructured` kütüphanesinin `"hi_res"` (yüksek çözünürlüklü) stratejisi kullanılarak sisteme yüklenir. Bu strateji, metinleri okumanın yanı sıra, Tesseract (OCR) ve Detectron2 (Görsel Analiz) gibi araçlarla dokümanların görsel yapısını (başlıklar, paragraflar, listeler ve **tablolar**) da anlar.
+    -   **Parçalama (Chunking):** Ayrıştırılan dokümanlar, anlamsal bütünlüğü koruyacak şekilde daha küçük metin parçalarına (`chunks`) bölünür.
+    -   **Gömme (Embedding):** Her bir metin parçası, Google'ın `embedding-001` modeli aracılığıyla anlamsal içeriğini temsil eden sayısal bir vektöre dönüştürülür.
+    -   **Depolama (Store):** Bu vektörler, verimli bir şekilde saklanmaları ve ışık hızında sorgulanabilmeleri için bir **FAISS** vektör veritabanına indekslenir ve kaydedilir.
+
+2.  **Soru-Cevap Akışı (Inference - Gerçek Zamanlı İşlem):**
+    -   **Sorgu (Query):** Kullanıcı, Streamlit arayüzü üzerinden sorusunu sorar.
+    -   **Geri Getirme (Retrieve):** Kullanıcının sorusu da aynı embedding modelinden geçirilerek bir vektöre dönüştürülür. FAISS veritabanında bu soru vektörüne anlamsal olarak en yakın ve en alakalı metin parçaları (`chunks`) bulunur ve geri getirilir.
+    -   **Zenginleştirme (Augment):** Geri getirilen bu alakalı metin parçaları ("bağlam" olarak) ve kullanıcının orijinal sorusu, özenle hazırlanmış bir prompt şablonu ile birleştirilir.
+    -   **Üretim (Generate):** Bu zenginleştirilmiş prompt, cevap üretmesi için **Google Gemini 1.5 Flash** modeline gönderilir. LLM, yalnızca kendisine sunulan bağlamdaki bilgileri kullanarak soruyu yanıtlar.
+
+### Kullanılan Teknolojiler ve Kütüphaneler
+
+-   **Model ve API:** Google Gemini 1.5 Flash, Google AI Platform
+-   **RAG & LLM Orkestrasyonu:** LangChain
+-   **Vektör Veritabanı:** FAISS (Facebook AI Similarity Search)
+-   **Doküman İşleme:** `unstructured[local-inference]` (Tesseract, Poppler, Detectron2 ile)
+-   **Web Arayüzü:** Streamlit
+-   **Programlama Dili:** Python 3.10+
+
+---
+
+## 🚀 Projeyi Lokalde Çalıştırma
+
+Bu projeyi kendi bilgisayarınızda çalıştırmak için aşağıdaki adımları izleyebilirsiniz.
+
+### Ön Gereksinimler
+
+-   Python 3.10 veya üzeri
+-   [Git](https://git-scm.com/)
+-   **Tesseract OCR:** [Kurulum Talimatları](https://github.com/UB-Mannheim/tesseract/wiki) (Kurulum sırasında Türkçe dil paketini ve PATH'e ekleme seçeneğini işaretlediğinizden emin olun.)
+-   **Poppler:** [Kurulum Talimatları](https://github.com/oschwartz10612/poppler-windows/releases/) (İndirdikten sonra `bin` klasörünü PATH'e eklemeniz gerekmektedir.)
+
+### Kurulum Adımları
 
 1.  **Repoyu Klonlayın:**
     ```bash
-    git clone [BU_REPOSITORININ_LINKI]
-    cd financial-analyst-chatbot
+    git clone https://github.com/[KULLANICI_ADINIZ]/[REPO_ADINIZ].git
+    cd [REPO_ADINIZ]
     ```
 
 2.  **Sanal Ortam Oluşturun ve Aktive Edin:**
@@ -61,32 +92,38 @@ Projeyi lokal makinenizde çalıştırmak için aşağıdaki adımları izleyebi
     ```bash
     pip install -r requirements.txt
     ```
+    *(Not: `unstructured[local-inference]` kurulumu, bağımlılıkların büyüklüğü nedeniyle biraz zaman alabilir.)*
 
-4.  **API Anahtarını Ayarlayın:**
-    *   Proje ana dizininde `.env` adında bir dosya oluşturun.
-    *   İçine Google AI Studio'dan aldığınız API anahtarınızı aşağıdaki gibi ekleyin:
+4.  **Google API Anahtarınızı Ayarlayın:**
+    -   Proje ana dizininde `.env` adında bir dosya oluşturun.
+    -   İçine [Google AI Studio](https://aistudio.google.com/)'dan aldığınız API anahtarınızı aşağıdaki gibi ekleyin:
       ```
-      GOOGLE_API_KEY="YOUR_GOOGLE_API_KEY"
+      GOOGLE_API_KEY="YOUR_GOOGLE_API_KEY_HERE"
       ```
 
-5.  **Uygulamayı Başlatın:**
-    *   Bu repoda `vectorstore` dosyası hazır olarak bulunmaktadır, bu nedenle veri işleme notebook'unu tekrar çalıştırmanıza gerek yoktur.
-    *   Aşağıdaki komut ile Streamlit uygulamasını başlatın:
+5.  **Veri Hazırlama (Sadece İlk Seferde):**
+    -   Kendi PDF dosyalarınızı proje ana dizinindeki `data` klasörüne (veya alt klasörlerine) yerleştirin.
+    -   Aşağıdaki komutla `01_data_ingestion.ipynb` notebook'unu çalıştırın. Bu işlem, donanımınıza ve veri setinizin büyüklüğüne bağlı olarak **çok uzun sürebilir.**
       ```bash
-      streamlit run src/app.py
+      # Notebook'u açıp "Run All" demeniz yeterlidir.
+      jupyter notebook notebooks/01_data_ingestion.ipynb
       ```
-    *   Tarayıcınızda açılan web sayfasından chatbot'u kullanmaya başlayabilirsiniz.
+    -   İşlem tamamlandığında, projenizin ana dizininde `vectorstore` adında bir klasör oluşacaktır.
+
+6.  **Uygulamayı Başlatın:**
+    ```bash
+    streamlit run src/app.py
+    ```
+    Tarayıcınızda açılan web sayfasından chatbot'u kullanmaya başlayabilirsiniz!
 
 ---
 
-## ✨ Elde Edilen Sonuçlar
+## ✨ Elde Edilen Sonuçlar ve Gelecek Geliştirmeler
 
-Proje sonucunda, seçilen finansal raporlar hakkında spesifik sorulara tutarlı ve doğru cevaplar üretebilen fonksiyonel bir chatbot geliştirilmiştir. Chatbot, cevaplarını dayandırdığı kaynak metinleri de sunarak şeffaflık ve doğrulanabilirlik sağlamaktadır.
+Bu proje, yapılandırılmamış PDF dokümanlarından akıllı bir şekilde bilgi çıkarabilen ve bunu kullanıcı dostu bir arayüzle sunabilen, uçtan uca fonksiyonel bir RAG uygulamasının başarılı bir kanıtıdır. Chatbot, özellikle metin tabanlı ve yarı yapısal bilgilere dayalı sorulara yüksek doğrulukla cevap verebilmektedir.
 
-![Chatbot Arayüz Görüntüsü]([İSTEĞE_BAĞLI_BURAYA_CHATBOT_EKRAN_GÖRÜNTÜSÜ_KOYABİLİRSİNİZ])
+**Gelecek Geliştirmeler:**
 
----
-
-## 🔗 Web Linkiniz
-
-[PROJEYİ STREAMLIT COMMUNITY CLOUD GİBİ BİR PLATFORMDA DEPLOY ETTİKTEN SONRA LİNKİ BURAYA EKLEYEBİLİRSİNİZ]
+-   **Gelişmiş Tablo Anlama:** Tabloları metin yerine yapısal veri (örn: Pandas DataFrame) olarak işleyerek "2022 ve 2023 yılları arasındaki ciro artış oranı nedir?" gibi karşılaştırmalı ve hesaplamalı sorulara cevap verebilme.
+-   **Kullanıcı Geri Bildirim Mekanizması:** Cevapları değerlendirme (beğen/beğenme) özelliği ekleyerek modelin performansını izleme.
+-   **Bulut Üzerinde Dağıtım (Deployment):** Uygulamayı Streamlit Community Cloud veya Hugging Face Spaces gibi platformlarda yayınlayarak herkesin erişimine açma.
