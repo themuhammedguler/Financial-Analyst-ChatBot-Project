@@ -2,8 +2,7 @@
 
 Bu proje, **Akbank GenAI Bootcamp** kapsamında geliştirilmiş, en güncel Yapay Zeka teknolojilerinden biri olan **Retrieval-Augmented Generation (RAG)** mimarisine dayalı bir Finansal Analist Chatbot'udur. Uygulama, Türkiye'nin önde gelen halka açık şirketlerinin Kamuyu Aydınlatma Platformu'nda (KAP) yayınlanan karmaşık ve hacimli finansal raporlarını analiz ederek, kullanıcıların doğal dilde sorduğu sorulara kanıta dayalı ve tutarlı cevaplar üretir.
 
-![Chatbot Arayüzü](https-jumbo-com-tr-static-0-2-3-11-2311_1-1-900-505-jpg)
-*(Not: Buraya kendi uygulamanızın ekran görüntüsünü eklemeniz tavsiye edilir.)*
+![Chatbot Arayüzü](https://github.com/themuhammedguler/Financial-Analyst-ChatBot-Project/blob/main/png/chatbot.png)
 
 ---
 
