@@ -5,7 +5,7 @@ import io
 import base64
 from pathlib import Path
 from datetime import datetime
-from PIL import Image
+from PIL import Image, ImageDraw
 
 # Proje kökünü sys.path'e ekle
 project_root = Path(__file__).resolve().parent.parent
@@ -38,6 +38,27 @@ from src.integration.api import get_hybrid_signal
 AVATAR_ORIGINAL_PATH = project_root / "png" / "Chatbot_avatar_logo_design_ae724d6f.jpg"
 AVATAR_SQUARE_PATH = project_root / "png" / "chatbot_avatar.png"
 
+def get_circular_image(img: Image.Image) -> Image.Image:
+    """Görseli dairesel formatta kırparak köşelerini tamamen şeffaf (RGBA) yapar."""
+    img_rgba = img.convert("RGBA")
+    w, h = img_rgba.size
+    min_dim = min(w, h)
+    left = (w - min_dim) // 2
+    top = (h - min_dim) // 2
+    square = img_rgba.crop((left, top, left + min_dim, top + min_dim))
+    
+    scale = 4
+    large_size = min_dim * scale
+    mask = Image.new("L", (large_size, large_size), 0)
+    draw_mask = ImageDraw.Draw(mask)
+    padding = 4 * scale
+    draw_mask.ellipse((padding, padding, large_size - padding, large_size - padding), fill=255)
+    mask = mask.resize((min_dim, min_dim), Image.Resampling.LANCZOS)
+    
+    circular = square.copy()
+    circular.putalpha(mask)
+    return circular
+
 CHATBOT_AVATAR = "💼"
 PAGE_FAVICON = "📈"
 LOGO_B64 = ""
@@ -47,13 +68,11 @@ try:
     if AVATAR_SQUARE_PATH.exists():
         _loaded_img = Image.open(AVATAR_SQUARE_PATH)
         _loaded_img.load()
+        if _loaded_img.mode != "RGBA":
+            _loaded_img = get_circular_image(_loaded_img)
     elif AVATAR_ORIGINAL_PATH.exists():
         _raw = Image.open(AVATAR_ORIGINAL_PATH)
-        w, h = _raw.size
-        min_dim = min(w, h)
-        left = (w - min_dim) // 2
-        top = (h - min_dim) // 2
-        _loaded_img = _raw.crop((left, top, left + min_dim, top + min_dim))
+        _loaded_img = get_circular_image(_raw)
         _loaded_img.load()
     
     if _loaded_img is not None:
