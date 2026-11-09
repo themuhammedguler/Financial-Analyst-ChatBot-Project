@@ -18,8 +18,8 @@ VECTORSTORE_DIR = Path("vectorstore/db_faiss")
 VECTORSTORE_PATH_STR = "vectorstore/db_faiss"
 
 # Model Yapılandırması (2026 Üretim Standartları)
-DEFAULT_LLM_MODEL = "gemini-3.5-flash"
-ADVANCED_LLM_MODEL = "gemini-3.8-flash"
+DEFAULT_LLM_MODEL = "gemini-flash-lite-latest"
+ADVANCED_LLM_MODEL = "gemini-3-flash-preview"
 EMBEDDING_MODEL = "models/gemini-embedding-001"
 EMBEDDING_DIM = 768
 

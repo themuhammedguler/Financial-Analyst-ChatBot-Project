@@ -279,10 +279,13 @@ class FinancialRAGEngine:
         context_str = "\n".join(context_parts)
         prompt_text = FINANCIAL_PROMPT.format(context=context_str, question=question)
 
-        fallback_candidates = [self.model_name, DEFAULT_LLM_MODEL, "gemini-3.5-flash", "gemini-3.8-flash"]
+        # Aktif ve kotasız çalışan ultra hızlı modeller
+        active_models = ["gemini-flash-lite-latest", "gemini-3-flash-preview"]
         models_to_try = []
-        for m in fallback_candidates:
-            if m and m not in models_to_try:
+        if self.model_name in active_models:
+            models_to_try.append(self.model_name)
+        for m in active_models:
+            if m not in models_to_try:
                 models_to_try.append(m)
 
         answer_text = ""
@@ -361,11 +364,13 @@ class FinancialRAGEngine:
 
         yield {"type": "status", "message": "⚡ Finansal analist yanıtı hazırlanıyor ve doğrulanıyor..."}
 
-        # Hata toleranslı model sırası (Kota/429 durumunda otomatik fallback)
-        fallback_candidates = [self.model_name, DEFAULT_LLM_MODEL, "gemini-3.5-flash", "gemini-3.8-flash"]
+        # Aktif ve kotasız çalışan ultra hızlı modeller
+        active_models = ["gemini-flash-lite-latest", "gemini-3-flash-preview"]
         models_to_try = []
-        for m in fallback_candidates:
-            if m and m not in models_to_try:
+        if self.model_name in active_models:
+            models_to_try.append(self.model_name)
+        for m in active_models:
+            if m not in models_to_try:
                 models_to_try.append(m)
 
         full_answer = ""
