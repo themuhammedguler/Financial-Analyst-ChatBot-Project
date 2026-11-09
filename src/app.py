@@ -380,79 +380,86 @@ with st.sidebar:
     st.divider()
 
     # --- 3. ADIM: BIST-TREND-FORECASTER ÇİFT YÖNLÜ KÖPRÜ VE HİBRİT KARAR MOTORU ---
-    forecaster_url = f"{FORECASTER_BASE_URL}/?ticker={active_ticker}"
+    is_specific_ticker = bool(active_ticker and active_ticker != "BIST")
 
-    report_file = REPORTS_DIR / f"{active_ticker}_latest.json"
-    active_report_obj = None
-    hybrid_sig = None
-    if report_file.exists():
-        try:
-            with open(report_file, "r", encoding="utf-8") as rf:
-                active_report_obj = FundamentalReport(**json.load(rf))
-            hybrid_sig = get_hybrid_signal(ticker=active_ticker)
-        except Exception:
-            pass
+    if is_specific_ticker:
+        forecaster_url = f"{FORECASTER_BASE_URL}/?ticker={active_ticker}"
+        report_file = REPORTS_DIR / f"{active_ticker}_latest.json"
+        active_report_obj = None
+        hybrid_sig = None
+        if report_file.exists():
+            try:
+                with open(report_file, "r", encoding="utf-8") as rf:
+                    active_report_obj = FundamentalReport(**json.load(rf))
+                hybrid_sig = get_hybrid_signal(ticker=active_ticker)
+            except Exception:
+                pass
 
-    decision_color = "#34D399"
-    decision_bg = "rgba(16, 185, 129, 0.18)"
-    decision_border = "rgba(52, 211, 153, 0.4)"
-    if hybrid_sig:
-        dec = hybrid_sig.decision
-        if "GÜÇLÜ AL" in dec:
-            decision_color = "#10B981"
-            decision_bg = "rgba(16, 185, 129, 0.22)"
-            decision_border = "rgba(16, 185, 129, 0.5)"
-        elif "AL" in dec:
-            decision_color = "#38BDF8"
-            decision_bg = "rgba(56, 189, 248, 0.20)"
-            decision_border = "rgba(56, 189, 248, 0.45)"
-        elif "TUT" in dec or "NÖTR" in dec:
-            decision_color = "#FBBF24"
-            decision_bg = "rgba(245, 158, 11, 0.20)"
-            decision_border = "rgba(245, 158, 11, 0.45)"
+        decision_color = "#34D399"
+        decision_bg = "rgba(16, 185, 129, 0.18)"
+        decision_border = "rgba(52, 211, 153, 0.4)"
+        badge_html = ""
+        details_html = ""
+
+        if hybrid_sig:
+            dec = hybrid_sig.decision
+            if "GÜÇLÜ AL" in dec:
+                decision_color = "#10B981"
+                decision_bg = "rgba(16, 185, 129, 0.22)"
+                decision_border = "rgba(16, 185, 129, 0.5)"
+            elif "AL" in dec:
+                decision_color = "#38BDF8"
+                decision_bg = "rgba(56, 189, 248, 0.20)"
+                decision_border = "rgba(56, 189, 248, 0.45)"
+            elif "TUT" in dec or "NÖTR" in dec:
+                decision_color = "#FBBF24"
+                decision_bg = "rgba(245, 158, 11, 0.20)"
+                decision_border = "rgba(245, 158, 11, 0.45)"
+            else:
+                decision_color = "#F87171"
+                decision_bg = "rgba(239, 68, 68, 0.20)"
+                decision_border = "rgba(239, 68, 68, 0.45)"
+
+            badge_html = f'<span style="background:{decision_bg}; color:{decision_color}; border:1px solid {decision_border}; font-size:0.75rem; font-weight:700; padding:2px 8px; border-radius:9999px;">{hybrid_sig.decision}</span>'
+            details_html = f'''<div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.15); border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; font-size: 0.78rem;">
+<div style="display: flex; justify-content: space-between; margin-bottom: 3px;"><span style="color:#94A3B8;">Bileşik Skor:</span><span style="color:#F8FAFC; font-weight:700;">{hybrid_sig.composite_score} / 100</span></div>
+<div style="display: flex; justify-content: space-between; margin-bottom: 3px;"><span style="color:#94A3B8;">Teknik Trend:</span><span style="color:#38BDF8; font-weight:600;">{hybrid_sig.technical_trend}</span></div>
+<div style="display: flex; justify-content: space-between;"><span style="color:#94A3B8;">Kelly Tahsisi:</span><span style="color:#34D399; font-weight:700;">%{hybrid_sig.kelly_allocation_percent} Portföy</span></div>
+</div>'''
         else:
-            decision_color = "#F87171"
-            decision_bg = "rgba(239, 68, 68, 0.20)"
-            decision_border = "rgba(239, 68, 68, 0.45)"
+            details_html = f'''<div style="color: #CBD5E1; font-size: 0.82rem; line-height: 1.4; margin-bottom: 10px;">
+<strong>{active_ticker}</strong> hissesinin <strong>XGBoost trend tahminini</strong> ve <strong>Kelly sermaye tahsisini</strong> inceleyin.
+</div>'''
 
-    st.markdown(f"""
-    <div class="forecaster-card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <span style="font-weight: 700; color: #38BDF8; font-size: 0.90rem;">
-                📈 BIST-Trend-Forecaster
-            </span>
-            {f'''<span style="background:{decision_bg}; color:{decision_color}; border:1px solid {decision_border}; font-size:0.75rem; font-weight:700; padding:2px 8px; border-radius:9999px;">
-                {hybrid_sig.decision}
-            </span>''' if hybrid_sig else ''}
-        </div>
-        {f'''<div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.15); border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; font-size: 0.78rem;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-                <span style="color:#94A3B8;">Bileşik Skor:</span>
-                <span style="color:#F8FAFC; font-weight:700;">{hybrid_sig.composite_score} / 100</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-                <span style="color:#94A3B8;">Teknik Trend:</span>
-                <span style="color:#38BDF8; font-weight:600;">{hybrid_sig.technical_trend}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-                <span style="color:#94A3B8;">Kelly Tahsisi:</span>
-                <span style="color:#34D399; font-weight:700;">%{hybrid_sig.kelly_allocation_percent} Portföy</span>
-            </div>
-        </div>''' if hybrid_sig else f'''<div style="color: #CBD5E1; font-size: 0.82rem; line-height: 1.4; margin-bottom: 10px;">
-            📈 <strong>{active_ticker}</strong> hissesinin <strong>XGBoost trend tahminini, teknik indikatörlerini</strong> ve <strong>Kelly sermaye tahsisini</strong> inceleyin.
-        </div>'''}
-        <a href="{forecaster_url}" target="_blank" style="display: block; text-align: center; background: linear-gradient(135deg, #2563EB, #1D4ED8); color: #FFFFFF; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 0.82rem; font-weight: 600; border: 1px solid rgba(56, 189, 248, 0.35); box-shadow: 0 2px 8px rgba(37,99,235,0.4);">
-            Forecaster'da Teknik Tahmini Gör ↗
-        </a>
-    </div>
-    """, unsafe_allow_html=True)
+        card_html = f'''<div class="forecaster-card">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+<span style="font-weight: 700; color: #38BDF8; font-size: 0.90rem;">📊 {active_ticker} Hibrit Karar Kartı</span>
+{badge_html}
+</div>
+{details_html}
+<a href="{forecaster_url}" target="_blank" style="display: block; text-align: center; background: linear-gradient(135deg, #2563EB, #1D4ED8); color: #FFFFFF; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 0.82rem; font-weight: 600; border: 1px solid rgba(56, 189, 248, 0.35); box-shadow: 0 2px 8px rgba(37,99,235,0.4);">
+Forecaster'da Teknik Tahmini Gör ↗
+</a>
+</div>'''
+        st.markdown(card_html, unsafe_allow_html=True)
 
-    # Finansal Sağlık Radarı (Plotly)
-    if active_report_obj:
-        with st.expander("📈 Finansal Sağlık Radarı (Plotly)", expanded=False):
-            st.caption(f"**{active_ticker}** için 5 Boyutlu RAG Temel Analiz Profili")
-            fig = create_radar_chart(active_report_obj)
-            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+        # Finansal Sağlık Radarı (Plotly)
+        if active_report_obj:
+            with st.expander("📈 Finansal Sağlık Radarı (Plotly)", expanded=False):
+                st.caption(f"**{active_ticker}** için 5 Boyutlu RAG Temel Analiz Profili")
+                fig = create_radar_chart(active_report_obj)
+                st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    else:
+        general_card = f'''<div class="forecaster-card" style="padding: 12px 14px;">
+<div style="font-weight: 700; color: #38BDF8; font-size: 0.86rem; margin-bottom: 4px;">🎯 Hisse Bazlı Teknik Tahmin</div>
+<div style="color: #94A3B8; font-size: 0.78rem; line-height: 1.4; margin-bottom: 10px;">
+Sol menüdeki <strong>Şirket Filtresi</strong>'nden bir hisse seçtiğinizde, teknik trend sinyali ve hibrit karar kartı burada otomatik aktif olur.
+</div>
+<a href="{FORECASTER_BASE_URL}" target="_blank" style="display: block; text-align: center; background: #172554; color: #93C5FD; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 0.78rem; font-weight: 600; border: 1px solid rgba(56, 189, 248, 0.3);">
+BIST-Trend-Forecaster Platformu ↗
+</a>
+</div>'''
+        st.markdown(general_card, unsafe_allow_html=True)
 
     st.divider()
 
