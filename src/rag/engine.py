@@ -17,6 +17,7 @@ from src.config import (
     COMPANIES,
     SUPPORTED_YEARS,
     GOOGLE_API_KEY,
+    extract_text_from_content,
 )
 from src.rag.embeddings import GeminiEmbeddings
 from src.rag.rewriter import QueryRewriter
@@ -293,8 +294,9 @@ class FinancialRAGEngine:
             try:
                 llm = self.get_llm(model=model_to_use, streaming=False, max_retries=1)
                 response = llm.invoke(prompt_text)
-                answer_text = response.content if hasattr(response, "content") else str(response)
-                if answer_text:
+                raw_c = response.content if hasattr(response, "content") else response
+                answer_text = extract_text_from_content(raw_c)
+                if answer_text and answer_text.strip():
                     break
             except Exception as e:
                 print(f"[RAGEngine] answer_query '{model_to_use}' hatası: {e}. Alternatif deneniyor...")
@@ -382,10 +384,12 @@ class FinancialRAGEngine:
                 llm = self.get_llm(model=model_to_use, streaming=True, max_retries=1)
                 full_answer = ""
                 for chunk in llm.stream(formatted_prompt):
-                    if chunk.content:
-                        full_answer += chunk.content
-                        yield {"type": "content", "content": chunk.content}
-                if full_answer.strip():
+                    raw_c = chunk.content if hasattr(chunk, "content") else chunk
+                    chunk_text = extract_text_from_content(raw_c)
+                    if chunk_text:
+                        full_answer += chunk_text
+                        yield {"type": "content", "content": chunk_text}
+                if full_answer and full_answer.strip():
                     stream_success = True
                     break
             except Exception as e:
@@ -399,8 +403,9 @@ class FinancialRAGEngine:
                 try:
                     llm = self.get_llm(model=model_to_use, streaming=False, max_retries=1)
                     res = llm.invoke(formatted_prompt)
-                    ans = res.content if hasattr(res, "content") else str(res)
-                    if ans.strip():
+                    raw_c = res.content if hasattr(res, "content") else res
+                    ans = extract_text_from_content(raw_c)
+                    if ans and ans.strip():
                         full_answer = ans
                         yield {"type": "content", "content": ans}
                         stream_success = True

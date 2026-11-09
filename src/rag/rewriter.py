@@ -1,7 +1,7 @@
 from typing import List, Dict
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
-from src.config import DEFAULT_LLM_MODEL, GOOGLE_API_KEY
+from src.config import DEFAULT_LLM_MODEL, GOOGLE_API_KEY, extract_text_from_content
 
 
 REWRITE_PROMPT_TEMPLATE = """Aşağıda bir finansal analist asistanı ile kullanıcı arasındaki önceki sohbet geçmişi ve kullanıcının son sorusu verilmiştir.
@@ -70,7 +70,8 @@ class QueryRewriter:
                 "chat_history": history_str,
                 "question": question
             })
-            rewritten = response.content.strip()
+            raw_c = response.content if hasattr(response, "content") else response
+            rewritten = extract_text_from_content(raw_c).strip()
             # Tırnak işaretleri varsa temizle
             rewritten = rewritten.strip('"\'')
             return rewritten if rewritten else question

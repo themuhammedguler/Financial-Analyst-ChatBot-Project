@@ -1,4 +1,5 @@
 import os
+from typing import Any
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -215,4 +216,28 @@ def get_ticker_for_company(company_name: str) -> str:
     elif "tüpraş" in c_lower or "tupras" in c_lower:
         return "TUPRS"
     return "BIST"
+
+
+def extract_text_from_content(content: Any) -> str:
+    """
+    LangChain / Gemini content nesnesini (str, list[str], list[dict])
+    her durumda güvenle düz string metne dönüştürür ('list' object has no attribute 'strip' hatasını önler).
+    """
+    if not content:
+        return ""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for item in content:
+            if isinstance(item, str):
+                parts.append(item)
+            elif isinstance(item, dict):
+                parts.append(item.get("text", str(item)))
+            elif hasattr(item, "text"):
+                parts.append(getattr(item, "text", ""))
+            else:
+                parts.append(str(item))
+        return "".join(parts)
+    return str(content)
 

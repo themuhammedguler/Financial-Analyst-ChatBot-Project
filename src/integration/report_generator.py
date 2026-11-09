@@ -13,6 +13,7 @@ from src.config import (
     REPORTS_DIR,
     GOOGLE_API_KEY,
     get_company_for_ticker,
+    extract_text_from_content,
 )
 from src.rag.engine import FinancialRAGEngine
 from src.integration.models import FundamentalReport, KeyMetrics
@@ -153,7 +154,8 @@ class FundamentalReportGenerator:
         )
 
         response = self.llm.invoke(formatted_prompt)
-        parsed_data = self._extract_json_from_response(response.content)
+        raw_c = response.content if hasattr(response, "content") else response
+        parsed_data = self._extract_json_from_response(extract_text_from_content(raw_c))
 
         # 3. Pydantic ile şemayı doğrula
         report = FundamentalReport(**parsed_data)
