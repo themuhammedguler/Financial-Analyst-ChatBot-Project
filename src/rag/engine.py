@@ -375,6 +375,7 @@ class FinancialRAGEngine:
 
         full_answer = ""
         stream_success = False
+        last_error = ""
 
         for model_to_use in models_to_try:
             try:
@@ -384,14 +385,34 @@ class FinancialRAGEngine:
                     if chunk.content:
                         full_answer += chunk.content
                         yield {"type": "content", "content": chunk.content}
-                stream_success = True
-                break
+                if full_answer.strip():
+                    stream_success = True
+                    break
             except Exception as e:
+                last_error = str(e)
                 print(f"[RAGEngine] Model '{model_to_use}' streaming hatası: {e}. Alternatif model deneniyor...")
                 continue
 
+        # Eğer streaming soketi kesildiyse standart senkron çağrı ile kurtarma dene
         if not stream_success:
-            yield {"type": "content", "content": "\n\n⚠️ Ücretsiz Gemini API kota sınırına ulaşıldı veya model yanıt veremedi. Lütfen birkaç dakika sonra tekrar deneyin."}
+            for model_to_use in models_to_try:
+                try:
+                    llm = self.get_llm(model=model_to_use, streaming=False, max_retries=1)
+                    res = llm.invoke(formatted_prompt)
+                    ans = res.content if hasattr(res, "content") else str(res)
+                    if ans.strip():
+                        full_answer = ans
+                        yield {"type": "content", "content": ans}
+                        stream_success = True
+                        break
+                except Exception as sync_e:
+                    last_error = str(sync_e)
+                    continue
+
+        if not stream_success:
+            err_msg = f"\n\n⚠️ Gemini API şu anda yoğunluk nedeniyle yanıt veremedi ({last_error[:60] if last_error else 'Kota aşımı'}). Lütfen sorunuzu birkaç saniye sonra tekrar iletiniz."
+            full_answer = err_msg
+            yield {"type": "content", "content": err_msg}
 
         # Hallucination Guard denetimi
         guard_result = self.guard.verify_claims(full_answer, docs)

@@ -10,6 +10,12 @@ load_dotenv(ROOT_DIR / ".env")
 
 # Google API Anahtarı
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
+if not GOOGLE_API_KEY:
+    try:
+        import streamlit as st
+        GOOGLE_API_KEY = st.secrets.get("GOOGLE_API_KEY", "")
+    except Exception:
+        pass
 
 # Dizin Yolları
 DATA_DIR = ROOT_DIR / "data"
