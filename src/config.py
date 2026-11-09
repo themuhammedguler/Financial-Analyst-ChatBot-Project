@@ -157,10 +157,32 @@ TICKER_TO_COMPANY = {
 COMPANY_TO_TICKER = {v: k for k, v in TICKER_TO_COMPANY.items()}
 
 # Hızlı arama için şirket alias sözlüğü
-COMPANIES = {
-    comp_name: [ticker.lower(), comp_name.lower()]
-    for ticker, comp_name in TICKER_TO_COMPANY.items()
-}
+COMPANIES = {}
+for ticker, comp_name in TICKER_TO_COMPANY.items():
+    aliases = [ticker.lower(), comp_name.lower()]
+    # Normalize common Turkish characters in alias
+    latin_name = (
+        comp_name.lower()
+        .replace("ı", "i")
+        .replace("ğ", "g")
+        .replace("ü", "u")
+        .replace("ş", "s")
+        .replace("ö", "o")
+        .replace("ç", "c")
+    )
+    if latin_name not in aliases:
+        aliases.append(latin_name)
+    # Yaygın kısaltmalar ve halk ağzı kullanımları
+    if "Türk Hava Yolları" in comp_name:
+        aliases.append("thy")
+    elif "Ereğli" in comp_name:
+        aliases.append("erdemir")
+        aliases.append("eregli")
+    elif "Tüpraş" in comp_name:
+        aliases.append("tupras")
+    elif "Şişecam" in comp_name:
+        aliases.append("sisecam")
+    COMPANIES[comp_name] = aliases
 
 
 def get_company_for_ticker(ticker: str) -> str:

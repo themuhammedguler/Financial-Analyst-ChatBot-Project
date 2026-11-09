@@ -43,6 +43,7 @@ ANALİZ VE CEVAP TALİMATLARI:
    - Yanıtını kurumsal bir finansal bülten formatında, yönetici özeti (Executive Summary), temel göstergeler (Key Metrics - madde işaretleriyle) ve varsa risk/trend değerlendirmesi şeklinde organize et.
    - Önemli finansal rasyoları veya büyüme oranlarını kalın (bold) harflerle vurgula.
 5. **Kaynak Şeffaflığı:** Rapor adını veya ilgili mali yılı cevabın içinde doğal olarak belirt.
+6. **Şirket Karşılaştırması (Peer Comparison Matrisi):** Eğer bağlamda veya soruda birden fazla şirket karşılaştırılıyorsa (Örn: THY vs Pegasus, Akbank vs Garanti), cevabında mutlaka her iki şirketin temel finansal rasyolarını (F/K, PD/DD, Kâr Marjı, Borçluluk) ve operasyonel hacimlerini yan yana özetleyen şık bir **Markdown Kıyaslama Tablosu (Peer Matrix)** sun ve ardından analitik bir mukayese değerlendirmesi yap.
 """
 
 FINANCIAL_PROMPT = PromptTemplate(
@@ -116,22 +117,28 @@ class FinancialRAGEngine:
         )
 
     def detect_filters(self, query: str) -> Dict[str, Any]:
-        """Kullanıcının sorgusundan şirket ve yıl filtresini otomatik tespit eder."""
+        """Kullanıcının sorgusundan şirket(ler) ve yıl filtresini otomatik tespit eder."""
         query_lower = query.lower()
-        detected_company = None
+        detected_companies = []
         detected_year = None
 
         for comp, aliases in COMPANIES.items():
             if any(alias in query_lower for alias in aliases):
-                detected_company = comp
-                break
+                if comp not in detected_companies:
+                    detected_companies.append(comp)
 
         for y in SUPPORTED_YEARS:
             if str(y) in query_lower:
                 detected_year = y
                 break
 
-        return {"company": detected_company, "year": detected_year}
+        primary_company = detected_companies[0] if detected_companies else None
+        return {
+            "company": primary_company,
+            "companies": detected_companies,
+            "is_comparison": len(detected_companies) >= 2,
+            "year": detected_year,
+        }
 
     def retrieve_documents(
         self,
@@ -201,7 +208,24 @@ class FinancialRAGEngine:
         ranked_keys = sorted(doc_scores.keys(), key=lambda k: doc_scores[k], reverse=True)
         combined_docs = [doc_map[k] for k in ranked_keys]
 
-        # 4. Metadata Filtresini Uygula
+        # 4. Çoklu Şirket Karşılaştırması (Peer Comparison) Modu
+        if auto_filters.get("is_comparison") and len(auto_filters.get("companies", [])) >= 2 and (not company_filter or company_filter == "Tümü"):
+            peer_docs = []
+            per_comp_k = max(2, top_k // 2)
+            for c_name in auto_filters["companies"][:2]:
+                c_matches = [d for d in combined_docs if d.metadata.get("company") == c_name]
+                if not c_matches:
+                    try:
+                        c_matches = self._vector_db.similarity_search(f"{c_name} {query}", k=per_comp_k)
+                    except Exception:
+                        c_matches = []
+                peer_docs.extend(c_matches[:per_comp_k])
+
+            if len(peer_docs) >= 2:
+                remaining = [d for d in combined_docs if d not in peer_docs]
+                return peer_docs + remaining[:max(0, top_k - len(peer_docs))]
+
+        # 5. Metadata Filtresini Uygula
         if filter_dict:
             filtered_docs = []
             for doc in combined_docs:

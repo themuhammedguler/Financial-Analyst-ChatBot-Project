@@ -22,10 +22,13 @@ from src.config import (
     get_company_for_ticker,
     get_ticker_for_company,
 )
+import plotly.graph_objects as go
 from src.rag.engine import FinancialRAGEngine
 from src.data_collection.kap_downloader import BIST_100_COMPANIES, download_company_annual_report
 from src.rag.ingestion import add_single_pdf_to_vectorstore
 from src.integration.report_generator import FundamentalReportGenerator
+from src.integration.models import FundamentalReport
+from src.integration.api import get_hybrid_signal
 
 # --- SAYFA YAPILANDIRMASI ---
 st.set_page_config(
@@ -227,6 +230,76 @@ def load_report_generator():
 
 
 # --- YARDIMCI GÖRSEL FONKSİYONLAR ---
+def create_radar_chart(report: FundamentalReport) -> go.Figure:
+    """Hisse için 5 boyutlu kurumsal finansal sağlık radar grafiği oluşturur."""
+    sentiment_score_norm = max(10.0, min(100.0, ((report.sentiment_score + 1.0) / 2.0) * 100))
+    
+    prof_trend = str(report.key_metrics.net_profit_margin_trend).lower()
+    if "artış" in prof_trend or "pozitif" in prof_trend or "yüksek" in prof_trend:
+        prof_score = 88.0
+    elif "azalış" in prof_trend or "düşüş" in prof_trend:
+        prof_score = 45.0
+    else:
+        prof_score = 65.0
+
+    debt = str(report.key_metrics.debt_to_equity).lower()
+    if "düşük" in debt or "yönetilebilir" in debt:
+        debt_score = 88.0
+    elif "orta" in debt:
+        debt_score = 65.0
+    else:
+        debt_score = 40.0
+
+    catalyst_score = min(95.0, 45.0 + len(report.catalysts) * 15.0)
+    risk_score = max(35.0, 95.0 - len(report.risk_factors) * 15.0)
+
+    categories = [
+        "Kârlılık & Marj",
+        "Finansal Sağlık",
+        "Büyüme Katalizörü",
+        "Piyasa Duygusu",
+        "Risk Dayanıklılığı"
+    ]
+    values = [prof_score, debt_score, catalyst_score, sentiment_score_norm, risk_score]
+    categories_closed = categories + [categories[0]]
+    values_closed = values + [values[0]]
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatterpolar(
+        r=values_closed,
+        theta=categories_closed,
+        fill='toself',
+        fillcolor='rgba(56, 189, 248, 0.22)',
+        line=dict(color='#38BDF8', width=2),
+        marker=dict(size=5, color='#38BDF8'),
+        name=report.ticker
+    ))
+
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, 100],
+                showticklabels=False,
+                linecolor='rgba(148, 163, 184, 0.2)',
+                gridcolor='rgba(148, 163, 184, 0.15)',
+            ),
+            angularaxis=dict(
+                tickfont=dict(size=10, color='#CBD5E1'),
+                linecolor='rgba(148, 163, 184, 0.2)',
+                gridcolor='rgba(148, 163, 184, 0.15)',
+            ),
+            bgcolor='rgba(15, 23, 42, 0.6)'
+        ),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=25, r=25, t=20, b=20),
+        showlegend=False,
+        height=260
+    )
+    return fig
+
+
 def get_company_badge(company_name: str) -> str:
     comp = str(company_name).lower()
     if "akbank" in comp:
@@ -302,21 +375,80 @@ with st.sidebar:
 
     st.divider()
 
-    # --- 3. ADIM: BIST-TREND-FORECASTER ÇİFT YÖNLÜ KÖPRÜ (CROSS-REFERENCE LINK) ---
+    # --- 3. ADIM: BIST-TREND-FORECASTER ÇİFT YÖNLÜ KÖPRÜ VE HİBRİT KARAR MOTORU ---
     forecaster_url = f"{FORECASTER_BASE_URL}/?ticker={active_ticker}"
+
+    report_file = REPORTS_DIR / f"{active_ticker}_latest.json"
+    active_report_obj = None
+    hybrid_sig = None
+    if report_file.exists():
+        try:
+            with open(report_file, "r", encoding="utf-8") as rf:
+                active_report_obj = FundamentalReport(**json.load(rf))
+            hybrid_sig = get_hybrid_signal(ticker=active_ticker)
+        except Exception:
+            pass
+
+    decision_color = "#34D399"
+    decision_bg = "rgba(16, 185, 129, 0.18)"
+    decision_border = "rgba(52, 211, 153, 0.4)"
+    if hybrid_sig:
+        dec = hybrid_sig.decision
+        if "GÜÇLÜ AL" in dec:
+            decision_color = "#10B981"
+            decision_bg = "rgba(16, 185, 129, 0.22)"
+            decision_border = "rgba(16, 185, 129, 0.5)"
+        elif "AL" in dec:
+            decision_color = "#38BDF8"
+            decision_bg = "rgba(56, 189, 248, 0.20)"
+            decision_border = "rgba(56, 189, 248, 0.45)"
+        elif "TUT" in dec or "NÖTR" in dec:
+            decision_color = "#FBBF24"
+            decision_bg = "rgba(245, 158, 11, 0.20)"
+            decision_border = "rgba(245, 158, 11, 0.45)"
+        else:
+            decision_color = "#F87171"
+            decision_bg = "rgba(239, 68, 68, 0.20)"
+            decision_border = "rgba(239, 68, 68, 0.45)"
+
     st.markdown(f"""
     <div class="forecaster-card">
-        <div style="font-weight: 700; color: #38BDF8; font-size: 0.90rem; margin-bottom: 4px;">
-            🤖 BIST-Trend-Forecaster Köprüsü
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-weight: 700; color: #38BDF8; font-size: 0.90rem;">
+                🤖 BIST-Trend-Forecaster
+            </span>
+            {f'''<span style="background:{decision_bg}; color:{decision_color}; border:1px solid {decision_border}; font-size:0.75rem; font-weight:700; padding:2px 8px; border-radius:9999px;">
+                {hybrid_sig.decision}
+            </span>''' if hybrid_sig else ''}
         </div>
-        <div style="color: #CBD5E1; font-size: 0.82rem; line-height: 1.4; margin-bottom: 10px;">
+        {f'''<div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.15); border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; font-size: 0.78rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                <span style="color:#94A3B8;">Bileşik Skor:</span>
+                <span style="color:#F8FAFC; font-weight:700;">{hybrid_sig.composite_score} / 100</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                <span style="color:#94A3B8;">Teknik Trend:</span>
+                <span style="color:#38BDF8; font-weight:600;">{hybrid_sig.technical_trend}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color:#94A3B8;">Kelly Tahsisi:</span>
+                <span style="color:#34D399; font-weight:700;">%{hybrid_sig.kelly_allocation_percent} Portföy</span>
+            </div>
+        </div>''' if hybrid_sig else f'''<div style="color: #CBD5E1; font-size: 0.82rem; line-height: 1.4; margin-bottom: 10px;">
             📈 <strong>{active_ticker}</strong> hissesinin <strong>XGBoost trend tahminini, teknik indikatörlerini</strong> ve <strong>Kelly sermaye tahsisini</strong> inceleyin.
-        </div>
+        </div>'''}
         <a href="{forecaster_url}" target="_blank" style="display: block; text-align: center; background: linear-gradient(135deg, #2563EB, #1D4ED8); color: #FFFFFF; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 0.82rem; font-weight: 600; border: 1px solid rgba(56, 189, 248, 0.35); box-shadow: 0 2px 8px rgba(37,99,235,0.4);">
-            Teknik Tahmini Gör ↗
+            Forecaster'da Teknik Tahmini Gör ↗
         </a>
     </div>
     """, unsafe_allow_html=True)
+
+    # Finansal Sağlık Radarı (Plotly)
+    if active_report_obj:
+        with st.expander("📈 Finansal Sağlık Radarı (Plotly)", expanded=False):
+            st.caption(f"**{active_ticker}** için 5 Boyutlu RAG Temel Analiz Profili")
+            fig = create_radar_chart(active_report_obj)
+            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
     st.divider()
 

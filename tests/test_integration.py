@@ -324,3 +324,42 @@ class TestHallucinationGuardAndBenchmark:
         assert "trap_defense_success_percent" in sm
         assert sm["faithfulness_score"] > 0.70
         assert bm_data["total_test_cases"] >= 8
+
+
+class TestHybridSignalAndComparison:
+    """Hibrit Karar Motoru ve Çift Şirket Karşılaştırmalı Analiz Testleri"""
+
+    def test_get_hybrid_signal_api_default(self):
+        client = TestClient(app)
+        response = client.get("/api/v1/signal/THYAO")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["ticker"] == "THYAO"
+        assert "composite_score" in data
+        assert 0.0 <= data["composite_score"] <= 100.0
+        assert data["decision"] in ["GÜÇLÜ AL", "AL", "TUT / NÖTR", "SAT", "GÜÇLÜ SAT"]
+        assert data["kelly_allocation_percent"] >= 0.0
+        assert "technical_trend" in data
+        assert "rationale" in data
+
+    def test_get_hybrid_signal_with_forecaster_params(self):
+        client = TestClient(app)
+        response = client.get("/api/v1/signal/THYAO?technical_trend=Yükseliş&technical_confidence=0.90")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["technical_trend"] == "Yükseliş"
+        assert data["technical_score"] >= 80.0
+        assert data["decision"] in ["GÜÇLÜ AL", "AL"]
+        assert data["kelly_allocation_percent"] > 0.0
+
+    def test_peer_comparison_filter_detection(self):
+        from src.rag.engine import FinancialRAGEngine
+        engine = FinancialRAGEngine.__new__(FinancialRAGEngine)
+        
+        query = "THY ile Tüpraş'ın 2024 yılı kârlılıklarını ve net kâr marjlarını karşılaştır"
+        filters = engine.detect_filters(query)
+        assert filters["is_comparison"] is True
+        assert len(filters["companies"]) >= 2
+        assert any("Türk Hava Yolları" in c for c in filters["companies"])
+        assert any("Tüpraş" in c for c in filters["companies"])
+        assert filters["year"] == 2024

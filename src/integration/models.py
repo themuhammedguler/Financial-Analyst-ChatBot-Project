@@ -90,3 +90,19 @@ class SentimentSummaryResponse(BaseModel):
     top_bearish_tickers: List[str] = Field(default_factory=list, description="En düşük skora sahip hisseler")
     available_tickers: List[str] = Field(default_factory=list, description="Mevcut raporu bulunan tüm hisseler")
 
+
+class HybridSignalResponse(BaseModel):
+    """BIST-Trend-Forecaster ve RAG Temel Analiz hibrit yatırım sinyali."""
+    ticker: str = Field(..., description="BIST Hisse Kodu")
+    company_name: str = Field(..., description="Şirket Ticari Unvanı")
+    fundamental_score: float = Field(..., description="0-100 normalize temel analiz skoru")
+    fundamental_sentiment: str = Field(..., description="Pozitif | Nötr | Negatif")
+    technical_score: float = Field(..., description="0-100 teknik trend skoru")
+    technical_trend: str = Field(..., description="Yükseliş | Yatay | Düşüş")
+    composite_score: float = Field(..., description="%60 Temel + %40 Teknik bileşik karar skoru (0-100)")
+    decision: Literal["GÜÇLÜ AL", "AL", "TUT / NÖTR", "SAT", "GÜÇLÜ SAT"] = Field(..., description="Bileşik karar tavsiyesi")
+    kelly_allocation_percent: float = Field(..., description="Kelly Kriteri önerilen portföy ağırlığı (%)")
+    rationale: str = Field(..., description="Karar ve rasyonel gerekçesi")
+    report_date: str = Field(..., description="Analiz tarihi (YYYY-MM-DD)")
+
+

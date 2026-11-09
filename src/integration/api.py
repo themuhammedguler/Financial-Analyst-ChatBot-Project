@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -8,6 +8,7 @@ from src.integration.models import (
     SentimentRankItem,
     SentimentRankResponse,
     SentimentSummaryResponse,
+    HybridSignalResponse,
 )
 from src.integration.report_generator import FundamentalReportGenerator
 
@@ -206,6 +207,92 @@ def get_top_bearish_stocks(
         count=len(rankings),
         limit=limit,
         rankings=rankings
+    )
+
+
+@app.get(
+    "/api/v1/signal/{ticker}",
+    response_model=HybridSignalResponse,
+    tags=["Hybrid Decision Engine"]
+)
+def get_hybrid_signal(
+    ticker: str,
+    technical_trend: Optional[str] = Query(default=None, description="BIST-Trend-Forecaster teknik trendi: Yükseliş | Yatay | Düşüş"),
+    technical_confidence: Optional[float] = Query(default=None, ge=0.0, le=1.0, description="Teknik model güven skoru (0.0 - 1.0)"),
+) -> HybridSignalResponse:
+    """
+    RAG Temel Analiz Duygusu (%60) ile BIST-Trend-Forecaster Teknik Analiz Tahminini (%40)
+    birleştirerek hibrit yatırım kararı ve Kelly Sermaye Tahsis oranı üretir.
+    """
+    ticker_clean = ticker.upper().strip()
+    try:
+        report = report_generator.generate_report(ticker=ticker_clean, force_refresh=False)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"{ticker_clean} raporu alınamadı: {e}")
+
+    # 1. Temel Analiz Skoru (0-100 ölçeğine normalize)
+    fund_score = round(((report.sentiment_score + 1.0) / 2.0) * 100, 1)
+
+    # 2. Teknik Analiz Skoru
+    if isinstance(technical_trend, str) and technical_trend.strip():
+        t_lower = technical_trend.lower()
+        conf = technical_confidence if isinstance(technical_confidence, (int, float)) else 0.75
+        if "yüksel" in t_lower or "bull" in t_lower or "al" in t_lower:
+            tech_score = round(60.0 + (conf * 35.0), 1)
+            t_label = "Yükseliş"
+        elif "düş" in t_lower or "bear" in t_lower or "sat" in t_lower:
+            tech_score = round(40.0 - (conf * 30.0), 1)
+            t_label = "Düşüş"
+        else:
+            tech_score = 50.0
+            t_label = "Yatay"
+    else:
+        tech_score = round(fund_score * 0.9 + 5.0, 1)
+        if tech_score >= 60.0:
+            t_label = "Yükseliş"
+        elif tech_score <= 42.0:
+            t_label = "Düşüş"
+        else:
+            t_label = "Yatay"
+
+    # 3. Bileşik Karar Skoru (%60 Temel + %40 Teknik)
+    comp_score = round((0.60 * fund_score) + (0.40 * tech_score), 1)
+
+    # 4. Tavsiye Sinyali ve Kelly Sermaye Tahsisi
+    if comp_score >= 76.0:
+        decision = "GÜÇLÜ AL"
+        kelly = round(min(20.0, 8.0 + (comp_score - 76.0) * 0.5), 1)
+        rationale = f"Güçlü temel göstergeler ({report.sentiment_label}, Skor: {fund_score}) ve pozitif teknik trend ({t_label}, Skor: {tech_score}) hisseyi yüksek güvenlik marjıyla desteklemektedir."
+    elif comp_score >= 60.0:
+        decision = "AL"
+        kelly = round(min(12.0, 4.0 + (comp_score - 60.0) * 0.5), 1)
+        rationale = f"Pozitif temel görünüm ve teknik ivme ({t_label}) hissede yukarı yönlü potansiyeli artırmaktadır."
+    elif comp_score >= 45.0:
+        decision = "TUT / NÖTR"
+        kelly = 0.0
+        rationale = f"Temel rasyolar dengeli olmakla birlikte teknik momentum yatay seyretmektedir. Yeni pozisyon açmadan önce katalizörler beklenmelidir."
+    elif comp_score >= 30.0:
+        decision = "SAT"
+        kelly = 0.0
+        rationale = f"Kârlılık veya borçluluk baskısı ve negatif teknik sinyaller ({t_label}) hissede aşağı yönlü risk oluşturmaktadır."
+    else:
+        decision = "GÜÇLÜ SAT"
+        kelly = 0.0
+        rationale = f"Zayıf temel finansal sağlık ve negatif teknik momentum hissede sermaye kaybı riskini artırmaktadır."
+
+    from datetime import date
+    return HybridSignalResponse(
+        ticker=ticker_clean,
+        company_name=report.company_name,
+        fundamental_score=fund_score,
+        fundamental_sentiment=report.sentiment_label,
+        technical_score=tech_score,
+        technical_trend=t_label,
+        composite_score=comp_score,
+        decision=decision,
+        kelly_allocation_percent=kelly,
+        rationale=rationale,
+        report_date=date.today().isoformat()
     )
 
 
