@@ -33,7 +33,19 @@ MMR_LAMBDA = 0.7
 COMPANIES = {
     "Akbank": ["akbank", "akb"],
     "Türk Hava Yolları": ["türk hava yolları", "turk hava yollari", "thy", "thya"],
-    "Tüpraş": ["tüpraş", "tupras"]
+    "Tüpraş": ["tüpraş", "tupras"],
+    "Ereğli Demir Çelik": ["eregli", "ereğli", "eregl", "erdemir"],
+    "Şişecam": ["şişecam", "sisecam", "sise"],
+    "Aselsan": ["aselsan", "asels"],
+    "BİM Mağazalar": ["bim", "bimas"],
+    "Ford Otomotiv": ["ford", "froto"],
+    "Garanti BBVA": ["garanti", "garan"],
+    "İş Bankası": ["iş bankası", "is bankasi", "isctr"],
+    "Koç Holding": ["koç holding", "koc holding", "kchol"],
+    "Sabancı Holding": ["sabancı holding", "sabanci holding", "sahol"],
+    "Yapı Kredi": ["yapı kredi", "yapi kredi", "ykbnk"],
+    "Pegasus": ["pegasus", "pgsus"],
+    "Turkcell": ["turkcell", "tcell"],
 }
 
 SUPPORTED_YEARS = [2020, 2021, 2022, 2023, 2024]

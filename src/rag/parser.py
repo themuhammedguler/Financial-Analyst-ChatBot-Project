@@ -17,14 +17,31 @@ def infer_metadata_from_path(file_path: Path) -> Dict[str, Any]:
     year = int(year_match.group(1)) if year_match else 2024
     
     # 2. Şirket Çıkarımı
-    if "akbank" in name_str or "akb" in name_str:
-        company = "Akbank"
-    elif "thy" in name_str or "hava yolları" in name_str or "hava yollari" in name_str:
-        company = "Türk Hava Yolları"
-    elif "tupras" in name_str or "tüpraş" in name_str:
-        company = "Tüpraş"
-    else:
-        company = "Bilinmeyen"
+    from src.config import TICKER_TO_COMPANY, COMPANIES
+
+    company = "Bilinmeyen"
+    # Önce ticker bazlı eşleme (EREGL, ASELS, THYAO vb.)
+    for ticker, full_name in TICKER_TO_COMPANY.items():
+        if ticker.lower() in name_str:
+            company = full_name
+            break
+
+    # Ticker eşleşmediyse şirket alternatif isimlerinden ara
+    if company == "Bilinmeyen":
+        for comp_name, aliases in COMPANIES.items():
+            if any(alias in name_str for alias in aliases):
+                company = comp_name
+                break
+            
+    if company == "Bilinmeyen":
+        if "akbank" in name_str or "akb" in name_str:
+            company = "Akbank"
+        elif "thy" in name_str or "hava yolları" in name_str or "hava yollari" in name_str:
+            company = "Türk Hava Yolları"
+        elif "tupras" in name_str or "tüpraş" in name_str:
+            company = "Tüpraş"
+        elif "eregli" in name_str or "erdemir" in name_str:
+            company = "Ereğli Demir Çelik"
         
     # 3. Doküman Türü Çıkarımı
     if "faaliyet" in name_str or "frat" in name_str or "entegre" in name_str:

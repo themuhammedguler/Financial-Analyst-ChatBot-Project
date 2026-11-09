@@ -77,11 +77,21 @@ def download_pdf_from_url(
 
         # İlk baytları kontrol et (PDF sihirli baytı: %PDF)
         with open(save_path, "rb") as f:
-            header = f.read(5)
-            if b"%PDF" not in header:
-                print(f"[KAP Downloader] İndirilen içerik geçerli bir PDF değil, siliniyor.")
-                save_path.unlink(missing_ok=True)
-                return False
+            header_sample = f.read(512)
+
+        pdf_offset = header_sample.find(b"%PDF")
+        if pdf_offset == -1:
+            print(f"[KAP Downloader] İndirilen içerik geçerli bir PDF değil, siliniyor.")
+            save_path.unlink(missing_ok=True)
+            return False
+        elif pdf_offset > 0:
+            # KAP Java Object Serialization stream (0xACED...) başlığını temizle
+            print(f"[KAP Downloader] KAP Java akış başlığı ({pdf_offset} byte) temizleniyor...")
+            with open(save_path, "rb") as f_in:
+                full_bytes = f_in.read()
+            with open(save_path, "wb") as f_out:
+                f_out.write(full_bytes[pdf_offset:])
+            file_size_kb = save_path.stat().st_size / 1024
 
         print(f"[KAP Downloader] Başarıyla indirildi: {save_path.name} ({file_size_kb / 1024:.2f} MB)")
         return True
@@ -93,12 +103,65 @@ def download_pdf_from_url(
         return False
 
 
+def resolve_kap_pdf_url(url_or_id: str) -> Optional[str]:
+    """
+    KAP bildirim ID'si veya URL'sinden doğrudan indirilebilir PDF bağlantısını çözer.
+    Desteklenen formatlar:
+    - 1410649 (Doğrudan Bildirim ID)
+    - https://www.kap.org.tr/tr/Bildirim/1410649
+    - https://www.kap.org.tr/tr/api/BildirimPdf/1410649
+    - https://www.kap.org.tr/tr/api/file/download/...
+    - Herhangi bir doğrudan .pdf bağlantısı
+    """
+    clean_target = url_or_id.strip()
+    
+    # Doğrudan PDF dosyası
+    if clean_target.lower().endswith(".pdf"):
+        return clean_target
+
+    # file/download URL'si
+    if "api/file/download/" in clean_target:
+        return clean_target
+
+    # Bildirim ID'sini yakala
+    disclosure_id_match = re.search(r"(?:Bildirim(?:Pdf)?/|/tr/Bildirim/)(\d+)", clean_target)
+    if not disclosure_id_match and clean_target.isdigit():
+        disclosure_id = clean_target
+    elif disclosure_id_match:
+        disclosure_id = disclosure_id_match.group(1)
+    else:
+        disclosure_id = None
+
+    if not disclosure_id:
+        return clean_target
+
+    # KAP bildirim sayfasını sorgulayarak ekli asıl faaliyet raporu PDF dosyasını ara
+    disclosure_page_url = f"https://www.kap.org.tr/tr/Bildirim/{disclosure_id}"
+    try:
+        resp = requests.get(disclosure_page_url, headers=DEFAULT_HEADERS, timeout=15)
+        if resp.status_code == 200:
+            # Ekli dosya bağlantısı (api/file/download/...)
+            file_match = re.search(r'href=[\'"]([^\'"]*api/file/download/[a-zA-Z0-9]+)[\'"]', resp.text)
+            if file_match:
+                found_url = file_match.group(1)
+                if not found_url.startswith("http"):
+                    found_url = "https://www.kap.org.tr" + found_url
+                return found_url
+    except Exception as e:
+        print(f"[KAP Downloader] Bildirim sayfası ayrıştırılamadı ({disclosure_page_url}): {e}")
+
+    # Ek dosya bulunamazsa standart KAP resmi bildirim PDF'ine yönlendir
+    return f"https://www.kap.org.tr/tr/api/BildirimPdf/{disclosure_id}"
+
+
 def download_kap_disclosure_pdf(disclosure_id: str, save_path: Path) -> bool:
     """
     KAP bildirim ID'si (disclosureIndex) üzerinden resmi PDF'i indirir.
-    URL Formatı: https://www.kap.org.tr/tr/BildirimPdf/{disclosure_id}
+    URL Formatı: https://www.kap.org.tr/tr/api/BildirimPdf/{disclosure_id}
     """
-    url = f"https://www.kap.org.tr/tr/BildirimPdf/{disclosure_id}"
+    url = resolve_kap_pdf_url(disclosure_id)
+    if not url:
+        return False
     return download_pdf_from_url(url, save_path)
 
 
@@ -134,7 +197,8 @@ def download_company_annual_report(
         return target_path
 
     if custom_url:
-        success = download_pdf_from_url(custom_url, target_path)
+        resolved_url = resolve_kap_pdf_url(custom_url) or custom_url
+        success = download_pdf_from_url(resolved_url, target_path)
         return target_path if success else None
 
     # Ticker ve yıla göre KAP bildirim PDF'i indirme

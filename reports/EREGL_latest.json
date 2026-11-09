@@ -1,0 +1,23 @@
+{
+  "ticker": "EREGL",
+  "company_name": "Ereğli Demir Çelik",
+  "report_date": "2024-12-31",
+  "fundamental_summary": "Ereğli Demir Çelik, 2024 yılında nakit ve nakit benzerlerinde önemli bir artışla güçlü bir likidite pozisyonu sergilemiştir. Ancak, banka kredileri faiz giderlerindeki ciddi yükseliş nedeniyle finansman giderleri de önemli ölçüde artmıştır. Şirketin toplam borçlanmaları belirgin bir şekilde yükselmiş olup, bu durum finansal riskleri ve kârlılık üzerindeki baskıyı artırmaktadır.",
+  "sentiment_score": -0.3,
+  "sentiment_label": "Negatif",
+  "key_metrics": {
+    "pe_ratio": null,
+    "pb_ratio": null,
+    "net_profit_margin_trend": "Azalış",
+    "debt_to_equity": "Yüksek",
+    "extra_metrics": {}
+  },
+  "catalysts": [
+    "Güçlü nakit pozisyonu ve artan finansal gelirler, şirketin operasyonel esnekliğini ve gelecekteki yatırım kapasitesini destekleyebilir.",
+    "Net kur farkı giderlerindeki belirgin düşüş, döviz kuru risk yönetiminde iyileşme veya daha istikrarlı kur ortamından fayda sağlandığını göstererek gelecekteki kârlılığa olumlu katkı sağlayabilir."
+  ],
+  "risk_factors": [
+    "Banka kredileri faiz giderlerindeki ve toplam borçlanmalardaki önemli artış, şirketin finansal yükünü ve kârlılık üzerindeki baskıyı yükseltmektedir.",
+    "Finansal varlıklarda değer düşüklüğü riskine ilişkin varsayımlar ve piyasa koşullarındaki olası kötüleşmeler, gelecekte ek karşılıklar ayrılmasına neden olabilir."
+  ]
+}

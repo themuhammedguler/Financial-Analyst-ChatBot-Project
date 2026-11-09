@@ -82,11 +82,42 @@ def build_vector_store(
     return db
 
 
+def filter_high_value_financial_pages(docs: List[Document], max_pages: int = 60) -> List[Document]:
+    """
+    Yüzlerce sayfalık kurumsal faaliyet raporlarında yüksek sinyalli finansal,
+    operasyonel ve yönetim mesajı içeren sayfaları akıllıca filtreler.
+    Böylece kota tasarrufu sağlanır ve RAG arama kalitesi yükselir.
+    """
+    if len(docs) <= max_pages:
+        return docs
+
+    keywords = [
+        "özet finansal", "finansal göstergeler", "gelir tablosu", "bilanço",
+        "nakit akış", "favök", "ebitda", "net kâr", "net kar", "temettü",
+        "yönetim kurulu başkanı", "genel müdür", "faaliyet sonuçları",
+        "kapasite kullanım", "satış gelirleri", "yatırımlar", "kâr dağıtım"
+    ]
+
+    # İlk 10 sayfa (Yönetici özeti ve genel bakış) daima dahil edilir
+    selected_indices = set(range(min(10, len(docs))))
+
+    for idx, d in enumerate(docs):
+        txt = d.page_content.lower()
+        if any(kw in txt for kw in keywords):
+            selected_indices.add(idx)
+
+    # Sıralı olarak seçilen sayfaları döndür
+    chosen_docs = [docs[i] for i in sorted(selected_indices)]
+    print(f"[Ingestion] Akıllı Sayfa Filtresi: {len(docs)} sayfadan en kritik {len(chosen_docs)} sayfa seçildi.")
+    return chosen_docs
+
+
 def add_single_pdf_to_vectorstore(
     pdf_path: Path,
     vectorstore_path_str: str = VECTORSTORE_PATH_STR,
     chunk_size: int = CHUNK_SIZE,
     chunk_overlap: int = CHUNK_OVERLAP,
+    smart_filter: bool = True,
 ) -> bool:
     """
     Yeni indirilen tek bir PDF raporunu mevcut FAISS veritabanına artırımlı (incremental) ekler.
@@ -102,6 +133,9 @@ def add_single_pdf_to_vectorstore(
     if not docs:
         print("[Ingestion] Dokümandan metin çıkarılamadı.")
         return False
+
+    if smart_filter and len(docs) > 40:
+        docs = filter_high_value_financial_pages(docs)
 
     splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
     chunks = splitter.split_documents(docs)
