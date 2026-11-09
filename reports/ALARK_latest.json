@@ -1,0 +1,23 @@
+{
+  "ticker": "ALARK",
+  "company_name": "Alarko Holding",
+  "report_date": "2025-03-15",
+  "fundamental_summary": "Şirket, 2024 yılı sonu itibarıyla güçlü bir finansal performans sergilemiştir. Toplam varlıklarında önemli bir artış gözlemlenirken, kaldıraç oranı ve net borçluluk seviyeleri düşüş eğilimindedir. Özkaynaklardaki belirgin büyüme, şirketin sermaye yapısının güçlendiğini ve finansal risklere karşı daha dirençli hale geldiğini göstermektedir. Ancak, tahsili gecikmiş alacaklardaki artış potansiyel bir risk unsuru olarak dikkat çekmektedir.",
+  "sentiment_score": 0.68,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": null,
+    "pb_ratio": null,
+    "net_profit_margin_trend": "Artış",
+    "debt_to_equity": "Düşük/Yönetilebilir",
+    "extra_metrics": {}
+  },
+  "catalysts": [
+    "Güçlü bilanço yapısı ve azalan kaldıraç oranları, şirketin gelecekteki büyüme projelerini finanse etme kapasitesini artırmaktadır.",
+    "Özkaynaklardaki belirgin artış ve net borçlulukta gözlemlenen düşüş, yatırımcı güvenini destekleyerek hisse performansına olumlu yansıyabilir."
+  ],
+  "risk_factors": [
+    "Tahsili gecikmiş alacaklardaki artış eğilimi, şirketin aktif kalitesi üzerinde baskı oluşturabilir ve karşılık giderlerini yükseltebilir.",
+    "Piyasa riskleri (kur riski, faiz oranı dalgalanmaları) ve makroekonomik belirsizlikler, şirketin finansal performansını olumsuz etkileyebilir."
+  ]
+}

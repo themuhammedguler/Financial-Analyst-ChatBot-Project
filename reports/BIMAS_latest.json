@@ -1,0 +1,24 @@
+{
+  "ticker": "BIMAS",
+  "company_name": "BİM Mağazalar",
+  "report_date": "2024-12-31",
+  "fundamental_summary": "BİM Mağazalar'ın son dönem finansal tabloları, varlıklarında artış gözlemlenmesine rağmen kârlılıkta ciddi bir düşüş eğilimi sergilemektedir. Dönem net kârı azalmış, hasılat kaleminde negatif değerler ve net parasal pozisyon kayıpları raporlanmıştır. Şirketin finansman giderleri artarken, geçmiş yıllar kârlarında da kayıplar kaydedilmiştir. Bu durum, operasyonel performans ve gelir yaratma kabiliyetinde önemli zorluklara işaret etmektedir.",
+  "sentiment_score": -0.7,
+  "sentiment_label": "Negatif",
+  "key_metrics": {
+    "pe_ratio": null,
+    "pb_ratio": null,
+    "net_profit_margin_trend": "Azalış",
+    "debt_to_equity": "Düşük/Yönetilebilir",
+    "extra_metrics": {}
+  },
+  "catalysts": [
+    "Yeni mağaza açılışları ve pazar payı genişlemesi",
+    "Operasyonel verimlilik artışı ve maliyet yönetimi"
+  ],
+  "risk_factors": [
+    "Enflasyonist baskılar ve net parasal pozisyon kayıpları",
+    "Düşen kârlılık ve negatif hasılat trendi",
+    "Artan finansman giderleri"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "ticker": "GARAN",
+  "company_name": "Garanti BBVA",
+  "report_date": "2024-12-31",
+  "fundamental_summary": "Şirket, 2024 yılında toplam varlıklarında ve bilanço içi varlıklarında önemli bir büyüme kaydetmiştir. Kaldıraç oranı bir önceki yıla göre düşüş gösterse de, yasal asgari seviyenin oldukça üzerinde kalarak güçlü bir sermaye yapısını korumaktadır. Bilanço dışı yükümlülüklerdeki artış, operasyonel hacmin genişlediğini işaret etmektedir.",
+  "sentiment_score": 0.65,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": null,
+    "pb_ratio": null,
+    "net_profit_margin_trend": "Yatay",
+    "debt_to_equity": "Düşük/Yönetilebilir",
+    "extra_metrics": {}
+  },
+  "catalysts": [
+    "Güçlü varlık büyümesi ve kredi portföyündeki genişleme potansiyeli.",
+    "Bilanço dışı işlemler ve türev finansal araçlardaki artan hacimden elde edilecek komisyon ve işlem gelirleri."
+  ],
+  "risk_factors": [
+    "Toplam risk tutarındaki önemli artışın etkin bir şekilde yönetilememesi riski.",
+    "Döviz kuru ve faiz oranlarındaki dalgalanmalara bağlı olarak kur ve faiz oranı riski."
+  ]
+}

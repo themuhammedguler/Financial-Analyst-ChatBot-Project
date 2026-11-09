@@ -1,0 +1,23 @@
+{
+  "ticker": "ENKAI",
+  "company_name": "Enka İnşaat & Enerji",
+  "report_date": "2024-12-31",
+  "fundamental_summary": "Enka İnşaat & Enerji (ENKAI) için talep edilen temel analiz, sağlanan kanıt metinlerinin Türk Hava Yolları, Ereğli Demir Çelik ve Akbank şirketlerine ait olması nedeniyle gerçekleştirilememektedir. ENKAI'ye özgü finansal veriler mevcut olmadığından, şirketin kârlılığı, gelir trendi, operasyonel performansı veya finansal sağlığı hakkında yorum yapılamamaktadır. Bu nedenle, aşağıdaki metrikler ve değerlendirmeler ENKAI için belirlenememiştir.",
+  "sentiment_score": 0.0,
+  "sentiment_label": "Nötr",
+  "key_metrics": {
+    "pe_ratio": null,
+    "pb_ratio": null,
+    "net_profit_margin_trend": "Bilinmiyor",
+    "debt_to_equity": "Bilinmiyor",
+    "extra_metrics": {}
+  },
+  "catalysts": [
+    "Sağlanan veriler ENKAI'ye ait olmadığından şirkete özgü büyüme faktörleri belirlenememiştir.",
+    "ENKAI'nin gelecekteki performansını etkileyecek somut fırsatlar için şirketin kendi resmi finansal raporları incelenmelidir."
+  ],
+  "risk_factors": [
+    "Sağlanan veriler ENKAI'ye ait olmadığından şirkete özgü finansal veya makro risk faktörleri belirlenememiştir.",
+    "ENKAI'nin operasyonel ve finansal riskleri hakkında detaylı bilgi için şirketin kendi resmi finansal raporları incelenmelidir."
+  ]
+}
