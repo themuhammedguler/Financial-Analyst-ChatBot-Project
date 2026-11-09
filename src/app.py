@@ -30,6 +30,10 @@ from src.integration.report_generator import FundamentalReportGenerator
 from src.integration.models import FundamentalReport
 from src.integration.api import get_hybrid_signal
 
+# --- CHATBOT AVATARLARI ---
+ASSISTANT_AVATAR = "💼"  # Kıdemli Finansal Analist / Portföy Yöneticisi
+USER_AVATAR = "👤"
+
 # --- SAYFA YAPILANDIRMASI ---
 st.set_page_config(
     page_title="BIST Finansal Analist Asistanı",
@@ -652,7 +656,7 @@ st.divider()
 
 # --- GEÇMİŞ MESAJLARI GÖSTER ---
 for msg in st.session_state.messages:
-    msg_avatar = "👤" if msg.get("role") == "user" else "📈"
+    msg_avatar = USER_AVATAR if msg.get("role") == "user" else ASSISTANT_AVATAR
     with st.chat_message(msg["role"], avatar=msg_avatar):
         st.markdown(msg["content"], unsafe_allow_html=True)
         # Eğer kaydedilmiş kaynaklar varsa göster
@@ -677,11 +681,11 @@ prompt_to_process = selected_quick_prompt if selected_quick_prompt else user_inp
 if prompt_to_process:
     # 1. Kullanıcı mesajını ekle ve ekrana yazdır
     st.session_state.messages.append({"role": "user", "content": prompt_to_process})
-    with st.chat_message("user", avatar="👤"):
+    with st.chat_message("user", avatar=USER_AVATAR):
         st.markdown(prompt_to_process)
 
     # 2. Asistan cevabını streaming ile üret
-    with st.chat_message("assistant", avatar="📈"):
+    with st.chat_message("assistant", avatar=ASSISTANT_AVATAR):
         full_response = ""
         captured_docs = []
         rewritten_q = prompt_to_process
