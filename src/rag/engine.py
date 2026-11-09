@@ -322,8 +322,10 @@ class FinancialRAGEngine:
         ve Hallucination Guard doğrulama skoru döner.
         """
         chat_history = chat_history or []
+        yield {"type": "status", "message": "🔍 Soru analiz ediliyor ve hisse parametreleri tespit ediliyor..."}
         rewritten_query = self.rewriter.rewrite(question, chat_history)
 
+        yield {"type": "status", "message": "📚 KAP faaliyet raporları ve dipnotlar taranıyor (FAISS + BM25)..."}
         docs = self.retrieve_documents(
             query=rewritten_query,
             company_filter=company_filter,
@@ -343,6 +345,8 @@ class FinancialRAGEngine:
             }
             return
 
+        yield {"type": "status", "message": f"📊 {len(docs)} ilgili finansal kaynak bulundu. Bilanço ve dipnotlar sentezleniyor..."}
+
         context_parts = []
         for idx, doc in enumerate(docs):
             src_name = doc.metadata.get("file_name", os.path.basename(doc.metadata.get("source", "Bilinmiyor")))
@@ -354,6 +358,8 @@ class FinancialRAGEngine:
 
         context_str = "\n".join(context_parts)
         formatted_prompt = FINANCIAL_PROMPT.format(context=context_str, question=question)
+
+        yield {"type": "status", "message": "⚡ Finansal analist yanıtı hazırlanıyor ve doğrulanıyor..."}
 
         # Hata toleranslı model sırası (Kota/429 durumunda otomatik fallback)
         fallback_candidates = [self.model_name, DEFAULT_LLM_MODEL, "gemini-3.5-flash", "gemini-3.8-flash"]

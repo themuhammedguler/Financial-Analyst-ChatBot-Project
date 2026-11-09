@@ -415,7 +415,7 @@ with st.sidebar:
     <div class="forecaster-card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <span style="font-weight: 700; color: #38BDF8; font-size: 0.90rem;">
-                🤖 BIST-Trend-Forecaster
+                📈 BIST-Trend-Forecaster
             </span>
             {f'''<span style="background:{decision_bg}; color:{decision_color}; border:1px solid {decision_border}; font-size:0.75rem; font-weight:700; padding:2px 8px; border-radius:9999px;">
                 {hybrid_sig.decision}
@@ -652,7 +652,8 @@ st.divider()
 
 # --- GEÇMİŞ MESAJLARI GÖSTER ---
 for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
+    msg_avatar = "👤" if msg.get("role") == "user" else "📈"
+    with st.chat_message(msg["role"], avatar=msg_avatar):
         st.markdown(msg["content"], unsafe_allow_html=True)
         # Eğer kaydedilmiş kaynaklar varsa göster
         if "sources" in msg and msg["sources"]:
@@ -676,36 +677,52 @@ prompt_to_process = selected_quick_prompt if selected_quick_prompt else user_inp
 if prompt_to_process:
     # 1. Kullanıcı mesajını ekle ve ekrana yazdır
     st.session_state.messages.append({"role": "user", "content": prompt_to_process})
-    with st.chat_message("user"):
+    with st.chat_message("user", avatar="👤"):
         st.markdown(prompt_to_process)
 
     # 2. Asistan cevabını streaming ile üret
-    with st.chat_message("assistant"):
-        stream_placeholder = st.empty()
+    with st.chat_message("assistant", avatar="📈"):
         full_response = ""
         captured_docs = []
         rewritten_q = prompt_to_process
+        captured_guard = {}
 
-        # RAG Engine streaming generator
-        with st.spinner("Finansal tablolar taranıyor ve analiz ediliyor..."):
-            generator = engine.stream_answer(
-                question=prompt_to_process,
-                chat_history=st.session_state.messages[:-1],
-                company_filter=selected_company,
-                year_filter=selected_year,
-            )
+        # Canlı Düşünme & Arama Durum Paneli
+        status_box = st.status("📊 Finansal Analist verileri inceliyor...", expanded=True)
+        stream_placeholder = st.empty()
+
+        generator = engine.stream_answer(
+            question=prompt_to_process,
+            chat_history=st.session_state.messages[:-1],
+            company_filter=selected_company,
+            year_filter=selected_year,
+        )
 
         for event in generator:
-            if event["type"] == "content":
+            ev_type = event.get("type")
+            if ev_type == "status":
+                status_box.write(event.get("message", "Finansal veriler işleniyor..."))
+            elif ev_type == "content":
+                if not full_response:
+                    # İlk veri geldiğinde durum kutusunu kapatıp tamamlandı rozetine dönüştür
+                    status_box.update(label="✅ Finansal Raporlar & Dipnotlar İncelendi", state="complete", expanded=False)
                 full_response += event["content"]
                 stream_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
-            elif event["type"] == "done":
+            elif ev_type == "done":
                 captured_docs = event.get("docs", [])
                 rewritten_q = event.get("rewritten_query", prompt_to_process)
                 captured_guard = event.get("guard_result", {})
 
+        # Status kutusunu tamamlandı olarak sonlandır
+        status_box.update(label="✅ Finansal Analiz Tamamlandı", state="complete", expanded=False)
+
         # İmleci kaldır ve nihai cevabı yerleştir
-        stream_placeholder.markdown(full_response, unsafe_allow_html=True)
+        if full_response.strip():
+            stream_placeholder.markdown(full_response, unsafe_allow_html=True)
+        else:
+            fallback_msg = "⚠️ Finansal raporlardan veri getirilirken bir aksaklık oluştu. Lütfen sorunuzu tekrar iletiniz."
+            stream_placeholder.markdown(fallback_msg, unsafe_allow_html=True)
+            full_response = fallback_msg
 
         # Hallucination Guard Doğrulama Rozeti
         if captured_guard and captured_guard.get("status_badge"):
