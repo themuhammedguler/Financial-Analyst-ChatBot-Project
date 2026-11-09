@@ -596,9 +596,12 @@ st.markdown("""
 <div class="main-header">
     <span style="font-size: 2.1rem;">📈</span>
     <span>BIST <span class="brand-highlight">Finansal Analist</span> Asistanı</span>
-    <span class="version-tag">Terminal v2.0</span>
+    <span class="version-tag">v2.2 Ultra-Fast</span>
 </div>
 """, unsafe_allow_html=True)
+
+if not GOOGLE_API_KEY:
+    st.error("⚠️ GOOGLE_API_KEY anahtarı okunamadı! Lütfen Streamlit Cloud > Settings > Secrets alanına GOOGLE_API_KEY eklediğinizden emin olun.")
 st.markdown('<div class="sub-header">Borsa İstanbul şirketlerinin KAP\'ta yayımlanan resmi faaliyet raporları, bilançoları ve dipnotlarına dayalı kurumsal RAG analiz ve temel veri servisi.</div>', unsafe_allow_html=True)
 
 # Durum rozetleri
