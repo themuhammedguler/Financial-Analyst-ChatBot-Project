@@ -43,89 +43,156 @@ url_ticker = raw_ticker_param.upper().strip() if raw_ticker_param else None
 # Ticker'a karşılık gelen şirket adını belirle
 url_company_name = get_company_for_ticker(url_ticker) if url_ticker else None
 
-# --- KURUMSAL CSS STİLLERİ ---
+# --- KURUMSAL DARK MODE CSS STİLLERİ ---
 st.markdown("""
 <style>
-    /* Ana font ve arka plan uyumu */
+    /* Global font ve kurumsal dark palet */
+    .stApp {
+        background-color: #080C14;
+        color: #F8FAFC;
+    }
+    
+    /* Sol Kenar Çubuğu (Sidebar) */
+    [data-testid="stSidebar"] {
+        background-color: #0B111E !important;
+        border-right: 1px solid #1E293B !important;
+    }
+
+    /* Başlık ve Alt Başlık */
     .main-header {
-        font-size: 2.1rem;
-        font-weight: 700;
-        color: #0F172A;
-        margin-bottom: 0.2rem;
+        font-size: 2.15rem;
+        font-weight: 800;
+        background: linear-gradient(90deg, #FFFFFF 0%, #38BDF8 60%, #60A5FA 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.3rem;
+        letter-spacing: -0.02em;
     }
     .sub-header {
-        font-size: 1.02rem;
-        color: #475569;
+        font-size: 0.98rem;
+        color: #94A3B8;
+        line-height: 1.5;
         margin-bottom: 1.2rem;
     }
-    /* Durum rozeti */
+
+    /* Durum ve Deep-Link Rozetleri */
     .status-badge {
         display: inline-flex;
         align-items: center;
-        background-color: #ECFDF5;
-        color: #059669;
-        font-size: 0.82rem;
+        background-color: rgba(16, 185, 129, 0.12);
+        color: #34D399;
+        font-size: 0.80rem;
         font-weight: 600;
         padding: 4px 12px;
         border-radius: 9999px;
-        border: 1px solid #A7F3D0;
+        border: 1px solid rgba(52, 211, 153, 0.3);
         margin-bottom: 1rem;
     }
     .deep-link-badge {
         display: inline-flex;
         align-items: center;
-        background-color: #EFF6FF;
-        color: #1D4ED8;
-        font-size: 0.82rem;
+        background-color: rgba(56, 189, 248, 0.12);
+        color: #38BDF8;
+        font-size: 0.80rem;
         font-weight: 600;
         padding: 4px 12px;
         border-radius: 9999px;
-        border: 1px solid #BFDBFE;
+        border: 1px solid rgba(56, 189, 248, 0.35);
         margin-bottom: 1rem;
         margin-left: 6px;
     }
-    /* Şirket etiketleri */
+
+    /* Şirket Rozetleri */
     .tag-akbank {
-        background-color: #FEE2E2;
-        color: #991B1B;
+        background-color: rgba(239, 68, 68, 0.15);
+        color: #FCA5A5;
+        border: 1px solid rgba(239, 68, 68, 0.35);
         padding: 2px 8px;
         border-radius: 6px;
         font-weight: 600;
         font-size: 0.78rem;
     }
     .tag-thy {
-        background-color: #E0E7FF;
-        color: #3730A3;
+        background-color: rgba(99, 102, 241, 0.15);
+        color: #A5B4FC;
+        border: 1px solid rgba(99, 102, 241, 0.35);
         padding: 2px 8px;
         border-radius: 6px;
         font-weight: 600;
         font-size: 0.78rem;
     }
     .tag-tupras {
-        background-color: #FEF3C7;
-        color: #92400E;
+        background-color: rgba(245, 158, 11, 0.15);
+        color: #FCD34D;
+        border: 1px solid rgba(245, 158, 11, 0.35);
         padding: 2px 8px;
         border-radius: 6px;
         font-weight: 600;
         font-size: 0.78rem;
     }
-    /* Kaynak kartı tasarımı */
-    .source-box {
-        background-color: #F8FAFC;
-        border-left: 4px solid #3B82F6;
-        padding: 10px 14px;
-        border-radius: 4px;
-        margin-bottom: 8px;
-        font-size: 0.88rem;
+    .tag-eregli {
+        background-color: rgba(20, 184, 166, 0.15);
+        color: #5EEAD4;
+        border: 1px solid rgba(20, 184, 166, 0.35);
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.78rem;
     }
-    /* Köprü kartı */
-    .forecaster-card {
-        background: linear-gradient(135deg, #0F172A, #1E293B);
-        border: 1px solid #334155;
-        border-radius: 8px;
+
+    /* Kaynak / Alıntı Kartı (Source Box) */
+    .source-box {
+        background-color: #0E1626;
+        border: 1px solid #1E293B;
+        border-left: 4px solid #38BDF8;
+        color: #CBD5E1;
         padding: 12px 14px;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        font-size: 0.86rem;
+        line-height: 1.5;
+    }
+    .source-box code {
+        background-color: #172238 !important;
+        color: #38BDF8 !important;
+        border: 1px solid rgba(56, 189, 248, 0.25) !important;
+        padding: 1px 5px !important;
+        border-radius: 4px !important;
+    }
+
+    /* BIST-Trend-Forecaster Köprü Kartı (Sidebar) */
+    .forecaster-card {
+        background: linear-gradient(145deg, #0D1628 0%, #162444 100%);
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        border-radius: 10px;
+        padding: 14px 14px;
         margin-top: 10px;
         margin-bottom: 12px;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Sohbet Mesajı Kutuları */
+    [data-testid="stChatMessage"] {
+        background-color: #0D1422 !important;
+        border: 1px solid #182236 !important;
+        border-radius: 12px !important;
+        margin-bottom: 0.75rem !important;
+    }
+
+    /* Hızlı Butonlar (Prompt Chips) ve Standart Butonlar */
+    div.stButton > button {
+        background-color: #0F172A !important;
+        color: #CBD5E1 !important;
+        border: 1px solid #1E293B !important;
+        border-radius: 8px !important;
+        font-weight: 500 !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+    div.stButton > button:hover {
+        background-color: #172554 !important;
+        color: #38BDF8 !important;
+        border-color: #38BDF8 !important;
+        box-shadow: 0 0 12px rgba(56, 189, 248, 0.25) !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -150,7 +217,9 @@ def get_company_badge(company_name: str) -> str:
         return f'<span class="tag-thy">THY</span>'
     elif "tüpraş" in comp or "tupras" in comp:
         return f'<span class="tag-tupras">Tüpraş</span>'
-    return f'<span style="background:#E2E8F0; color:#334155; padding:2px 8px; border-radius:6px; font-size:0.78rem;">{company_name}</span>'
+    elif "ereğli" in comp or "eregli" in comp or "erdemir" in comp:
+        return f'<span class="tag-eregli">Ereğli</span>'
+    return f'<span style="background:rgba(148, 163, 184, 0.12); color:#CBD5E1; border:1px solid rgba(148, 163, 184, 0.25); padding:2px 8px; border-radius:6px; font-size:0.78rem;">{company_name}</span>'
 
 
 # --- KENAR ÇUBUĞU (SIDEBAR) ---
@@ -206,7 +275,7 @@ with st.sidebar:
         <div style="color: #CBD5E1; font-size: 0.82rem; line-height: 1.4; margin-bottom: 10px;">
             📈 <strong>{active_ticker}</strong> hissesinin <strong>XGBoost trend tahminini, teknik indikatörlerini</strong> ve <strong>Kelly sermaye tahsisini</strong> inceleyin.
         </div>
-        <a href="{forecaster_url}" target="_blank" style="display: block; text-align: center; background-color: #2563EB; color: #FFFFFF; padding: 7px 12px; border-radius: 6px; text-decoration: none; font-size: 0.82rem; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+        <a href="{forecaster_url}" target="_blank" style="display: block; text-align: center; background: linear-gradient(135deg, #2563EB, #1D4ED8); color: #FFFFFF; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 0.82rem; font-weight: 600; border: 1px solid rgba(56, 189, 248, 0.35); box-shadow: 0 2px 8px rgba(37,99,235,0.4);">
             Teknik Tahmini Gör ↗
         </a>
     </div>
@@ -318,7 +387,7 @@ badge_html = ""
 if has_index:
     badge_html += '<span class="status-badge">● Finansal Bilgi Bankası Aktif (2020-2024 KAP Raporları)</span>'
 else:
-    badge_html += '<span style="background:#FEF3C7; color:#92400E; padding:4px 12px; border-radius:9999px; font-size:0.82rem; font-weight:600;">⚠️ Vektör indeksi senkronize ediliyor</span>'
+    badge_html += '<span style="background: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.35); padding: 4px 12px; border-radius: 9999px; font-size: 0.80rem; font-weight: 600;">⚠️ Vektör indeksi senkronize ediliyor</span>'
 
 if url_ticker:
     badge_html += f'<span class="deep-link-badge">🔗 Entegrasyon Modu: {url_ticker} ({url_company_name or url_ticker})</span>'
@@ -429,9 +498,9 @@ if prompt_to_process:
         # 3. Adım Köprü Kartı: Cevap sonuna BIST-Trend-Forecaster butonu ekle
         detected_or_active_ticker = active_ticker
         st.markdown(f"""
-        <div style="margin-top: 14px; padding: 8px 14px; background: #F1F5F9; border-radius: 8px; border: 1px solid #E2E8F0; display: inline-flex; align-items: center; gap: 10px;">
-            <span style="font-size: 0.84rem; color: #334155;">📈 <strong>{detected_or_active_ticker}</strong> hissesinin teknik model tahminlerini görmek ister misiniz?</span>
-            <a href="{FORECASTER_BASE_URL}/?ticker={detected_or_active_ticker}" target="_blank" style="background:#2563EB; color:white; font-size:0.78rem; font-weight:600; padding:4px 10px; border-radius:5px; text-decoration:none;">BIST-Trend-Forecaster'a Git ↗</a>
+        <div style="margin-top: 14px; padding: 10px 16px; background: #0E1626; border-radius: 8px; border: 1px solid #1E293B; display: inline-flex; align-items: center; gap: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.35);">
+            <span style="font-size: 0.85rem; color: #E2E8F0;">📈 <strong>{detected_or_active_ticker}</strong> hissesinin teknik model tahminlerini görmek ister misiniz?</span>
+            <a href="{FORECASTER_BASE_URL}/?ticker={detected_or_active_ticker}" target="_blank" style="background: linear-gradient(135deg, #2563EB, #1D4ED8); color: white; font-size: 0.78rem; font-weight: 600; padding: 5px 12px; border-radius: 6px; text-decoration: none; border: 1px solid rgba(56, 189, 248, 0.35); box-shadow: 0 2px 6px rgba(37,99,235,0.3);">BIST-Trend-Forecaster'a Git ↗</a>
         </div>
         """, unsafe_allow_html=True)
 
