@@ -1,0 +1,40 @@
+services:
+  # 1. Streamlit Chatbot & Finans Terminali Arayüzü
+  chatbot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bist_financial_chatbot
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    volumes:
+      - ./data:/app/data
+      - ./reports:/app/reports
+      - ./vectorstore:/app/vectorstore
+    env_file:
+      - .env
+    command: ["streamlit", "run", "src/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+
+  # 2. FastAPI Entegrasyon Servisi (BIST-Trend-Forecaster & Harici İstemciler)
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bist_fundamental_api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    volumes:
+      - ./data:/app/data
+      - ./reports:/app/reports
+      - ./vectorstore:/app/vectorstore
+    env_file:
+      - .env
+    command: ["uvicorn", "src.integration.api:app", "--host", "0.0.0.0", "--port", "8000"]

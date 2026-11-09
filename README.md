@@ -114,11 +114,25 @@ Veritabanını sıfırdan yeniden oluşturmak veya yeni raporları eklemek için
 python -m src.rag.ingestion
 ```
 
-### 5. Uygulamayı Başlatma
+### 5. Uygulamayı Başlatma (İki Farklı Yöntem)
+
+#### Yöntem A: Doğrudan Python ile Çalıştırma
 ```bash
-streamlit run src/app.py
+python -m streamlit run src/app.py
 ```
-Tarayıcınızda otomatik açılan ekrandan finansal analiz asistanını kullanmaya başlayabilirsiniz!
+
+#### Yöntem B: Docker & Docker Compose ile Tek Komutta Çalıştırma (Önerilen)
+Hiçbir Python veya sanal ortam (`venv`) bağımlılığına gerek kalmadan, hem Streamlit arayüzünü hem de FastAPI servisini tek komutla izole konteynerlerde ayağa kaldırabilirsiniz:
+```bash
+# Servisleri inşa et ve arka planda başlat
+docker compose up -d --build
+
+# Logları canlı takip etmek için
+docker compose logs -f
+```
+- **Streamlit Web Terminali:** `http://localhost:8501`
+- **FastAPI Entegrasyon Servisi:** `http://localhost:8000` (Swagger: `http://localhost:8000/docs`)
+- **Durdurmak için:** `docker compose down`
 
 ---
 

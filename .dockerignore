@@ -1,0 +1,24 @@
+# Python sanal ortamı ve önbellekler
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Git ve IDE ayarları
+.git/
+.gitignore
+.gitattributes
+.vscode/
+.idea/
+*.log
+
+# Geçici dosyalar
+*.tmp
+*.bak
+vectorstore/*backup*/
