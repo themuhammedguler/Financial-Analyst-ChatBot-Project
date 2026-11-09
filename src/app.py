@@ -62,11 +62,25 @@ st.markdown("""
     .main-header {
         font-size: 2.15rem;
         font-weight: 800;
-        background: linear-gradient(90deg, #FFFFFF 0%, #38BDF8 60%, #60A5FA 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #F8FAFC;
         margin-bottom: 0.3rem;
         letter-spacing: -0.02em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .main-header .brand-highlight {
+        color: #38BDF8;
+    }
+    .main-header .version-tag {
+        font-size: 0.78rem;
+        color: #38BDF8;
+        font-weight: 600;
+        padding: 3px 8px;
+        background: rgba(56, 189, 248, 0.12);
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        border-radius: 6px;
+        margin-left: 6px;
     }
     .sub-header {
         font-size: 0.98rem;
@@ -224,7 +238,15 @@ def get_company_badge(company_name: str) -> str:
 
 # --- KENAR ÇUBUĞU (SIDEBAR) ---
 with st.sidebar:
-    st.image("https://raw.githubusercontent.com/themuhammedguler/Financial-Analyst-ChatBot-Project/main/png/chatbot.png", use_container_width=True)
+    st.markdown("""
+    <div style="padding: 12px 14px; margin-bottom: 12px; background: linear-gradient(135deg, #0F172A, #1E293B); border: 1px solid #1E293B; border-radius: 10px; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 1.5rem;">📊</span>
+        <div>
+            <div style="font-weight: 700; font-size: 0.96rem; color: #F8FAFC; letter-spacing: -0.01em;">BIST ANALYTICS</div>
+            <div style="font-size: 0.73rem; color: #38BDF8; font-weight: 600;">KAP RAG & Temel Analiz</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     st.markdown("### ⚙️ Analiz & Filtre Paneli")
     
     # 1. Model Seçimi
@@ -376,7 +398,13 @@ with st.sidebar:
         )
 
 # --- ANA EKRAN VE BAŞLIK ---
-st.markdown('<div class="main-header">📈 BIST Finansal Analist Asistanı</div>', unsafe_allow_html=True)
+st.markdown("""
+<div class="main-header">
+    <span style="font-size: 2.1rem;">📈</span>
+    <span>BIST <span class="brand-highlight">Finansal Analist</span> Asistanı</span>
+    <span class="version-tag">Terminal v2.0</span>
+</div>
+""", unsafe_allow_html=True)
 st.markdown('<div class="sub-header">Borsa İstanbul şirketlerinin KAP\'ta yayımlanan resmi faaliyet raporları, bilançoları ve dipnotlarına dayalı kurumsal RAG analiz ve temel veri servisi.</div>', unsafe_allow_html=True)
 
 # Durum rozetleri
