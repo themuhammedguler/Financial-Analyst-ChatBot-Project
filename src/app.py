@@ -258,8 +258,14 @@ with st.sidebar:
         help="Finansal analizler için Gemini model versiyonu."
     )
 
-    # 2. Şirket Filtresi (Deep-linking ile otomatik eşleşme)
-    company_options = ["Tümü"] + list(COMPANIES.keys())
+    # 2. Şirket Filtresi (Deep-linking ile otomatik eşleşme - Türkçe Alfabetik Sıralı)
+    _tr_order = "aAbBcCçÇdDeEfFgGğĞhHıIİijJkKlLmMnNoOöÖpPrRsSşŞtTuUüÜvVyYzZ"
+    _tr_dict = {c: i for i, c in enumerate(_tr_order)}
+    def _tr_sort_key(text: str):
+        return [_tr_dict.get(c, ord(c) + 1000) for c in text]
+
+    sorted_company_names = sorted(list(COMPANIES.keys()), key=_tr_sort_key)
+    company_options = ["Tümü"] + sorted_company_names
     
     # Eğer URL'den geçerli bir şirket geldiyse varsayılan indeks olarak onu seç
     default_company_index = 0
@@ -340,7 +346,7 @@ with st.sidebar:
         st.caption("BIST 100 şirketlerinin raporlarını doğrudan indirip sisteme ekleyin.")
         bist_ticker_choice = st.selectbox(
             "Hisse Kodu (Ticker)",
-            options=list(BIST_100_COMPANIES.keys()),
+            options=sorted(list(BIST_100_COMPANIES.keys())),
             format_func=lambda x: f"{x} - {BIST_100_COMPANIES[x]['name'][:24]}...",
             index=0
         )

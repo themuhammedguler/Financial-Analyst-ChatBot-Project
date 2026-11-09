@@ -41,6 +41,24 @@ class TestQueryParamAndMapping:
         expected_url = f"{FORECASTER_BASE_URL}/?ticker={ticker}"
         assert expected_url == "https://bist-trend-forecaster.streamlit.app/?ticker=THYAO"
 
+    def test_company_filter_alphabetical_sorting(self):
+        from src.config import COMPANIES
+        _tr_order = "aAbBcCçÇdDeEfFgGğĞhHıIİijJkKlLmMnNoOöÖpPrRsSşŞtTuUüÜvVyYzZ"
+        _tr_dict = {c: i for i, c in enumerate(_tr_order)}
+        def _tr_sort_key(text: str):
+            return [_tr_dict.get(c, ord(c) + 1000) for c in text]
+
+        sorted_companies = sorted(list(COMPANIES.keys()), key=_tr_sort_key)
+        company_options = ["Tümü"] + sorted_companies
+        assert company_options[0] == "Tümü"
+        # First company should start with 'A'
+        assert company_options[1].startswith("A")
+        # Ensure Turkish C / Ç ordering
+        c_index = next(i for i, name in enumerate(company_options) if name.startswith("C"))
+        ç_index = next(i for i, name in enumerate(company_options) if name.startswith("Ç"))
+        assert c_index < ç_index
+
+
 
 class TestFundamentalReportSchema:
     """Standart Yapılandırılmış Çıktı ve Pydantic Doğrulama Testleri (2. Adım)"""
@@ -204,6 +222,57 @@ class TestFastAPIIntegration:
         assert "key_metrics" in data
         assert "catalysts" in data
         assert "risk_factors" in data
+
+    def test_sentiment_summary_endpoint(self, client):
+        response = client.get("/api/v1/sentiment/summary")
+        assert response.status_code == 200
+        data = response.json()
+        assert "total_reports" in data
+        assert data["total_reports"] >= 1
+        assert "average_sentiment_score" in data
+        assert "sentiment_breakdown" in data
+        assert "positive_ratio" in data
+        assert "top_bullish_tickers" in data
+        assert "top_bearish_tickers" in data
+        assert "available_tickers" in data
+        assert isinstance(data["available_tickers"], list)
+        assert len(data["top_bullish_tickers"]) <= 3
+        assert len(data["top_bearish_tickers"]) <= 3
+
+    def test_sentiment_top_bullish_endpoint(self, client):
+        response = client.get("/api/v1/sentiment/top-bullish?limit=3")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["category"] == "bullish"
+        assert data["limit"] == 3
+        assert len(data["rankings"]) <= 3
+        if data["rankings"]:
+            # Check descending order
+            scores = [r["sentiment_score"] for r in data["rankings"]]
+            assert scores == sorted(scores, reverse=True)
+            first_rank = data["rankings"][0]
+            assert first_rank["rank"] == 1
+            assert "ticker" in first_rank
+            assert "sentiment_label" in first_rank
+            assert "key_metrics" in first_rank
+
+    def test_sentiment_top_bearish_endpoint(self, client):
+        response = client.get("/api/v1/sentiment/top-bearish?limit=3")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["category"] == "bearish"
+        assert data["limit"] == 3
+        assert len(data["rankings"]) <= 3
+        if data["rankings"]:
+            # Check ascending order
+            scores = [r["sentiment_score"] for r in data["rankings"]]
+            assert scores == sorted(scores)
+            first_rank = data["rankings"][0]
+            assert first_rank["rank"] == 1
+            assert "ticker" in first_rank
+            assert "sentiment_label" in first_rank
+            assert "key_metrics" in first_rank
+
 
 
 class TestHallucinationGuardAndBenchmark:

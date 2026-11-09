@@ -56,3 +56,37 @@ class FundamentalReport(BaseModel):
         with open(Path(path), "r", encoding="utf-8") as f:
             data = json.load(f)
         return cls(**data)
+
+
+class SentimentRankItem(BaseModel):
+    """Hisse duygu sıralaması öğesi."""
+    rank: int = Field(..., description="Sıralama pozisyonu (1'den başlar)")
+    ticker: str = Field(..., description="BIST Hisse Kodu")
+    company_name: str = Field(..., description="Şirket Ticari Unvanı")
+    sentiment_score: float = Field(..., description="Duygu skoru (-1.0 ile +1.0 arası)")
+    sentiment_label: Literal["Pozitif", "Nötr", "Negatif"] = Field(..., description="Duygu etiketi")
+    fundamental_summary: str = Field(..., description="Kısa temel analiz özeti")
+    key_metrics: KeyMetrics = Field(..., description="Temel rasyolar")
+    catalysts: List[str] = Field(default_factory=list, description="Katalizörler")
+    risk_factors: List[str] = Field(default_factory=list, description="Risk faktörleri")
+    report_date: str = Field(..., description="Rapor üretim tarihi")
+
+
+class SentimentRankResponse(BaseModel):
+    """Duygu sıralaması yanıt modeli (Top-Bullish veya Top-Bearish)."""
+    category: Literal["bullish", "bearish"] = Field(..., description="Sıralama kategorisi")
+    count: int = Field(..., description="Dönen hisse sayısı")
+    limit: int = Field(..., description="İstenen limit")
+    rankings: List[SentimentRankItem] = Field(default_factory=list, description="Sıralı hisse listesi")
+
+
+class SentimentSummaryResponse(BaseModel):
+    """Piyasa geneli duygu özeti modeli."""
+    total_reports: int = Field(..., description="İncelenen toplam şirket raporu sayısı")
+    average_sentiment_score: float = Field(..., description="Ortalama duygu skoru")
+    sentiment_breakdown: Dict[str, int] = Field(..., description="Etiket dağılımı: Pozitif, Nötr, Negatif sayıları")
+    positive_ratio: float = Field(..., description="Pozitif duyguya sahip şirketlerin oranı (0.0 - 1.0)")
+    top_bullish_tickers: List[str] = Field(default_factory=list, description="En yüksek skora sahip hisseler")
+    top_bearish_tickers: List[str] = Field(default_factory=list, description="En düşük skora sahip hisseler")
+    available_tickers: List[str] = Field(default_factory=list, description="Mevcut raporu bulunan tüm hisseler")
+
