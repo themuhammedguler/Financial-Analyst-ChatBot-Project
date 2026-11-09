@@ -335,7 +335,7 @@ with st.sidebar:
     model_option = st.selectbox(
         "🧠 Yapay Zeka Modeli",
         options=[DEFAULT_LLM_MODEL, ADVANCED_LLM_MODEL],
-        format_func=lambda x: "Gemini Flash Lite (Ultra Hızlı ~1s)" if "lite" in x else "Gemini 3 Flash (Derin Finansal Muhakeme)",
+        format_func=lambda x: "Gemini 3.1 Flash Lite (Ultra Hızlı ~1s)" if "3.1" in x else "Gemini 3.5 Flash Lite (Derin Finansal Muhakeme)",
         index=0,
         help="Finansal analizler için Gemini model versiyonu."
     )

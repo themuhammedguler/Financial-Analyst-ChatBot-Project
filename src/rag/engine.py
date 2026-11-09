@@ -279,8 +279,8 @@ class FinancialRAGEngine:
         context_str = "\n".join(context_parts)
         prompt_text = FINANCIAL_PROMPT.format(context=context_str, question=question)
 
-        # Aktif ve kotasız çalışan ultra hızlı modeller
-        active_models = ["gemini-flash-lite-latest", "gemini-3-flash-preview"]
+        # Aktif ve kotasız çalışan ultra hızlı modeller (v1 ve v1beta tam uyumlu)
+        active_models = ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite"]
         models_to_try = []
         if self.model_name in active_models:
             models_to_try.append(self.model_name)
@@ -364,8 +364,8 @@ class FinancialRAGEngine:
 
         yield {"type": "status", "message": "⚡ Finansal analist yanıtı hazırlanıyor ve doğrulanıyor..."}
 
-        # Aktif ve kotasız çalışan ultra hızlı modeller
-        active_models = ["gemini-flash-lite-latest", "gemini-3-flash-preview"]
+        # Aktif ve kotasız çalışan ultra hızlı modeller (v1 ve v1beta tam uyumlu)
+        active_models = ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite"]
         models_to_try = []
         if self.model_name in active_models:
             models_to_try.append(self.model_name)
