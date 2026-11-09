@@ -160,6 +160,9 @@ class FinancialRAGEngine:
         if not self._vector_db:
             return []
 
+        # Detay derinliği için asgari getirme sayısını koru
+        top_k = max(top_k, 6)
+
         # Otomatik filtre tespiti
         auto_filters = self.detect_filters(query)
         effective_company = company_filter if company_filter and company_filter != "Tümü" else auto_filters["company"]
@@ -174,22 +177,36 @@ class FinancialRAGEngine:
             except ValueError:
                 pass
 
-        # 1. Dense (FAISS) Arama
+        # 1. Finansal Terim ve Eş Anlamlı Genişletmesi (Query Expansion)
+        expanded_query = query
+        q_lower = query.lower()
+        if "kâr" in q_lower or "kar" in q_lower:
+            expanded_query += " net kâr dönem kârı faaliyet kârı favök ebitda"
+        elif any(w in q_lower for w in ["hasılat", "gelir", "satış", "ciro"]):
+            expanded_query += " hasılat satış gelirleri net satışlar faaliyet gelirleri"
+        elif any(w in q_lower for w in ["borç", "yükümlülük", "kredi"]):
+            expanded_query += " finansal borçlar kısa vadeli yükümlülükler net borç"
+        elif "özkaynak" in q_lower or "özsermaye" in q_lower:
+            expanded_query += " ana ortaklığa ait özkaynaklar ödenmiş sermaye"
+        elif "temettü" in q_lower:
+            expanded_query += " kâr payı dağıtımı temettü nakit kâr payı"
+
+        # 2. Dense (FAISS) Arama
         dense_docs = []
         try:
-            dense_docs = self._vector_db.similarity_search(query, k=top_k * 2)
+            dense_docs = self._vector_db.similarity_search(expanded_query, k=top_k * 2)
         except Exception as e:
             print(f"[RAGEngine] FAISS arama hatası: {e}")
 
-        # 2. Sparse (BM25) Arama
+        # 3. Sparse (BM25) Arama
         sparse_docs = []
         if use_hybrid and self._bm25_retriever:
             try:
-                sparse_docs = self._bm25_retriever.invoke(query)
+                sparse_docs = self._bm25_retriever.invoke(expanded_query)
             except Exception as e:
                 print(f"[RAGEngine] BM25 arama hatası: {e}")
 
-        # 3. Reciprocal Rank Fusion (RRF) ile Skorlama
+        # 4. Reciprocal Rank Fusion (RRF) ile Skorlama
         doc_scores: Dict[str, float] = {}
         doc_map: Dict[str, Document] = {}
 
@@ -204,6 +221,23 @@ class FinancialRAGEngine:
             key = f"{doc.metadata.get('file_name', '')}_{doc.metadata.get('page', '')}_{doc.page_content[:50]}"
             doc_scores[key] = doc_scores.get(key, 0.0) + (0.4 / (60 + rank))
             doc_map[key] = doc
+
+        # 5. Bölüm & Finansal Tablo Odaklı Bonus Skorlama (Section Boosting)
+        target_section = None
+        if any(w in q_lower for w in ["bilanço", "borç", "varlık", "alacak", "kasa"]):
+            target_section = "Bilanço"
+        elif any(w in q_lower for w in ["kâr", "kar", "gelir", "hasılat", "favök", "ebitda", "satış", "marj"]):
+            target_section = "Gelir Tablosu"
+        elif any(w in q_lower for w in ["nakit", "serbest nakit", "cash flow"]):
+            target_section = "Nakit Akış"
+        elif any(w in q_lower for w in ["dipnot", "not ", "detay"]):
+            target_section = "Dipnot"
+
+        if target_section:
+            for key, doc in doc_map.items():
+                sec = doc.metadata.get("section", "")
+                if target_section.lower() in sec.lower():
+                    doc_scores[key] *= 1.35
 
         # RRF skoruna göre azalan sırada sırala
         ranked_keys = sorted(doc_scores.keys(), key=lambda k: doc_scores[k], reverse=True)
