@@ -1,0 +1,183 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" width="1200" height="480">
+  <defs>
+    <!-- Background Gradients -->
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#060911" />
+      <stop offset="50%" stop-color="#0A1120" />
+      <stop offset="100%" stop-color="#050811" />
+    </linearGradient>
+
+    <linearGradient id="card-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E1729" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#0B1220" stop-opacity="0.9" />
+    </linearGradient>
+
+    <!-- Accent Gradients -->
+    <linearGradient id="cyan-glow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#0284C7" />
+    </linearGradient>
+
+    <linearGradient id="green-glow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+
+    <linearGradient id="purple-glow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#818CF8" />
+      <stop offset="100%" stop-color="#6366F1" />
+    </linearGradient>
+
+    <linearGradient id="amber-glow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F59E0B" />
+      <stop offset="100%" stop-color="#D97706" />
+    </linearGradient>
+
+    <!-- Filter Shadows -->
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.5" />
+    </filter>
+  </defs>
+
+  <!-- Background Layer -->
+  <rect width="1200" height="480" fill="url(#bg-grad)" rx="16" />
+
+  <!-- Grid Overlay Pattern -->
+  <g opacity="0.06">
+    <path d="M0,60 H1200 M0,120 H1200 M0,180 H1200 M0,240 H1200 M0,300 H1200 M0,360 H1200 M0,420 H1200" stroke="#FFFFFF" stroke-width="1" />
+    <path d="M100,0 V480 M200,0 V480 M300,0 V480 M400,0 V480 M500,0 V480 M600,0 V480 M700,0 V480 M800,0 V480 M900,0 V480 M1000,0 V480 M1100,0 V480" stroke="#FFFFFF" stroke-width="1" />
+  </g>
+
+  <!-- Top Ambient Glow -->
+  <circle cx="600" cy="0" r="300" fill="#38BDF8" opacity="0.08" />
+  <circle cx="1050" cy="380" r="220" fill="#10B981" opacity="0.05" />
+
+  <!-- HEADER SECTION -->
+  <g transform="translate(60, 48)">
+    <!-- Pill Badge -->
+    <rect width="210" height="28" rx="14" fill="#0E1A30" stroke="#1E293B" />
+    <circle cx="14" cy="14" r="5" fill="#10B981" />
+    <text x="28" y="18" fill="#38BDF8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" letter-spacing="1">BIST FINTECH ECOSYSTEM</text>
+
+    <!-- Title -->
+    <text x="0" y="68" fill="#F8FAFC" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="800">BIST Finansal Analist Asistanı</text>
+    <text x="0" y="94" fill="#94A3B8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="400">Kurumsal BIST RAG Terminali • Hibrit Vektör Arama • DuPont &amp; Altman Risk Motoru • Portföy Simülatörü</text>
+  </g>
+
+  <!-- METRIC BADGES (TOP RIGHT) -->
+  <g transform="translate(860, 45)">
+    <rect width="280" height="54" rx="10" fill="#0B1322" stroke="#1E293B" />
+    <g transform="translate(18, 16)">
+      <text x="0" y="14" fill="#10B981" font-family="monospace" font-size="16" font-weight="800">42 / 42</text>
+      <text x="0" y="28" fill="#64748B" font-family="-apple-system, sans-serif" font-size="10" font-weight="600">TEST SUITE (CI)</text>
+    </g>
+    <line x1="95" y1="12" x2="95" y2="42" stroke="#1E293B" stroke-width="1" />
+    <g transform="translate(112, 16)">
+      <text x="0" y="14" fill="#38BDF8" font-family="monospace" font-size="16" font-weight="800">100 / 100</text>
+      <text x="0" y="28" fill="#64748B" font-family="-apple-system, sans-serif" font-size="10" font-weight="600">BIST KAPSAMI</text>
+    </g>
+    <line x1="190" y1="12" x2="190" y2="42" stroke="#1E293B" stroke-width="1" />
+    <g transform="translate(208, 16)">
+      <text x="0" y="14" fill="#F59E0B" font-family="monospace" font-size="16" font-weight="800">&lt; 2.0s</text>
+      <text x="0" y="28" fill="#64748B" font-family="-apple-system, sans-serif" font-size="10" font-weight="600">YANIT SÜRESİ</text>
+    </g>
+  </g>
+
+  <!-- ARCHITECTURE / FEATURE CARDS (5 MODULES) -->
+
+  <!-- CARD 1: Hibrit RAG & Gemini LLM -->
+  <g transform="translate(60, 170)" filter="url(#shadow)">
+    <rect width="205" height="260" rx="12" fill="url(#card-grad)" stroke="#1E293B" stroke-width="1.2" />
+    <rect width="205" height="3" fill="url(#cyan-glow)" rx="1.5" />
+    <circle cx="34" cy="36" r="16" fill="rgba(56,189,248,0.12)" />
+    <text x="27" y="42" font-size="16">🧠</text>
+    <text x="60" y="34" fill="#F8FAFC" font-family="-apple-system, sans-serif" font-size="14" font-weight="700">Hibrit RAG</text>
+    <text x="60" y="49" fill="#38BDF8" font-family="-apple-system, sans-serif" font-size="10" font-weight="600">FAISS + BM25</text>
+    <path d="M20,72 H185" stroke="#1E293B" stroke-width="1" />
+    
+    <text x="20" y="98" fill="#CBD5E1" font-family="-apple-system, sans-serif" font-size="11" font-weight="500">• Dense + Sparse RRF</text>
+    <text x="20" y="122" fill="#CBD5E1" font-family="-apple-system, sans-serif" font-size="11" font-weight="500">• Gemini 3.1 &amp; 3.5 Flash</text>
+    <text x="20" y="146" fill="#CBD5E1" font-family="-apple-system, sans-serif" font-size="11" font-weight="500">• Bilanço Dipnot Arama</text>
+    <text x="20" y="170" fill="#CBD5E1" font-family="-apple-system, sans-serif" font-size="11" font-weight="500">• Hallucination Guard</text>
+
+    <!-- Mini Indicator -->
+    <rect x="20" y="206" width="165" height="30" rx="6" fill="#080D1A" stroke="#1E293B" />
+    <text x="32" y="225" fill="#94A3B8" font-family="monospace" font-size="10">Doğruluk Oranı: %99.4</text>
+  </g>
+
+  <!-- CARD 2: Canlı Mum & Teknik Analiz -->
+  <g transform="translate(285, 170)" filter="url(#shadow)">
+    <rect width="205" height="260" rx="12" fill="url(#card-grad)" stroke="#1E293B" stroke-width="1.2" />
+    <rect width="205" height="3" fill="url(#green-glow)" rx="1.5" />
+    <circle cx="34" cy="36" r="16" fill="rgba(16,185,129,0.12)" />
+    <text x="27" y="42" font-size="16">📈</text>
+    <text x="60" y="34" fill="#F8FAFC" font-family="-apple-system, sans-serif" font-size="14" font-weight="700">Piyasa &amp; Mum</text>
+    <text x="60" y="49" fill="#10B981" font-family="-apple-system, sans-serif" font-size="10" font-weight="600">Canlı BIST (.IS)</text>
+    <path d="M20,72 H185" stroke="#1E293B" stroke-width="1" />
+
+    <text x="20" y="98" fill="#CBD5E1" font-family="-apple-system, sans-serif" font-size="11" font-weight="500">• Plotly Candlestick</text>
+    <text x="20" y="122" fill="#CBD5E1" font-family="-apple-system, sans-serif" font-size="11" font-weight="500">• SMA 20 / 50 / 200</text>
+    <text x="20" y="146" fill="#CBD5E1" font-family="-apple-system, sans-serif" font-size="11" font-weight="500">• 14 Günlük RSI</text>
+    <text x="20" y="170" fill="#CBD5E1" font-family="-apple-system, sans-serif" font-size="11" font-weight="500">• Hacim &amp; Çarpanlar</text>
+
+    <rect x="20" y="206" width="165" height="30" rx="6" fill="#080D1A" stroke="#1E293B" />
+    <text x="32" y="225" fill="#10B981" font-family="monospace" font-size="10">Gerçek Zamanlı Veri</text>
+  </g>
+
+  <!-- CARD 3: DuPont & Altman Z-Score (YENİ) -->
+  <g transform="translate(510, 170)" filter="url(#shadow)">
+    <rect width="205" height="260" rx="12" fill="url(#card-grad)" stroke="#1E293B" stroke-width="1.2" />
+    <rect width="205" height="3" fill="url(#purple-glow)" rx="1.5" />
+    <circle cx="34" cy="36" r="16" fill="rgba(129,140,248,0.12)" />
+    <text x="27" y="42" font-size="16">🔬</text>
+    <text x="60" y="34" fill="#F8FAFC" font-family="-apple-system, sans-serif" font-size="14" font-weight="700">DuPont &amp; Altman</text>
+    <text x="60" y="49" fill="#818CF8" font-family="-apple-system, sans-serif" font-size="10" font-weight="600">Derin Rasyolar</text>
+    <path d="M20,72 H185" stroke="#1E293B" stroke-width="1" />
+
+    <text x="20" y="98" fill="#CBD5E1" font-family="-apple-system, sans-serif" font-size="11" font-weight="500">• 3 Aşamalı DuPont ROE</text>
+    <text x="20" y="122" fill="#CBD5E1" font-family="-apple-system, sans-serif" font-size="11" font-weight="500">• Marj × Devir × Kaldıraç</text>
+    <text x="20" y="146" fill="#CBD5E1" font-family="-apple-system, sans-serif" font-size="11" font-weight="500">• Altman Z İflas İndeksi</text>
+    <text x="20" y="170" fill="#CBD5E1" font-family="-apple-system, sans-serif" font-size="11" font-weight="500">• Güvenli / Gri / Stres</text>
+
+    <rect x="20" y="206" width="165" height="30" rx="6" fill="#080D1A" stroke="#1E293B" />
+    <text x="32" y="225" fill="#818CF8" font-family="monospace" font-size="10">Risk &amp; Kârlılık Kökü</text>
+  </g>
+
+  <!-- CARD 4: Portföy Risk & Kelly Rebalancing (YENİ) -->
+  <g transform="translate(735, 170)" filter="url(#shadow)">
+    <rect width="205" height="260" rx="12" fill="url(#card-grad)" stroke="#1E293B" stroke-width="1.2" />
+    <rect width="205" height="3" fill="url(#amber-glow)" rx="1.5" />
+    <circle cx="34" cy="36" r="16" fill="rgba(245,158,11,0.12)" />
+    <text x="27" y="42" font-size="16">💼</text>
+    <text x="60" y="34" fill="#F8FAFC" font-family="-apple-system, sans-serif" font-size="14" font-weight="700">Portföy Risk</text>
+    <text x="60" y="49" fill="#F59E0B" font-family="-apple-system, sans-serif" font-size="10" font-weight="600">Kelly Kriteri</text>
+    <path d="M20,72 H185" stroke="#1E293B" stroke-width="1" />
+
+    <text x="20" y="98" fill="#CBD5E1" font-family="-apple-system, sans-serif" font-size="11" font-weight="500">• Çoklu Hisse Simülasyonu</text>
+    <text x="20" y="122" fill="#CBD5E1" font-family="-apple-system, sans-serif" font-size="11" font-weight="500">• Sektörel Dağılım Donut</text>
+    <text x="20" y="146" fill="#CBD5E1" font-family="-apple-system, sans-serif" font-size="11" font-weight="500">• Ağırlıklı 5D Karne Radarı</text>
+    <text x="20" y="170" fill="#CBD5E1" font-family="-apple-system, sans-serif" font-size="11" font-weight="500">• Dinamik Yeniden Dengeleme</text>
+
+    <rect x="20" y="206" width="165" height="30" rx="6" fill="#080D1A" stroke="#1E293B" />
+    <text x="32" y="225" fill="#F59E0B" font-family="monospace" font-size="10">Sermaye Tahsisi</text>
+  </g>
+
+  <!-- CARD 5: BIST-Trend-Forecaster Senkronizasyonu -->
+  <g transform="translate(960, 170)" filter="url(#shadow)">
+    <rect width="180" height="260" rx="12" fill="url(#card-grad)" stroke="#1E293B" stroke-width="1.2" />
+    <rect width="180" height="3" fill="url(#cyan-glow)" rx="1.5" />
+    <circle cx="34" cy="36" r="16" fill="rgba(56,189,248,0.12)" />
+    <text x="27" y="42" font-size="16">⚡</text>
+    <text x="60" y="34" fill="#F8FAFC" font-family="-apple-system, sans-serif" font-size="14" font-weight="700">Kardeş Proje</text>
+    <text x="60" y="49" fill="#38BDF8" font-family="-apple-system, sans-serif" font-size="10" font-weight="600">Forecaster</text>
+    <path d="M20,72 H160" stroke="#1E293B" stroke-width="1" />
+
+    <text x="18" y="98" fill="#CBD5E1" font-family="-apple-system, sans-serif" font-size="11" font-weight="500">• FastAPI Endpoints</text>
+    <text x="18" y="122" fill="#CBD5E1" font-family="-apple-system, sans-serif" font-size="11" font-weight="500">• %60 Temel + %40 Tek.</text>
+    <text x="18" y="146" fill="#CBD5E1" font-family="-apple-system, sans-serif" font-size="11" font-weight="500">• Çift Yönlü Deep Link</text>
+    <text x="18" y="170" fill="#CBD5E1" font-family="-apple-system, sans-serif" font-size="11" font-weight="500">• Hibrit Karar Kartı</text>
+
+    <rect x="18" y="206" width="144" height="30" rx="6" fill="#080D1A" stroke="#1E293B" />
+    <text x="28" y="225" fill="#38BDF8" font-family="monospace" font-size="10">368 Sibling Test</text>
+  </g>
+</svg>

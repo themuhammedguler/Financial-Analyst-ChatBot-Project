@@ -12,10 +12,16 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-REST%20Endpoints-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![CI](https://github.com/themuhammedguler/Financial-Analyst-ChatBot-Project/actions/workflows/ci.yml/badge.svg)](https://github.com/themuhammedguler/Financial-Analyst-ChatBot-Project/actions/workflows/ci.yml)
 [![Docker](https://img.shields.io/badge/Docker-Multi--Container-2496ED?logo=docker&logoColor=white)](docker-compose.yml)
-[![Tests](https://img.shields.io/badge/Tests-34%2F34%20Passing-success?logo=pytest&logoColor=white)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-42%2F42%20Passing-success?logo=pytest&logoColor=white)](tests/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**Kamuyu Aydınlatma Platformu'nda (KAP) yayımlanan resmi faaliyet raporlarını, bilançoları ve finansal dipnotları analiz eden; Hibrit Vektör Arama, Halüsinasyon Savunması ve Çift Yönlü Karar Destek Entegrasyonuna sahip yeni nesil Finansal RAG Terminali.**
+<br/>
+
+<img src="assets/bist_analyst_hero.svg" alt="BIST Finansal Analist Asistanı Mimari Görünümü" width="100%" />
+
+<br/>
+
+**Kamuyu Aydınlatma Platformu'nda (KAP) yayımlanan resmi faaliyet raporlarını, bilançoları ve finansal dipnotları analiz eden; Hibrit Vektör Arama, DuPont ROE Modeli, Altman Z-Skoru, Portföy Risk Simülatörü ve Çift Yönlü Karar Destek Entegrasyonuna sahip yeni nesil Finansal RAG Terminali.**
 
 [🌐 Canlı Web Terminali](https://financial-analyst-chatbot-project.streamlit.app/) • [🤖 BIST-Trend-Forecaster](https://bist-trend-forecaster.streamlit.app/) • [📚 API Dokümantasyonu](#-fastapi-rest-entegrasyon-servisi) • [🚀 Hızlı Başlangıç](#-hızlı-başlangıç--kurulum)
 
@@ -37,6 +43,8 @@ Platform, teknik analiz ve kantitatif tahmin motoru olan **[BIST-Trend-Forecaste
 | :--- | :--- |
 | **🔍 Hibrit Belge Arama (Dense + Sparse)** | Anlamsal benzerlik için **FAISS** vektör aramasını, rasyo, sayı ve dipnot numaraları tam eşleşmesi için **BM25** aramasını **Reciprocal Rank Fusion (RRF)** ile harmanlar. |
 | **📈 Canlı Piyasa & Mum Grafiği** | Yahoo Finance canlı BIST (.IS) entegrasyonu: Plotly interaktif Candlestick (mum) grafiği, işlem hacmi, SMA 20/50/200 trend çizgileri ve 14 günlük RSI. |
+| **🔬 DuPont & Altman Z-Skoru** | **3 Aşamalı DuPont Modeli** (Net Kâr Marjı × Aktif Devir Hızı × Finansal Kaldıraç) ve **Altman Z-Skoru** ile iflas/stres dayanıklılık analizi. |
+| **💼 Portföy Risk Simülatörü** | Çoklu hisse portföyü, ağırlıklı sağlık & duygu puanı, sektörel çeşitlendirme (Donut) ve **Kelly Kriteri dinamik yeniden dengeleme (rebalancing)**. |
 | **⚖️ Çift Şirket Kıyaslama & Çift Radar** | İki şirketin 5 boyutlu finansal profilini aynı radar üzerinde çakıştıran (Dual Radar) ve rasyoları yan yana mukayese eden **Peer-to-Peer Karşılaştırma Matrisi**. |
 | **📄 Tek Tıkla Kurumsal Rapor İhracı** | Yönetici özeti, 5D karne çubukları, çarpanlar, katalizörler ve Kelly kararını içeren antetli **yazdırılabilir (Print to PDF / HTML) Araştırma Notu**. |
 | **📢 Canlı KAP Akışı & Fırsat Radarı** | BIST şirketlerinin Kamuyu Aydınlatma Platformu'ndaki son dakika bildirimleri (yeni iş ilişkisi, temettü, ihraç) ve yapay zeka duygu etiketlemesi (Pozitif/Nötr/Riskli). |
@@ -246,15 +254,18 @@ Sistem, **Ragas** ve **TruLens** endüstriyel metrikleri baz alınarak tuzak sor
 
 ## 🧪 Testleri Çalıştırma
 
-Tüm entegrasyon, Pydantic şema doğrulaması ve API uç noktası testlerini çalıştırmak için:
+Tüm entegrasyon, Pydantic şema doğrulaması, canlı piyasa grafikleri, portföy simülatörü ve DuPont/Altman testlerini çalıştırmak için:
 
 ```bash
-pytest tests/test_integration.py -v
+pytest tests/ -v
 ```
 
 ```
-tests/test_integration.py .........................  [100%]
-======================= 25 passed, 1 warning in 4.96s =======================
+collected 42 items
+tests/test_features.py ......................... [ 21%]
+tests/test_integration.py ...................... [ 80%]
+tests/test_portfolio_dupont.py ................ [100%]
+======================= 42 passed, 1 warning in 15.40s =======================
 ```
 
 ---

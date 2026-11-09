@@ -13,6 +13,7 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 import streamlit as st
+import pandas as pd
 from src.config import (
     GOOGLE_API_KEY,
     DEFAULT_LLM_MODEL,
@@ -37,6 +38,8 @@ from src.market_data import fetch_ticker_market_data, create_candlestick_chart
 from src.comparison import create_comparison_radar_chart, generate_peer_comparison_summary
 from src.export_report import generate_executive_html_report
 from src.kap_feed import get_recent_kap_disclosures
+from src.portfolio import analyze_portfolio, create_sector_donut_chart, create_portfolio_radar_chart
+from src.dupont_analysis import calculate_dupont_model, calculate_altman_z_score, create_dupont_breakdown_chart
 
 # --- CHATBOT LOGO VE AVATAR YAPILANDIRMASI ---
 AVATAR_ORIGINAL_PATH = project_root / "png" / "Chatbot_avatar_logo_design_ae724d6f.jpg"
@@ -720,11 +723,12 @@ if "messages" not in st.session_state or not st.session_state.messages:
         {"role": "assistant", "content": welcome_content}
     ]
 
-# --- ANA SEKMELER: SOHBET, GRAFİK, KIYASLAMA VE KAP AKIŞI ---
-tab_chat, tab_chart, tab_compare, tab_kap = st.tabs([
+# --- ANA SEKMELER: SOHBET, GRAFİK, KIYASLAMA, PORTFÖY VE KAP AKIŞI ---
+tab_chat, tab_chart, tab_compare, tab_port, tab_kap = st.tabs([
     "💬 Finansal Analist Sohbeti",
     "📈 Fiyat & Mum Grafiği",
     "⚖️ Çift Şirket Kıyaslama",
+    "💼 Portföy Risk Simülatörü",
     "📢 Canlı KAP Akışı & Radar"
 ])
 
@@ -941,6 +945,67 @@ with tab_chart:
     else:
         st.warning(f"{chart_ticker} için canlı fiyat verisi alınamadı veya piyasa kapalı. Lütfen daha sonra tekrar deneyiniz.")
 
+    # --- DERİN FİNANSAL RASYOLAR: DUPONT & ALTMAN Z-SKORU ---
+    st.markdown("---")
+    st.markdown(f"#### 🔬 {chart_ticker} Derin Finansal Rasyolar & Risk Dayanıklılığı")
+    st.caption("3 Aşamalı DuPont Modeli (Kârlılık Sürücüleri) ve Altman Z-Skoru (Finansal Dayanıklılık ve İflas Riski İndeksi).")
+
+    with st.spinner(f"{chart_ticker} için DuPont ve Altman Z-Skoru hesaplanıyor..."):
+        dupont_res = calculate_dupont_model(chart_ticker)
+        altman_res = calculate_altman_z_score(chart_ticker, dupont_res)
+
+    col_dp1, col_dp2 = st.columns([1, 1])
+    with col_dp1:
+        st.markdown(f"""
+        <div style="background: #0D1422; border: 1px solid #1E293B; border-radius: 10px; padding: 16px; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-weight: 700; color: #F8FAFC; font-size: 0.95rem;">🛡️ Altman Z-Skoru (İflas/Stres Riski)</span>
+                {altman_res['badge_html']}
+            </div>
+            <div style="font-size: 1.8rem; font-weight: 800; color: {altman_res['zone_color']}; margin: 6px 0;">
+                Z = {altman_res['z_score']:.2f}
+            </div>
+            <p style="font-size: 0.82rem; color: #CBD5E1; margin-bottom: 12px; line-height: 1.5;">
+                {altman_res['interpretation']}
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 0.78rem; color: #94A3B8; background: #080C14; padding: 10px; border-radius: 8px;">
+                <div><b>X1 Likidite:</b> {altman_res['components']['Likidite (X1)']:.2f}</div>
+                <div><b>X2 Küm. Kâr:</b> {altman_res['components']['Kümülatif Kârlılık (X2)']:.2f}</div>
+                <div><b>X3 Faaliyet Get.:</b> {altman_res['components']['Faaliyet Getirisi (X3)']:.2f}</div>
+                <div><b>X4 Kaldıraç:</b> {altman_res['components']['Kaldıraç Gücü (X4)']:.2f}</div>
+                <div style="grid-column: span 2;"><b>X5 Varlık Verimi:</b> {altman_res['components']['Varlık Verimi (X5)']:.2f}</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_dp2:
+        st.markdown(f"""
+        <div style="background: #0D1422; border: 1px solid #1E293B; border-radius: 10px; padding: 16px; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-weight: 700; color: #F8FAFC; font-size: 0.95rem;">🧬 DuPont 3-Aşamalı ROE Ayrıştırması</span>
+                <span style="background: rgba(56, 189, 248, 0.15); color: #38BDF8; border: 1px solid #38BDF8; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">
+                    ROE: %{dupont_res['roe_pct']:.1f}
+                </span>
+            </div>
+            <div style="font-size: 0.85rem; color: #94A3B8; margin-bottom: 6px;">
+                <b>Ana Sürücü:</b> <span style="color: #38BDF8; font-weight: 600;">{dupont_res['driver']}</span>
+            </div>
+            <p style="font-size: 0.82rem; color: #CBD5E1; margin-bottom: 10px; line-height: 1.4;">
+                {dupont_res['quality_assessment']}
+            </p>
+            <div style="display: flex; justify-content: space-between; font-size: 0.78rem; background: #080C14; padding: 8px 10px; border-radius: 8px; color: #E2E8F0;">
+                <span><b>Net Marj:</b> %{dupont_res['net_profit_margin_pct']:.1f}</span>
+                <span>✖</span>
+                <span><b>Aktif Devir:</b> {dupont_res['asset_turnover']:.2f}x</span>
+                <span>✖</span>
+                <span><b>Kaldıraç:</b> {dupont_res['equity_multiplier']:.2f}x</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    fig_dupont = create_dupont_breakdown_chart(dupont_res, chart_ticker)
+    st.plotly_chart(fig_dupont, use_container_width=True, config={"displayModeBar": False})
+
 
 # --- 3. SEKME: ÇİFT ŞİRKET KIYASLAMA ---
 with tab_compare:
@@ -1007,7 +1072,119 @@ with tab_compare:
         st.markdown(matrix_md)
 
 
-# --- 4. SEKME: CANLI KAP BİLDİRİMLERİ ---
+# --- 4. SEKME: PORTFÖY RİSK & TEMEL SAĞLIK SİMÜLATÖRÜ ---
+with tab_port:
+    st.markdown("### 💼 BIST Portföy Risk & Temel Sağlık Simülatörü")
+    st.caption("Çoklu hisse portföyünüzün ağırlıklı finansal sağlık puanını, sektörel yoğunlaşma riskini ve Kelly Kriterine dayalı dinamik ağırlık optimizasyonunu hesaplayın.")
+
+    if "portfolio_items" not in st.session_state:
+        st.session_state.portfolio_items = [
+            {"ticker": "THYAO", "weight": 35.0},
+            {"ticker": "TUPRS", "weight": 30.0},
+            {"ticker": "AKBNK", "weight": 20.0},
+            {"ticker": "EREGL", "weight": 15.0},
+        ]
+
+    port_col1, port_col2 = st.columns([1, 2])
+
+    with port_col1:
+        st.markdown("##### ➕ Portföy Varlıkları & Ağırlıklar")
+        all_bist = sorted(list(BIST_100_COMPANIES.keys()))
+
+        with st.form("add_stock_to_portfolio_form", clear_on_submit=True):
+            add_ticker = st.selectbox("Hisse Ekle", options=all_bist, index=0)
+            add_weight = st.number_input("Hedef Ağırlık (%)", min_value=1.0, max_value=100.0, value=20.0, step=5.0)
+            submitted_add = st.form_submit_button("➕ Portföye Ekle / Güncelle", use_container_width=True)
+            if submitted_add:
+                existing = [it for it in st.session_state.portfolio_items if it["ticker"] == add_ticker]
+                if existing:
+                    existing[0]["weight"] = add_weight
+                else:
+                    st.session_state.portfolio_items.append({"ticker": add_ticker, "weight": add_weight})
+                st.rerun()
+
+        st.markdown("###### Mevcut Pozisyonlar:")
+        total_w = sum(it.get("weight", 0.0) for it in st.session_state.portfolio_items)
+
+        to_remove = None
+        for idx, item in enumerate(st.session_state.portfolio_items):
+            c_name, c_w, c_del = st.columns([2, 1, 1])
+            with c_name:
+                st.write(f"**{item['ticker']}**")
+            with c_w:
+                st.write(f"%{item['weight']:.0f}")
+            with c_del:
+                if st.button("🗑️", key=f"del_port_{idx}_{item['ticker']}"):
+                    to_remove = idx
+
+        if to_remove is not None:
+            st.session_state.portfolio_items.pop(to_remove)
+            st.rerun()
+
+        if total_w != 100.0:
+            st.caption(f"⚠️ Toplam ağırlık: **%{total_w:.0f}** (Analiz sırasında otomatik %100'e normalize edilir).")
+        else:
+            st.caption(f"✅ Toplam ağırlık: **%{total_w:.0f}**")
+
+        if st.button("🔄 Varsayılan BIST Sepetine Sıfırla", use_container_width=True):
+            st.session_state.portfolio_items = [
+                {"ticker": "THYAO", "weight": 35.0},
+                {"ticker": "TUPRS", "weight": 30.0},
+                {"ticker": "AKBNK", "weight": 20.0},
+                {"ticker": "EREGL", "weight": 15.0},
+            ]
+            st.rerun()
+
+    with port_col2:
+        if st.session_state.portfolio_items:
+            res_port = analyze_portfolio(st.session_state.portfolio_items)
+            if "error" in res_port:
+                st.error(res_port["error"])
+            else:
+                m1, m2, m3, m4 = st.columns(4)
+                comp_score = res_port.get('composite_health_score', res_port.get('portfolio_composite_score', 0.0))
+                m1.metric("Portföy Sağlık Skoru", f"{comp_score:.1f} / 100", help="Tüm varlıkların temel analiz ve finansal sağlamlık ağırlıklı puanı")
+                sent_emoji = "🟢" if res_port['weighted_sentiment'] > 0.1 else ("🔴" if res_port['weighted_sentiment'] < -0.1 else "🟡")
+                m2.metric("Ağırlıklı Duygu", f"{sent_emoji} {res_port['weighted_sentiment']:+.2f}", help="-1.0 (Aşırı Negatif) ile +1.0 (Aşırı Pozitif) arası")
+                m3.metric("Sektör Dağılımı", f"{len(res_port['sector_distribution'])} Sektör", help="Portföyün maruz kaldığı farklı sektör sayısı")
+                m4.metric("Duygu Durumu", res_port.get('port_sentiment_label', 'Dengeli'), help="Genel ağırlıklı piyasa duygu etiketi")
+
+                chart_col1, chart_col2 = st.columns([1, 1])
+                with chart_col1:
+                    donut_fig = create_sector_donut_chart(res_port['sector_distribution'])
+                    st.plotly_chart(donut_fig, use_container_width=True, config={"displayModeBar": False})
+                with chart_col2:
+                    radar_fig = create_portfolio_radar_chart(res_port['weighted_5d'])
+                    st.plotly_chart(radar_fig, use_container_width=True, config={"displayModeBar": False})
+
+                st.markdown("##### ⚖️ Pozisyon Analizi & Kelly Ağırlık Optimizasyonu")
+                reb_map = {r["ticker"]: r for r in res_port.get("rebalance_suggestions", [])}
+                holdings_df = pd.DataFrame([
+                    {
+                        "Hisse": h["ticker"],
+                        "Şirket": h.get("company_name", h.get("name", h["ticker"])),
+                        "Sektör": h["sector"],
+                        "Mevcut": f"%{h.get('weight_pct', h.get('current_weight', 0.0)):.1f}",
+                        "Sağlık Skoru": f"{h.get('stock_avg_score', h.get('fundamental_score', 0.0)):.1f}",
+                        "Duygu": f"{h.get('sentiment_score', 0.0):+.2f}",
+                        "Kelly Optimize": f"%{reb_map.get(h['ticker'], {}).get('optimal_weight', h.get('weight_pct', 0.0)):.1f}",
+                        "Aksiyon": reb_map.get(h['ticker'], {}).get('action', 'KORU')
+                    }
+                    for h in res_port.get("holdings", res_port.get("holdings_breakdown", []))
+                ])
+                st.dataframe(holdings_df, use_container_width=True, hide_index=True)
+
+                sec_cnt = len(res_port['sector_distribution'])
+                st.markdown(f"""
+                <div style="background: #0D1422; border-left: 4px solid #38BDF8; padding: 12px 16px; border-radius: 6px; margin-top: 10px; font-size: 0.85rem; color: #CBD5E1;">
+                    <b>💡 Analist Strateji Notu:</b> Portföyünüz {sec_cnt} farklı sektöre dağılmış olup genel temel sağlık skoru 100 üzerinden <b>{comp_score:.1f}</b> seviyesindedir. Ağırlıklı piyasa duygu derecesi <b>{res_port.get('port_sentiment_label', 'Dengeli')}</b> ({res_port['weighted_sentiment']:+.2f}) olarak ölçülmüştür. Kelly optimizasyonuna göre yüksek sağlık puanına sahip hisselere sermaye kaydırılması riski minimize eder.
+                </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.info("Portföy simülatörünü çalıştırmak için lütfen sol menüden en az bir hisse ekleyiniz.")
+
+
+# --- 5. SEKME: CANLI KAP BİLDİRİMLERİ ---
 with tab_kap:
     st.markdown("### 📢 Canlı KAP Bildirimleri & Son Dakika Fırsat Radarı")
     st.caption("Borsa İstanbul şirketlerinin Kamuyu Aydınlatma Platformu'nda (KAP) yayımlanan son dakika bildirimleri ve anlık yapay zeka duygu analizi.")
