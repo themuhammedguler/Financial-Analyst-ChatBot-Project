@@ -10,6 +10,8 @@
 [![Vector Store](https://img.shields.io/badge/FAISS%20%2B%20BM25-Hybrid%20Search-10B981?logo=meta&logoColor=white)](https://github.com/facebookresearch/faiss)
 [![BIST 100](https://img.shields.io/badge/BIST%20100-100%2F100%20Coverage-F59E0B?logo=cachet&logoColor=white)](https://www.kap.org.tr/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-REST%20Endpoints-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![CI](https://github.com/themuhammedguler/Financial-Analyst-ChatBot-Project/actions/workflows/ci.yml/badge.svg)](https://github.com/themuhammedguler/Financial-Analyst-ChatBot-Project/actions/workflows/ci.yml)
+[![Docker](https://img.shields.io/badge/Docker-Multi--Container-2496ED?logo=docker&logoColor=white)](docker-compose.yml)
 [![Tests](https://img.shields.io/badge/Tests-25%2F25%20Passing-success?logo=pytest&logoColor=white)](tests/test_integration.py)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
