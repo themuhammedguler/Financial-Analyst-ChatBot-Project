@@ -1,6 +1,8 @@
-# 💼 BIST Finansal Analist Asistanı
-
 <div align="center">
+
+<img src="png/chatbot_avatar.png" alt="BIST Finansal Analist Asistanı Logo" width="130" />
+
+# BIST Finansal Analist Asistanı
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://financial-analyst-chatbot-project.streamlit.app/)
 [![Python Version](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-38BDF8?logo=python&logoColor=white)](https://python.org)
