@@ -1,0 +1,23 @@
+{
+  "ticker": "AKBNK",
+  "company_name": "Akbank",
+  "report_date": "2024-12-31",
+  "fundamental_summary": "Akbank, 2024 yılı sonunda güçlü özkaynak ve varlık büyümesi sergilemiştir. Sermaye yeterliliği oranları bir önceki döneme göre hafif düşüş gösterse de, yasal asgari seviyelerin oldukça üzerinde kalmaya devam etmektedir. Kaldıraç oranı da yasal sınırın üzerinde olup, bankanın finansal sağlamlığını ve operasyonel gücünü koruduğunu göstermektedir.",
+  "sentiment_score": 0.7,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": null,
+    "pb_ratio": null,
+    "net_profit_margin_trend": "Yatay",
+    "debt_to_equity": "Düşük/Yönetilebilir",
+    "extra_metrics": {}
+  },
+  "catalysts": [
+    "Güçlü özkaynak ve varlık büyümesi, bankanın kredi hacmini artırma ve pazar payını genişletme potansiyelini desteklemektedir.",
+    "Yasal asgari seviyelerin oldukça üzerinde seyreden sermaye yeterliliği oranları, bankanın gelecekteki büyüme ve olası temettü dağıtımları için sağlam bir finansal yapıya sahip olduğunu göstermektedir."
+  ],
+  "risk_factors": [
+    "Sermaye yeterliliği ve kaldıraç oranlarındaki düşüş eğilimi, gelecekteki risk ağırlıklı varlık büyümesi veya sermaye üretimi açısından izlenmesi gereken bir faktördür.",
+    "Varlık ve yükümlülüklerin önemli bir kısmının yabancı para cinsinden olması, kur dalgalanmalarına karşı bankayı döviz kuru riskine maruz bırakmaktadır."
+  ]
+}

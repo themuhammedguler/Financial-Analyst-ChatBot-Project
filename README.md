@@ -1,134 +1,200 @@
-# RAG Tabanlı Finansal Analist Chatbot 📈
+# 📈 BIST Finansal Analist Asistanı (Enterprise RAG Platformu)
 
-Bu proje, **Akbank GenAI Bootcamp** için geliştirilmiş, **Retrieval-Augmented Generation (RAG)** mimarisine dayalı, son teknoloji bir Finansal Analist Chatbot'udur. Uygulama; Akbank, Türk Hava Yolları ve Tüpraş gibi Türkiye'nin önde gelen şirketlerinin Kamuyu Aydınlatma Platformu'nda (KAP) yayınladığı yüzlerce sayfalık finansal raporları analiz eder ve kullanıcıların doğal dilde sorduğu sorulara, doğrudan raporlardan alınan kanıtlara dayalı, tutarlı cevaplar üretir.
+Kamuyu Aydınlatma Platformu'nda (KAP) yayımlanan yüzlerce sayfalık faaliyet raporlarını, konsolide bilançoları, kâr/zarar tablolarını ve finansal dipnotları analiz eden, **Retrieval-Augmented Generation (RAG)** mimarisine dayalı kurumsal finansal analitik platformu.
 
-<br>
-
-![Finansal Analist Chatbot Arayüzü](https://raw.githubusercontent.com/themuhammedguler/Financial-Analyst-ChatBot-Project/main/png/chatbot.png)
+Bu platform; **Akbank (AKBNK), Türk Hava Yolları (THYAO), Tüpraş (TUPRS)** ve BIST 100 şirketlerinin finansal dokümanlarını tarayarak kullanıcının sorduğu sorulara doğrudan resmi raporlardan kanıt göstererek güvenilir, halüsinasyonsuz ve tutarlı yanıtlar üretir.
 
 ---
 
-## 🔗 Canlı Demo
+## 🌟 Öne Çıkan Özellikler ve Mimari Yenilikler
 
-Uygulamanın internet üzerinden erişilebilen canlı demosu aşağıdadır. Ücretsiz sunucuların uyku modundan çıkması nedeniyle uygulamanın ilk açılışı 1-2 dakika sürebilir.
-
-### ➡️ **[Finansal Analist Chatbot'u Canlı Denemek İçin Buraya Tıklayın!](https://financial-analyst-chatbot-project.streamlit.app/)**
-
----
-
-## 🎯 Projenin Amacı ve Çözdüğü Problem
-
-Finansal analistler, yatırımcılar ve öğrenciler için şirketlerin faaliyet raporları ve finansal tabloları en değerli bilgi kaynaklarıdır. Ancak bu raporlar genellikle yüzlerce sayfadan oluşur; yapılandırılmamış metinler, karmaşık tablolar ve dipnotlar içerir. Bu durum, spesifik bir bilgiye ulaşmayı son derece zaman alıcı ve verimsiz bir hale getirir.
-
-Bu proje, bu problemi çözmek amacıyla geliştirilmiştir:
-
--   ✅ **Hızlı Bilgi Erişimi:** Kullanıcıların saatlerce rapor taramak yerine, "Tüpraş'ın 2023 yılındaki sürdürülebilirlik yatırımları nelerdir?" gibi spesifik sorular sorarak saniyeler içinde cevap almasını sağlar.
--   ✅ **Veri Odaklı Cevaplar:** Büyük Dil Modelleri'nin (LLM) "halüsinasyon" (bilgi uydurma) eğilimini, cevapları yalnızca sağlanan raporlardaki verilere dayandırarak ortadan kaldırır.
--   ✅ **Verimlilik Artışı:** Finansal karar alma süreçlerinde ihtiyaç duyulan veri toplama ve analiz aşamasını dramatik bir şekilde hızlandırır.
+- ⚡ **Ultra Hızlı & Temiz Metin Çıkarımı (`pypdfium2`):** Geleneksel OCR kütüphanelerinin tabloları ve dijital PDF mizanpajlarını bozmasının önüne geçilmiş; Google PDFium motoru ile binlerce sayfa sıfır gürültüyle ayrıştırılmıştır.
+- 🧠 **Çok Turlu Sohbet Hafızası (Query Rewriting):** Takip sorularında (*"Peki bir önceki yıla göre nasıl değişti?"*) bağlamın kaybolmaması için arka planda soruları bağımsız finansal arama sorgularına dönüştüren dinamik sorgu yeniden yazıcı (Query Condensation) entegre edilmiştir.
+- 🎯 **Akıllı Metadata Filtreleme:** Her doküman parçası şirket (`Akbank`, `THY`, `Tüpraş`), mali yıl (`2020-2024`), doküman türü (`Faaliyet Raporu` / `Finansal Tablo`) ve sayfa numarasıyla etiketlenmiştir.
+- 📡 **Canlı Yanıt Akışı (Real-time Token Streaming):** Yanıtlar kelime kelime ekrana canlı daktilo efektiyle yazdırılır.
+- 📌 **Şeffaf Kaynak & Alıntı Kartları:** Üretilen her yanıtın altında hangi şirketten, hangi mali yıldan, hangi rapordan ve hangi sayfadan alıntı yapıldığını gösteren etkileşimli kaynak kartları sunulur.
+- 📥 **Otomatik KAP İndirici (BIST 100 Ölçeklenebilirliği):** Elle rapor indirme zahmetini ortadan kaldıran, BIST 100 hisse kodları üzerinden veya doğrudan KAP bildirim bağlantısıyla yeni raporları sisteme ekleyip anında indeksleyen modül.
+- 💾 **Raporu Dışa Aktarma (Export):** Yapılan finansal analizi tek tıkla Markdown/Özet rapor olarak bilgisayara indirebilme.
 
 ---
 
-## 📂 Veri Seti
+## 🏗️ Sistem Mimarisi
 
-Chatbot'un bilgi tabanı, Türkiye'nin farklı sektörlerdeki en büyük şirketlerinden bazılarının KAP'ta kamuya açıkladığı resmi dokümanlardan oluşmaktadır.
-
--   **Şirketler:** Akbank, Türk Hava Yolları, Tüpraş
--   **Doküman Türleri:** Yıllık Faaliyet Raporları, Konsolide Finansal Tablolar ve Dipnotlar
--   **Kapsanan Yıllar:** 2020 - 2024
--   **Veri Kaynağı:** [Kamuyu Aydınlatma Platformu (KAP)](https://www.kap.org.tr/)
--   **Format:** PDF
-
----
-
-## 🛠️ Teknik Mimari ve Kullanılan Teknolojiler
-
-Proje, modern ve güçlü bir **Retrieval-Augmented Generation (RAG)** akışı üzerine inşa edilmiştir. Bu mimari, LLM'lerin yaratıcılığını, harici bir bilgi tabanının doğruluğu ve güncelliği ile birleştirir.
-
-### Çözüm Mimarisi
-
-1.  **Veri Hazırlama (Ingestion - Çevrimdışı İşlem):**
-    -   **Yükleme & Ayrıştırma:** PDF raporları, `unstructured` kütüphanesinin `"hi_res"` stratejisi kullanılarak sisteme yüklenir. Bu strateji, metinleri okumanın yanı sıra, Tesseract (OCR) ve Detectron2 (Görsel Analiz) gibi araçlarla dokümanların görsel yapısını (başlıklar, paragraflar, listeler ve **tablolar**) da anlar.
-    -   **Parçalama (Chunking):** Ayrıştırılan dokümanlar, anlamsal bütünlüğü koruyacak şekilde daha küçük metin parçalarına (`chunks`) bölünür.
-    -   **Gömme (Embedding):** Her bir metin parçası, Google'ın `embedding-001` modeli aracılığıyla sayısal bir vektöre dönüştürülür.
-    -   **Depolama (Store):** Bu vektörler, verimli bir şekilde saklanmaları ve ışık hızında sorgulanabilmeleri için bir **FAISS** vektör veritabanına indekslenir.
-
-2.  **Soru-Cevap Akışı (Inference - Gerçek Zamanlı İşlem):**
-    -   **Sorgu (Query):** Kullanıcı, Streamlit arayüzü üzerinden sorusunu sorar.
-    -   **Geri Getirme (Retrieve):** Kullanıcının sorusu da bir vektöre dönüştürülür ve FAISS veritabanında bu soruya anlamsal olarak en yakın metin parçaları bulunur.
-    -   **Zenginleştirme (Augment):** Geri getirilen bu alakalı metin parçaları ("bağlam" olarak) ve kullanıcının orijinal sorusu, özenle hazırlanmış bir prompt şablonu ile birleştirilir.
-    -   **Üretim (Generate):** Bu zenginleştirilmiş prompt, cevap üretmesi için **Google Gemini 1.5 Flash** modeline gönderilir. LLM, yalnızca kendisine sunulan bağlamdaki bilgileri kullanarak soruyu yanıtlar.
-
-### Teknoloji Seti
-
--   **Model ve API:** Google Gemini 2.5 Pro, Google AI Platform
--   **RAG & LLM Orkestrasyonu:** LangChain
--   **Vektör Veritabanı:** FAISS (Facebook AI Similarity Search)
--   **Doküman İşleme:** `unstructured[local-inference]` (Tesseract, Poppler, Detectron2 ile)
--   **Web Arayüzü:** Streamlit
--   **Programlama Dili:** Python 3.10+
+```
+[BIST 100 KAP Raporları (PDF)]
+            │
+            ▼ (pypdfium2 - Dijital Ekstraksiyon & Temizleme)
+[Yapılandırılmış Metin & Tablolar]
+            │
+            ▼ (Metadata Zenginleştirme: Şirket, Yıl, Rapor Tipi, Sayfa No)
+[Metin Parçaları (Chunks: 1800 char, 150 overlap)]
+            │
+            ▼ (Google Gemini Embeddings: models/gemini-embedding-001 - 768-dim)
+[FAISS Vektör Veritabanı (vectorstore/db_faiss)]
+            │
+            ├─── Kullanıcı Sorusu + Sohbet Geçmişi
+            ▼ (Query Rewriter: Contextualize Question)
+[Bağımsız Arama Sorgusu]
+            │
+            ▼ (MMR & Metadata Filtreli Arama)
+[En Alakalı Kaynak Parçaları (Context)]
+            │
+            ▼ (Prompt Mühendisliği: Kıdemli Finansal Analist Rolü)
+[LLM: Google Gemini 2.5 Flash / Pro]
+            │
+            ▼ (Canlı Streaming)
+[Finansal Analiz Yanıtı + Şeffaf Kaynak Kartları (Streamlit UI)]
+```
 
 ---
 
-## 🚀 Projeyi Lokalde Çalıştırma
+## 📂 Proje Dizin Yapısı
 
-Bu projeyi kendi bilgisayarınızda çalıştırmak için aşağıdaki adımları izleyebilirsiniz.
-
-### Ön Gereksinimler
-
--   Python 3.10 veya üzeri
--   [Git](https://git-scm.com/)
--   **Tesseract OCR:** [Kurulum Talimatları](https://github.com/UB-Mannheim/tesseract/wiki) (Kurulum sırasında Türkçe dil paketini ve PATH'e ekleme seçeneğini işaretlediğinizden emin olun.)
--   **Poppler:** [Kurulum Talimatları](https://github.com/oschwartz10612/poppler-windows/releases/) (İndirdikten sonra `bin` klasörünü PATH'e eklemeniz gerekmektedir.)
-
-### Kurulum Adımları
-
-1.  **Repoyu Klonlayın:**
-    ```bash
-    git clone https://github.com/themuhammedguler/Financial-Analyst-ChatBot-Project.git
-    cd Financial-Analyst-ChatBot-Project
-    ```
-
-2.  **Sanal Ortam Oluşturun ve Aktive Edin:**
-    ```bash
-    python -m venv venv
-    # Windows için:
-    venv\Scripts\activate
-    # MacOS/Linux için:
-    source venv/bin/activate
-    ```
-
-3.  **Gerekli Kütüphaneleri Yükleyin:**
-    ```bash
-    pip install -r requirements.txt
-    ```
-    *(Not: `unstructured[local-inference]` kurulumu, bağımlılıkların büyüklüğü nedeniyle biraz zaman alabilir.)*
-
-4.  **Google API Anahtarınızı Ayarlayın:**
-    -   Proje ana dizininde `.env` adında bir dosya oluşturun.
-    -   İçine [Google AI Studio](https://aistudio.google.com/)'dan aldığınız API anahtarınızı aşağıdaki gibi ekleyin:
-      ```bash     
-      GOOGLE_API_KEY="YOUR_GOOGLE_API_KEY_HERE"
-      ```
-
-5.  **Veri Hazırlama (Sadece İlk Seferde):**
-    -   Kendi PDF dosyalarınızı proje ana dizinindeki `data` klasörüne (veya alt klasörlerine) yerleştirin.
-    -   `notebooks/01_data_ingestion.ipynb` notebook'unu çalıştırın. Bu işlem, donanımınıza ve veri setinizin büyüklüğüne bağlı olarak **çok uzun sürebilir.**
-    -   İşlem tamamlandığında, projenizin ana dizininde `vectorstore` adında bir klasör oluşacaktır.
-
-6.  **Uygulamayı Başlatın:**
-    ```bash
-    streamlit run src/app.py
-    ```
-    Tarayıcınızda açılan web sayfasından chatbot'u kullanmaya başlayabilirsiniz!
+```
+Financial-Analyst-ChatBot-Project/
+├── data/                                 # 2020-2024 KAP PDF Raporları (Yıl bazlı klasörler)
+├── vectorstore/
+│   └── db_faiss/                         # Optimize edilmiş FAISS vektör indeksi
+├── src/
+│   ├── config.py                         # Merkezi ayarlar, model adları, şirket ve URL tanımları
+│   ├── app.py                            # Kurumsal Streamlit Finans Terminali Arayüzü & Deep-Linking
+│   ├── integration/                      # BIST-Trend-Forecaster Entegrasyon Modülü
+│   │   ├── models.py                     # Standart Pydantic veri şemaları (FundamentalReport, KeyMetrics)
+│   │   ├── report_generator.py           # RAG ve LLM tabanlı yapılandırılmış JSON rapor üreticisi
+│   │   └── api.py                        # FastAPI REST uç noktaları (/api/v1/fundamental/{ticker})
+│   ├── rag/
+│   │   ├── embeddings.py                 # Gemini Embeddings sarmalayıcısı (429 Rate-Limit backoff destekli)
+│   │   ├── parser.py                     # pypdfium2 tabanlı temiz metin çıkarıcı
+│   │   ├── rewriter.py                   # Multi-turn takip sorusu çözücü
+│   │   ├── ingestion.py                  # Chunking ve vektör veritabanı boru hattı
+│   │   └── engine.py                     # Streaming RAG motoru ve MMR retriever
+│   └── data_collection/
+│       └── kap_downloader.py             # Otomatik KAP ve BIST 100 rapor indirme modülü
+├── reports/                              # Üretilen standart {TICKER}_latest.json raporları
+├── tests/                                # Entegrasyon ve şema birim testleri (pytest)
+├── scripts/
+│   └── index_recent.py                   # Raporları otomatik indeksleme betiği
+├── requirements.txt                      # Optimize edilmiş Python bağımlılıkları
+└── README.md                             # Proje dokümantasyonu
+```
 
 ---
 
-## ✨ Elde Edilen Sonuçlar ve Gelecek Geliştirmeler
+## 🚀 Kurulum ve Çalıştırma
 
-Bu proje, yapılandırılmamış PDF dokümanlarından akıllı bir şekilde bilgi çıkarabilen ve bunu kullanıcı dostu bir arayüzle sunabilen, uçtan uca fonksiyonel bir RAG uygulamasının başarılı bir kanıtıdır. Chatbot, özellikle metin tabanlı ve yarı yapısal bilgilere dayalı sorulara yüksek doğrulukla cevap verebilmektedir.
+### 1. Ön Gereksinimler
+- Python 3.10+
+- [Google AI Studio](https://aistudio.google.com/)'dan alınmış Gemini API Anahtarı
 
-### Gelecek Geliştirmeler
+### 2. Repoyu Klonlama ve Ortam Hazırlığı
+```bash
+git clone https://github.com/themuhammedguler/Financial-Analyst-ChatBot-Project.git
+cd Financial-Analyst-ChatBot-Project
 
--   **Gelişmiş Tablo Anlama:** Tabloları metin yerine yapısal veri (örn: Pandas DataFrame) olarak işleyerek "2022 ve 2023 yılları arasındaki ciro artış oranı nedir?" gibi karşılaştırmalı ve hesaplamalı sorulara cevap verebilme.
--   **Kullanıcı Geri Bildirim Mekanizması:** Cevapları değerlendirme (beğen/beğenme) özelliği ekleyerek modelin performansını izleme.
--   **Sohbet Geçmişi (Chat History):** Uygulamaya hafıza özelliği ekleyerek kullanıcıların takip soruları sormasına olanak tanıma.
+# Sanal ortam oluşturma ve etkinleştirme
+python -m venv venv
+# Windows:
+venv\Scripts\activate
+# Linux/macOS:
+source venv/bin/activate
+
+# Gerekli bağımlılıkları yükleme
+pip install -r requirements.txt
+```
+
+### 3. API Anahtarını Yapılandırma
+Proje ana dizininde bir `.env` dosyası oluşturun ve API anahtarınızı tanımlayın:
+```env
+GOOGLE_API_KEY="AIzaSy..."
+```
+
+### 4. Raporları İndeksleme (İsteğe Bağlı)
+Veritabanını sıfırdan yeniden oluşturmak veya yeni raporları eklemek için:
+```bash
+python -m src.rag.ingestion
+```
+
+### 5. Uygulamayı Başlatma
+```bash
+streamlit run src/app.py
+```
+Tarayıcınızda otomatik açılan ekrandan finansal analiz asistanını kullanmaya başlayabilirsiniz!
+
+---
+
+## 📊 BIST 100 Otomatik Rapor İndirme (CLI Kullanımı)
+
+KAP üzerinden herhangi bir BIST 100 hissesine ait raporu komut satırından otomatik olarak indirebilirsiniz:
+```bash
+python -m src.data_collection.kap_downloader --ticker AKBNK --year 2024 --type faaliyet --url "https://www.kap.org.tr/tr/BildirimPdf/123456"
+```
+İndirilen rapor doğrudan ilgili yıl klasörüne kaydedilir ve arayüz üzerinden tek tıkla indekslenebilir.
+
+---
+
+## 🔗 BIST-Trend-Forecaster Entegrasyonu (Temel Analiz + RAG Servisi)
+
+Bu proje, makine öğrenmesi ve kantitatif teknik analiz karar destek platformu olan **BIST-Trend-Forecaster** ile iki yönlü tam entegre çalışmaktadır. BIST-Trend-Forecaster teknik indikatörler, XGBoost trend tahminleri ve Kelly sermaye boyutlandırmasını sağlarken; bu platform KAP bildirimleri ve faaliyet raporları üzerinden **Temel Analiz, Niteliksel Duygu Skoru (Sentiment) ve RAG Zekasını** sağlar.
+
+### 1. Streamlit URL Query Parametre Desteği (Deep-Linking)
+Kullanıcı BIST-Trend-Forecaster üzerinden *"Temel Analiz & Chatbot'a Sor"* butonuna tıkladığında bu uygulamaya `?ticker=THYAO` parametresi ile yönlendirilir:
+- **Otomatik Şirket Eşleme:** URL'deki `ticker` veya `symbol` parametresi yakalanır (`st.query_params`), şirket filtresi otomatik seçilir ve mavi entegrasyon rozeti görüntülenir.
+- **Kişiselleştirilmiş Karşılama:** Hisseye özel hoş geldiniz mesajı üretilir (*"THYAO için son dönem bilanço ve KAP analizine hoş geldiniz..."*).
+- **Hızlı Finansal Soru Çipleri (Prompt Chips):** İlgili hisseye özel tek tıkla sorulabilen dinamik soru şablonları sunulur (*Net Kâr, Temettü Kararları, Borçluluk Durumu, Gelecek Beklentileri*).
+
+```
+Örnek URL:
+http://localhost:8501/?ticker=THYAO
+http://localhost:8501/?symbol=AKBNK
+```
+
+### 2. Standart Yapılandırılmış Çıktı (Structured JSON Output & REST API)
+BIST-Trend-Forecaster karar destek modellerinin temel analiz verilerini arka planda okuyabilmesi için standart `FundamentalReport` JSON şeması üretilir:
+
+```json
+{
+  "ticker": "THYAO",
+  "company_name": "Türk Hava Yolları",
+  "report_date": "2026-11-08",
+  "fundamental_summary": "Yolcu doluluk oranlarında güçlü artış ve kargo gelirlerindeki büyüme ile FAVÖK beklentileri aştı...",
+  "sentiment_score": 0.75,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": 4.8,
+    "pb_ratio": 1.15,
+    "net_profit_margin_trend": "Artış",
+    "debt_to_equity": "Düşük/Yönetilebilir"
+  },
+  "catalysts": [
+    "Yeni uçak siparişleri ve filo büyümesi",
+    "Yaz sezonu güçlü rezervasyonları"
+  ],
+  "risk_factors": [
+    "Havacılık yakıt maliyetleri oynaklığı",
+    "Küresel makroekonomik yavaşlama riski"
+  ]
+}
+```
+
+#### Veri Erişim Yolları:
+1. **Dosya Tabanlı Önbellek:** Üretilen raporlar `reports/{ticker}_latest.json` yolunda disk üzerinde kalıcı olarak saklanır.
+2. **Streamlit UI İndirme:** Sol kenar çubuğundaki *"Temel Analiz JSON Raporu"* panelinden tek tıkla üretilir ve `.json` olarak indirilebilir.
+3. **FastAPI REST Servisi:** BIST-Trend-Forecaster veya harici servislerin doğrudan HTTP GET isteği atabileceği yüksek performanslı API:
+   ```bash
+   # API Sunucusunu Başlatma
+   python -m uvicorn src.integration.api:app --host 0.0.0.0 --port 8000 --reload
+   ```
+   - `GET /health` : Servis sağlık durumu kontrolü
+   - `GET /api/v1/tickers` : Desteklenen BIST hisselerinin listesi
+   - `GET /api/v1/fundamental/{ticker}` : İlgili hisse için standart temel analiz JSON çıktısı
+
+### 3. Karşı Projeye Çift Yönlü Köprü (Cross-Reference Link)
+- **Kenar Çubuğu Köprü Kartı:** Kenar çubuğunda seçili hisseye dinamik bağlanan `https://bist-trend-forecaster.streamlit.app/?ticker={active_ticker}` linki ile teknik tahmin kartı sunulur.
+- **Sohbet Cevabı Köprüsü:** Chatbot'un ürettiği her temel analiz cevabının altında, kullanıcının tek tıkla teknik tahmin platformuna geçmesini sağlayan yönlendirme butonu yer alır:
+  > *"📈 {ticker} hissesinin XGBoost trend tahminini, teknik indikatörlerini ve Kelly sermaye tahsisini inceleyin"*
+
+### 4. Test ve Doğrulama
+Entegrasyonun tüm bileşenlerini (Deep-linking, Pydantic şema doğrulaması, JSON çıktıları ve FastAPI uç noktaları) test etmek için:
+```bash
+pytest tests/test_integration.py -v
+```

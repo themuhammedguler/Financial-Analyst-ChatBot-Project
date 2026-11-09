@@ -1,128 +1,473 @@
 import os
+import sys
+import json
+from pathlib import Path
+from datetime import datetime
+
+# Proje kökünü sys.path'e ekle
+project_root = Path(__file__).resolve().parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
 import streamlit as st
-from dotenv import load_dotenv
-from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
-from langchain_community.vectorstores import FAISS
-from langchain.chains.question_answering import load_qa_chain
-from langchain.prompts import PromptTemplate
-from langchain.chains import RetrievalQA
+from src.config import (
+    DEFAULT_LLM_MODEL,
+    ADVANCED_LLM_MODEL,
+    COMPANIES,
+    SUPPORTED_YEARS,
+    VECTORSTORE_DIR,
+    FORECASTER_BASE_URL,
+    REPORTS_DIR,
+    TICKER_TO_COMPANY,
+    get_company_for_ticker,
+    get_ticker_for_company,
+)
+from src.rag.engine import FinancialRAGEngine
+from src.data_collection.kap_downloader import BIST_100_COMPANIES, download_company_annual_report
+from src.rag.ingestion import add_single_pdf_to_vectorstore
+from src.integration.report_generator import FundamentalReportGenerator
 
-# .env dosyasından environment variable'ları yükle
-load_dotenv()
+# --- SAYFA YAPILANDIRMASI ---
+st.set_page_config(
+    page_title="BIST Finansal Analist Asistanı",
+    page_icon="📈",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-# Google API anahtarını al
-google_api_key = os.getenv("GOOGLE_API_KEY")
-if not google_api_key:
-    st.error("Google API anahtarı bulunamadı. Lütfen .env dosyanızı kontrol edin.")
-    st.stop()
+# --- DEEP-LINKING (URL QUERY PARAMS DESTEĞİ - 1. ADIM) ---
+query_params = st.query_params
+raw_ticker_param = query_params.get("ticker") or query_params.get("symbol")
+url_ticker = raw_ticker_param.upper().strip() if raw_ticker_param else None
+
+# Ticker'a karşılık gelen şirket adını belirle
+url_company_name = get_company_for_ticker(url_ticker) if url_ticker else None
+
+# --- KURUMSAL CSS STİLLERİ ---
+st.markdown("""
+<style>
+    /* Ana font ve arka plan uyumu */
+    .main-header {
+        font-size: 2.1rem;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 0.2rem;
+    }
+    .sub-header {
+        font-size: 1.02rem;
+        color: #475569;
+        margin-bottom: 1.2rem;
+    }
+    /* Durum rozeti */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        background-color: #ECFDF5;
+        color: #059669;
+        font-size: 0.82rem;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        border: 1px solid #A7F3D0;
+        margin-bottom: 1rem;
+    }
+    .deep-link-badge {
+        display: inline-flex;
+        align-items: center;
+        background-color: #EFF6FF;
+        color: #1D4ED8;
+        font-size: 0.82rem;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        border: 1px solid #BFDBFE;
+        margin-bottom: 1rem;
+        margin-left: 6px;
+    }
+    /* Şirket etiketleri */
+    .tag-akbank {
+        background-color: #FEE2E2;
+        color: #991B1B;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.78rem;
+    }
+    .tag-thy {
+        background-color: #E0E7FF;
+        color: #3730A3;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.78rem;
+    }
+    .tag-tupras {
+        background-color: #FEF3C7;
+        color: #92400E;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.78rem;
+    }
+    /* Kaynak kartı tasarımı */
+    .source-box {
+        background-color: #F8FAFC;
+        border-left: 4px solid #3B82F6;
+        padding: 10px 14px;
+        border-radius: 4px;
+        margin-bottom: 8px;
+        font-size: 0.88rem;
+    }
+    /* Köprü kartı */
+    .forecaster-card {
+        background: linear-gradient(135deg, #0F172A, #1E293B);
+        border: 1px solid #334155;
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin-top: 10px;
+        margin-bottom: 12px;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 
-# Vektör veritabanının yolu
-DB_FAISS_PATH = 'vectorstore/db_faiss'
+# --- ENGINE VE REPORT GENERATOR ÖNBELLEKLEME ---
+@st.cache_resource(show_spinner=False)
+def load_rag_engine(model_choice: str):
+    return FinancialRAGEngine(model_name=model_choice)
 
-# --- RAG MİMARİSİNİN TEMEL FONKSİYONLARI ---
+@st.cache_resource(show_spinner=False)
+def load_report_generator():
+    return FundamentalReportGenerator()
 
-def get_vector_store():
-    """
-    Daha önce oluşturulmuş ve kaydedilmiş FAISS vektör veritabanını yükler.
-    Embedding modeli olarak Gemini'yi kullanır.
-    """
-    try:
-        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-        vector_db = FAISS.load_local(DB_FAISS_PATH, embeddings, allow_dangerous_deserialization=True)
-        return vector_db
-    except Exception as e:
-        st.error(f"Vektör veritabanı yüklenirken bir hata oluştu: {e}")
-        return None
 
-def get_conversational_chain():
-    """
-    Soru-cevaplama zincirini (QA Chain) oluşturur. Bu zincir, LLM'in (Gemini Pro)
-    nasıl davranacağını belirleyen bir prompt şablonu kullanır.
-    """
+# --- YARDIMCI GÖRSEL FONKSİYONLAR ---
+def get_company_badge(company_name: str) -> str:
+    comp = str(company_name).lower()
+    if "akbank" in comp:
+        return f'<span class="tag-akbank">Akbank</span>'
+    elif "hava yolları" in comp or "thy" in comp:
+        return f'<span class="tag-thy">THY</span>'
+    elif "tüpraş" in comp or "tupras" in comp:
+        return f'<span class="tag-tupras">Tüpraş</span>'
+    return f'<span style="background:#E2E8F0; color:#334155; padding:2px 8px; border-radius:6px; font-size:0.78rem;">{company_name}</span>'
+
+
+# --- KENAR ÇUBUĞU (SIDEBAR) ---
+with st.sidebar:
+    st.image("https://raw.githubusercontent.com/themuhammedguler/Financial-Analyst-ChatBot-Project/main/png/chatbot.png", use_container_width=True)
+    st.markdown("### ⚙️ Analiz & Filtre Paneli")
     
-    # LLM'e verilecek talimatları içeren prompt şablonu
-    prompt_template = """
-    Sen bir Finansal Analist Asistanısın. Görevin, sana verilen bağlamdaki (context) finansal raporları
-    analiz ederek sorulan sorulara doğru ve net cevaplar vermektir.
-    
-    Bağlam (Context):
-    {context}
-    
-    Soru:
-    {question}
-    
-    Cevap:
-    - Cevabını sadece ve sadece sana verilen bağlamdaki bilgilere dayanarak oluştur.
-    - Eğer bağlamda sorunun cevabı yoksa, "Bu bilgiye sahip değilim." veya "Raporlarda bu konu hakkında bir bilgi bulamadım." şeklinde cevap ver. Kesinlikle bağlam dışı bilgi kullanma veya tahmin yürütme.
-    - Cevaplarını madde işaretleri kullanarak veya kısa paragraflar halinde, kolay okunabilir bir formatta sun.
-    - Finansal terimleri basit bir dille açıkla.
-    """
-    
-    # LLM modelini başlat (Gemini Pro)
-    model = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.3)
-    
-    # Prompt şablonunu ve modeli kullanarak bir QA zinciri oluştur
-    prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
-    chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
-    
-    return chain
+    # 1. Model Seçimi
+    model_option = st.selectbox(
+        "🧠 Yapay Zeka Modeli",
+        options=[DEFAULT_LLM_MODEL, ADVANCED_LLM_MODEL],
+        format_func=lambda x: "Gemini 2.5 Flash (Ultra Hızlı)" if "flash" in x else "Gemini 2.5 Pro (Derin Muhakeme)",
+        index=0,
+        help="Finansal analizler için Gemini model versiyonu."
+    )
 
-# --- STREAMLIT CHATBOT ARAYÜZÜ ---
+    # 2. Şirket Filtresi (Deep-linking ile otomatik eşleşme)
+    company_options = ["Tümü"] + list(COMPANIES.keys())
+    
+    # Eğer URL'den geçerli bir şirket geldiyse varsayılan indeks olarak onu seç
+    default_company_index = 0
+    if url_company_name and url_company_name in company_options:
+        default_company_index = company_options.index(url_company_name)
 
-st.set_page_config(page_title="Finansal Analist Asistanı", page_icon="📈", layout="wide")
-st.title("📈 Finansal Analist Asistanı")
-st.divider()
+    selected_company = st.selectbox(
+        "🏢 Şirket Filtresi",
+        options=company_options,
+        index=default_company_index,
+        help="Sorguyu belirli bir şirketle sınırlandırabilir veya 'Tümü' seçeneğiyle sorunun içeriğinden otomatik tespit edilmesini sağlayabilirsiniz."
+    )
 
-# Vektör veritabanını yükle
-vector_store = get_vector_store()
+    # Aktif hisse sembolü
+    active_ticker = url_ticker if url_ticker else get_ticker_for_company(selected_company)
 
-if not vector_store:
-    st.warning("Uygulamanın başlayabilmesi için vektör veritabanının başarıyla yüklenmesi gerekmektedir.")
-    st.stop()
+    # 3. Yıl Filtresi
+    year_options = ["Tümü"] + [str(y) for y in reversed(SUPPORTED_YEARS)]
+    selected_year = st.selectbox(
+        "📅 Mali Yıl Filtresi",
+        options=year_options,
+        index=0,
+        help="Belirli bir faaliyet veya bilanço yılına odaklanın."
+    )
 
-# Adım 1: Sohbet geçmişini başlatma (DEĞİŞTİRİLMİŞ İLK MESAJ İLE)
-if "messages" not in st.session_state:
+    st.divider()
+
+    # --- 3. ADIM: BIST-TREND-FORECASTER ÇİFT YÖNLÜ KÖPRÜ (CROSS-REFERENCE LINK) ---
+    forecaster_url = f"{FORECASTER_BASE_URL}/?ticker={active_ticker}"
+    st.markdown(f"""
+    <div class="forecaster-card">
+        <div style="font-weight: 700; color: #38BDF8; font-size: 0.90rem; margin-bottom: 4px;">
+            🤖 BIST-Trend-Forecaster Köprüsü
+        </div>
+        <div style="color: #CBD5E1; font-size: 0.82rem; line-height: 1.4; margin-bottom: 10px;">
+            📈 <strong>{active_ticker}</strong> hissesinin <strong>XGBoost trend tahminini, teknik indikatörlerini</strong> ve <strong>Kelly sermaye tahsisini</strong> inceleyin.
+        </div>
+        <a href="{forecaster_url}" target="_blank" style="display: block; text-align: center; background-color: #2563EB; color: #FFFFFF; padding: 7px 12px; border-radius: 6px; text-decoration: none; font-size: 0.82rem; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+            Teknik Tahmini Gör ↗
+        </a>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.divider()
+
+    # --- 2. ADIM: STANDART YAPILANDIRILMIŞ ÇIKTI (JSON EXPORT / BIST-TREND-FORECASTER ENTEGRASYONU) ---
+    with st.expander("📊 Temel Analiz JSON Raporu (BIST-Trend-Forecaster)"):
+        st.caption(f"{active_ticker} hissesi için teknik analiz modeline beslenecek standart yapılandırılmış JSON çıktısı.")
+        
+        rep_gen = load_report_generator()
+        report_file = REPORTS_DIR / f"{active_ticker}_latest.json"
+
+        if st.button("⚡ JSON Raporunu Üret / Güncelle", use_container_width=True):
+            with st.spinner(f"{active_ticker} için RAG temel analiz raporu oluşturuluyor..."):
+                try:
+                    generated_rep = rep_gen.generate_report(ticker=active_ticker, force_refresh=True)
+                    st.success(f"{active_ticker} raporu hazırlandı!")
+                except Exception as e:
+                    st.error(f"Rapor oluşturulurken hata: {e}")
+
+        # Eğer önceden üretilmiş rapor varsa göster ve indirme butonu koy
+        if report_file.exists():
+            with open(report_file, "r", encoding="utf-8") as rf:
+                report_json_str = rf.read()
+            st.json(json.loads(report_json_str))
+            st.download_button(
+                label=f"📥 {active_ticker}_latest.json İndir",
+                data=report_json_str,
+                file_name=f"{active_ticker}_latest.json",
+                mime="application/json",
+                use_container_width=True
+            )
+
+    st.divider()
+
+    # 4. BIST 100 Yeni Rapor İndirici (Ölçeklenebilirlik Çözümü)
+    with st.expander("📥 KAP'tan Yeni Rapor İndir (BIST 100)"):
+        st.caption("BIST 100 şirketlerinin raporlarını doğrudan indirip sisteme ekleyin.")
+        bist_ticker_choice = st.selectbox(
+            "Hisse Kodu (Ticker)",
+            options=list(BIST_100_COMPANIES.keys()),
+            format_func=lambda x: f"{x} - {BIST_100_COMPANIES[x]['name'][:24]}...",
+            index=0
+        )
+        report_year = st.selectbox("Rapor Yılı", options=[2024, 2023, 2022, 2021, 2020], index=0)
+        report_type = st.radio("Rapor Türü", options=["Faaliyet Raporu", "Finansal Tablolar"], horizontal=True)
+        direct_url = st.text_input("KAP Doğrudan PDF URL (Opsiyonel)", placeholder="https://www.kap.org.tr/tr/BildirimPdf/...")
+
+        if st.button("🚀 Raporu İndir ve İndeksle", use_container_width=True):
+            if direct_url:
+                with st.spinner(f"{bist_ticker_choice} {report_year} raporu indiriliyor..."):
+                    doc_t = "faaliyet" if "Faaliyet" in report_type else "finansal"
+                    downloaded_path = download_company_annual_report(
+                        ticker=bist_ticker_choice,
+                        year=report_year,
+                        doc_type=doc_t,
+                        custom_url=direct_url
+                    )
+                    if downloaded_path and downloaded_path.exists():
+                        st.success(f"Rapor indirildi: {downloaded_path.name}")
+                        with st.spinner("Rapor vektör indeksine ekleniyor..."):
+                            success = add_single_pdf_to_vectorstore(downloaded_path)
+                            if success:
+                                st.success("Rapor başarıyla indekslendi ve analize hazır!")
+                            else:
+                                st.error("İndeksleme sırasında bir hata oluştu.")
+                    else:
+                        st.error("Dosya indirilemedi. Lütfen bağlantıyı kontrol edin.")
+            else:
+                st.info("KAP bildirim sayfasındaki PDF bağlantısını yukarıdaki kutuya yapıştırarak tek tıkla sisteme entegre edebilirsiniz.")
+
+    st.divider()
+
+    # 5. Sohbeti Temizleme ve Dışa Aktarma
+    col_clear, col_export = st.columns(2)
+    with col_clear:
+        if st.button("🗑️ Temizle", use_container_width=True):
+            st.session_state.messages = []
+            st.rerun()
+
+    with col_export:
+        chat_export = ""
+        if "messages" in st.session_state and st.session_state.messages:
+            chat_export = f"# BIST Finansal Analist Asistanı - Analiz Raporu\n*Tarih: {datetime.now().strftime('%Y-%m-%d %H:%M')}*\n\n---\n"
+            for m in st.session_state.messages:
+                sender = "Kullanıcı" if m["role"] == "user" else "Finansal Analist Asistanı"
+                chat_export += f"### {sender}\n{m['content']}\n\n"
+        
+        st.download_button(
+            label="💾 İndir (MD)",
+            data=chat_export,
+            file_name=f"Finansal_Analiz_Raporu_{datetime.now().strftime('%Y%m%d_%H%M')}.md",
+            mime="text/markdown",
+            use_container_width=True,
+            disabled=not bool(chat_export)
+        )
+
+# --- ANA EKRAN VE BAŞLIK ---
+st.markdown('<div class="main-header">📈 BIST Finansal Analist Asistanı</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-header">Borsa İstanbul şirketlerinin KAP\'ta yayımlanan resmi faaliyet raporları, bilançoları ve dipnotlarına dayalı kurumsal RAG analiz ve temel veri servisi.</div>', unsafe_allow_html=True)
+
+# Durum rozetleri
+col_badges = st.container()
+has_index = (VECTORSTORE_DIR / "index.faiss").exists()
+
+badge_html = ""
+if has_index:
+    badge_html += '<span class="status-badge">● Finansal Bilgi Bankası Aktif (2020-2024 KAP Raporları)</span>'
+else:
+    badge_html += '<span style="background:#FEF3C7; color:#92400E; padding:4px 12px; border-radius:9999px; font-size:0.82rem; font-weight:600;">⚠️ Vektör indeksi senkronize ediliyor</span>'
+
+if url_ticker:
+    badge_html += f'<span class="deep-link-badge">🔗 Entegrasyon Modu: {url_ticker} ({url_company_name or url_ticker})</span>'
+
+st.markdown(badge_html, unsafe_allow_html=True)
+
+# --- RAG MOTORUNU YÜKLE ---
+engine = load_rag_engine(model_option)
+
+# --- SOHBET GEÇMİŞİNİ BAŞLAT (DEEP-LINKING UYARLAMASI - 1. ADIM) ---
+if "messages" not in st.session_state or not st.session_state.messages:
+    if url_ticker:
+        comp_title = url_company_name if url_company_name else url_ticker
+        welcome_content = f"👋 **{url_ticker}** ({comp_title}) için son dönem bilanço, faaliyet raporu ve KAP analizine hoş geldiniz. Ne öğrenmek istersiniz?"
+    else:
+        welcome_content = "Merhaba! Ben sizin **BIST Kıdemli Finansal Analist Asistanınızım**. Akbank, Türk Hava Yolları ve Tüpraş gibi BIST şirketlerinin bilanço, kâr/zarar tabloları, faaliyet raporları ve rasyoları hakkında sorularınızı yanıtlayabilirim."
+
     st.session_state.messages = [
-        {"role": "assistant", 
-         "content": "Merhaba! Ben sizin Finansal Analist Asistanınızım. **Akbank, THY ve Tüpraş**'a ait **finansal tablolar ve yıllık faaliyet raporları** hakkında istediğiniz soruyu sorabilirsiniz."}
+        {"role": "assistant", "content": welcome_content}
     ]
 
-# Adım 2: Geçmişteki tüm mesajları ekrana yazdırma
-# Bu döngü, her etkileşimde yeniden çalışarak geçmişi ekranda tutar.
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+# --- HIZLI ANALİZ ŞABLONLARI (PROMPT CHIPS - 1. ADIM) ---
+st.markdown("##### 💡 Hızlı Finansal Analiz Soruları")
+q_cols = st.columns(4)
 
-# Adım 3: Kullanıcıdan yeni bir girdi alma
-# st.chat_input, sayfanın altında sabit bir giriş kutusu oluşturur.
-if prompt := st.chat_input("Akbank'ın dijitalleşme vizyonu hakkında bilgi verir misin?"):
-    
-    # a. Kullanıcının mesajını sohbet geçmişine ekle
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    
-    # b. Kullanıcının mesajını ekrana anında yazdır
+if url_ticker:
+    # URL'den gelen hisseye özel hızlı butonlar
+    comp_name_short = url_company_name if url_company_name else url_ticker
+    quick_queries = [
+        (f"📊 {url_ticker} Net Kâr", f"{comp_name_short} ({url_ticker}) son dönem net kârı ve gelirleri nasıl geldi?"),
+        (f"💰 {url_ticker} Temettü", f"{comp_name_short} ({url_ticker}) temettü dağıtım veya sermaye artırımı kararı var mı?"),
+        (f"⚖️ {url_ticker} Borçluluk", f"{comp_name_short} ({url_ticker}) borçluluk durumu, net borç ve finansal yapısı nasıldır?"),
+        (f"🎯 {url_ticker} Beklentiler", f"{comp_name_short} ({url_ticker}) gelecek dönem beklentileri, hedefleri ve yatırım planları nelerdir?"),
+    ]
+else:
+    # Genel hisse soruları
+    quick_queries = [
+        ("Akbank 2024 Net Kâr", "Akbank'ın 2024 yılı net kârı ve aktif büyüklüğü nedir?"),
+        ("THY 2024 Filo & Yolcu", "Türk Hava Yolları'nın 2024 filo büyüklüğü ve yolcu sayısı ne kadardır?"),
+        ("Tüpraş 2024 Rafineri Marjı", "Tüpraş'ın 2024 yılı rafineri kapasite kullanımı ve net rafineri marjı nedir?"),
+        ("Kârlılık Karşılaştırması", "Akbank ve Tüpraş'ın 2023-2024 yıllarındaki net kâr değişimlerini karşılaştırır mısın?"),
+    ]
+
+selected_quick_prompt = None
+for i, (label, query_text) in enumerate(quick_queries):
+    with q_cols[i]:
+        if st.button(label, key=f"quick_btn_{i}", use_container_width=True):
+            selected_quick_prompt = query_text
+
+st.divider()
+
+# --- GEÇMİŞ MESAJLARI GÖSTER ---
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"], unsafe_allow_html=True)
+        # Eğer kaydedilmiş kaynaklar varsa göster
+        if "sources" in msg and msg["sources"]:
+            with st.expander("📌 Referans Alınan KAP Raporları & Sayfalar"):
+                for s_idx, src in enumerate(msg["sources"]):
+                    comp_badge = get_company_badge(src.get("company", ""))
+                    st.markdown(
+                        f"""<div class="source-box">
+                        <strong>Kaynak {s_idx+1}:</strong> {comp_badge} | <strong>Yıl:</strong> {src.get('year')} | 
+                        <strong>Dosya:</strong> <code>{src.get('file_name')}</code> | <strong>Sayfa:</strong> {src.get('page')}
+                        <br><br>
+                        <em>"{src.get('snippet')}..."</em>
+                        </div>""",
+                        unsafe_allow_html=True
+                    )
+
+# --- KULLANICI GİRDİSİ VE ANALİZ DÖNGÜSÜ ---
+user_input = st.chat_input("Finansal bir gösterge veya şirket performansı hakkında soru sorun...")
+prompt_to_process = selected_quick_prompt if selected_quick_prompt else user_input
+
+if prompt_to_process:
+    # 1. Kullanıcı mesajını ekle ve ekrana yazdır
+    st.session_state.messages.append({"role": "user", "content": prompt_to_process})
     with st.chat_message("user"):
-        st.markdown(prompt)
+        st.markdown(prompt_to_process)
 
-    # c. Asistanın cevabını oluşturma (RAG süreci)
+    # 2. Asistan cevabını streaming ile üret
     with st.chat_message("assistant"):
-        with st.spinner("Analiz ediliyor..."):
-            # RAG zincirini çalıştır (eski kodunuzdaki mantığın aynısı)
-            docs = vector_store.similarity_search(prompt, k=5)
-            chain = get_conversational_chain()
-            response = chain({"input_documents": docs, "question": prompt}, return_only_outputs=True)
-            
-            # Cevabı ve kaynakları ekrana yazdır
-            assistant_response = response["output_text"]
-            st.markdown(assistant_response)
+        stream_placeholder = st.empty()
+        full_response = ""
+        captured_docs = []
+        rewritten_q = prompt_to_process
 
-            # Kaynakları cevabın altına gizlenmiş bir şekilde ekle
-            with st.expander("Referans Alınan Kaynak Metinleri Gör"):
-                for i, doc in enumerate(docs):
-                    source_filename = os.path.basename(doc.metadata.get('source', 'Bilinmiyor'))
-                    st.info(f"**Kaynak {i+1}** | Dosya: `{source_filename}` | Sayfa: `{doc.metadata.get('page', 'Bilinmiyor')}`")
-                    st.text_area(label="", value=doc.page_content, height=150, key=f"expander_source_{i}")
+        # RAG Engine streaming generator
+        with st.spinner("Finansal tablolar taranıyor ve analiz ediliyor..."):
+            generator = engine.stream_answer(
+                question=prompt_to_process,
+                chat_history=st.session_state.messages[:-1],
+                company_filter=selected_company,
+                year_filter=selected_year,
+            )
 
-    # d. Asistanın cevabını da sohbet geçmişine ekle
-    st.session_state.messages.append({"role": "assistant", "content": assistant_response})
+        for event in generator:
+            if event["type"] == "content":
+                full_response += event["content"]
+                stream_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
+            elif event["type"] == "done":
+                captured_docs = event.get("docs", [])
+                rewritten_q = event.get("rewritten_query", prompt_to_process)
+
+        # İmleci kaldır ve nihai cevabı yerleştir
+        stream_placeholder.markdown(full_response, unsafe_allow_html=True)
+
+        # 3. Adım Köprü Kartı: Cevap sonuna BIST-Trend-Forecaster butonu ekle
+        detected_or_active_ticker = active_ticker
+        st.markdown(f"""
+        <div style="margin-top: 14px; padding: 8px 14px; background: #F1F5F9; border-radius: 8px; border: 1px solid #E2E8F0; display: inline-flex; align-items: center; gap: 10px;">
+            <span style="font-size: 0.84rem; color: #334155;">📈 <strong>{detected_or_active_ticker}</strong> hissesinin teknik model tahminlerini görmek ister misiniz?</span>
+            <a href="{FORECASTER_BASE_URL}/?ticker={detected_or_active_ticker}" target="_blank" style="background:#2563EB; color:white; font-size:0.78rem; font-weight:600; padding:4px 10px; border-radius:5px; text-decoration:none;">BIST-Trend-Forecaster'a Git ↗</a>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Kaynakları şık kartlar halinde göster
+        formatted_sources = []
+        if captured_docs:
+            with st.expander("📌 Referans Alınan KAP Raporları & Sayfalar"):
+                for s_idx, doc in enumerate(captured_docs):
+                    comp = doc.metadata.get("company", "Bilinmeyen")
+                    yr = doc.metadata.get("year", "")
+                    fname = doc.metadata.get("file_name", os.path.basename(doc.metadata.get("source", "")))
+                    page = doc.metadata.get("page", "Bilinmiyor")
+                    snippet = doc.page_content[:240].replace("\n", " ").strip()
+                    
+                    formatted_sources.append({
+                        "company": comp,
+                        "year": yr,
+                        "file_name": fname,
+                        "page": page,
+                        "snippet": snippet
+                    })
+
+                    comp_badge = get_company_badge(comp)
+                    st.markdown(
+                        f"""<div class="source-box">
+                        <strong>Kaynak {s_idx+1}:</strong> {comp_badge} | <strong>Yıl:</strong> {yr} | 
+                        <strong>Dosya:</strong> <code>{fname}</code> | <strong>Sayfa:</strong> {page}
+                        <br><br>
+                        <em>"{snippet}..."</em>
+                        </div>""",
+                        unsafe_allow_html=True
+                    )
+
+        # 3. Asistan mesajını hafızaya kaydet
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": full_response,
+            "sources": formatted_sources
+        })
