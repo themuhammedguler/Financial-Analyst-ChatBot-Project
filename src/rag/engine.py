@@ -134,6 +134,8 @@ class FinancialRAGEngine:
         year_filter: Optional[int] = None,
         top_k: int = TOP_K_RETRIEVAL,
         use_hybrid: bool = True,
+        use_mmr: bool = False,
+        **kwargs
     ) -> List[Document]:
         """
         Gelişmiş Hibrit Belge Getirme (Hybrid Retrieval: Dense FAISS + Sparse BM25).
