@@ -285,6 +285,23 @@ st.markdown("""
         border-color: #38BDF8 !important;
         box-shadow: 0 0 12px rgba(56, 189, 248, 0.25) !important;
     }
+
+    /* Chat Input kutusu ve taban yerleşimi */
+    [data-testid="stChatInput"] {
+        background-color: transparent !important;
+        border-radius: 12px !important;
+        z-index: 99 !important;
+    }
+    [data-testid="stChatInput"] textarea {
+        background-color: #0D1422 !important;
+        color: #F8FAFC !important;
+        border: 1px solid #1E293B !important;
+        border-radius: 10px !important;
+    }
+    [data-testid="stChatInput"] textarea:focus {
+        border-color: #38BDF8 !important;
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.25) !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -763,135 +780,142 @@ with tab_chat:
 
     st.divider()
 
-    # --- GEÇMİŞ MESAJLARI GÖSTER ---
-    for msg in st.session_state.messages:
-        msg_avatar = USER_AVATAR if msg.get("role") == "user" else ASSISTANT_AVATAR
-        with st.chat_message(msg["role"], avatar=msg_avatar):
-            st.markdown(msg["content"], unsafe_allow_html=True)
-            # Eğer kaydedilmiş kaynaklar varsa göster
-            if "sources" in msg and msg["sources"]:
-                with st.expander("📌 Referans Alınan KAP Raporları & Sayfalar"):
-                    for s_idx, src in enumerate(msg["sources"]):
-                        comp_badge = get_company_badge(src.get("company", ""))
-                        st.markdown(
-                            f"""<div class="source-box">
-                            <strong>Kaynak {s_idx+1}:</strong> {comp_badge} | <strong>Yıl:</strong> {src.get('year')} | 
-                            <strong>Dosya:</strong> <code>{src.get('file_name')}</code> | <strong>Sayfa:</strong> {src.get('page')}
-                            <br><br>
-                            <em>"{src.get('snippet')}..."</em>
-                            </div>""",
-                            unsafe_allow_html=True
-                        )
+    # --- SOHBET MESAJLARI KONTEYNERİ (HER ZAMAN GİRDİ KUTUSUNUN ÜSTÜNDE AKAR) ---
+    chat_container = st.container()
 
-    # --- KULLANICI GİRDİSİ VE ANALİZ DÖNGÜSÜ ---
+    # --- KULLANICI GİRDİSİ (EN ALTTA KONUMLANIR) ---
     user_input = st.chat_input("Finansal bir gösterge veya şirket performansı hakkında soru sorun...")
     prompt_to_process = selected_quick_prompt if selected_quick_prompt else user_input
 
-    if prompt_to_process:
-        # 1. Kullanıcı mesajını ekle ve ekrana yazdır
-        st.session_state.messages.append({"role": "user", "content": prompt_to_process})
-        with st.chat_message("user", avatar=USER_AVATAR):
-            st.markdown(prompt_to_process)
+    # --- GEÇMİŞ VE YENİ MESAJLARI KONTEYNER İÇİNDE RENDER ET ---
+    with chat_container:
+        for msg in st.session_state.messages:
+            msg_avatar = USER_AVATAR if msg.get("role") == "user" else ASSISTANT_AVATAR
+            with st.chat_message(msg["role"], avatar=msg_avatar):
+                st.markdown(msg["content"], unsafe_allow_html=True)
+                # Eğer kaydedilmiş kaynaklar varsa göster
+                if "sources" in msg and msg["sources"]:
+                    with st.expander("📌 Referans Alınan KAP Raporları & Sayfalar"):
+                        for s_idx, src in enumerate(msg["sources"]):
+                            comp_badge = get_company_badge(src.get("company", ""))
+                            st.markdown(
+                                f"""<div class="source-box">
+                                <strong>Kaynak {s_idx+1}:</strong> {comp_badge} | <strong>Yıl:</strong> {src.get('year')} | 
+                                <strong>Dosya:</strong> <code>{src.get('file_name')}</code> | <strong>Sayfa:</strong> {src.get('page')}
+                                <br><br>
+                                <em>"{src.get('snippet')}..."</em>
+                                </div>""",
+                                unsafe_allow_html=True
+                            )
 
-        # 2. Asistan cevabını streaming ile üret
-        with st.chat_message("assistant", avatar=ASSISTANT_AVATAR):
-            full_response = ""
-            captured_docs = []
-            rewritten_q = prompt_to_process
-            captured_guard = {}
+        if prompt_to_process:
+            # 1. Kullanıcı mesajını ekle ve ekrana yazdır
+            st.session_state.messages.append({"role": "user", "content": prompt_to_process})
+            with st.chat_message("user", avatar=USER_AVATAR):
+                st.markdown(prompt_to_process)
 
-            # Canlı Düşünme & Arama Durum Paneli
-            status_box = st.status("📊 Finansal Analist verileri inceliyor...", expanded=True)
-            stream_placeholder = st.empty()
+            # 2. Asistan cevabını streaming ile üret
+            with st.chat_message("assistant", avatar=ASSISTANT_AVATAR):
+                full_response = ""
+                captured_docs = []
+                rewritten_q = prompt_to_process
+                captured_guard = {}
 
-            generator = engine.stream_answer(
-                question=prompt_to_process,
-                chat_history=st.session_state.messages[:-1],
-                company_filter=selected_company,
-                year_filter=selected_year,
-            )
+                # Canlı Düşünme & Arama Durum Paneli
+                status_box = st.status("📊 Finansal Analist verileri inceliyor...", expanded=True)
+                stream_placeholder = st.empty()
 
-            for event in generator:
-                ev_type = event.get("type")
-                if ev_type == "status":
-                    status_box.write(event.get("message", "Finansal veriler işleniyor..."))
-                elif ev_type == "content":
-                    if not full_response:
-                        # İlk veri geldiğinde durum kutusunu kapatıp tamamlandı rozetine dönüştür
-                        status_box.update(label="✅ Finansal Raporlar & Dipnotlar İncelendi", state="complete", expanded=False)
-                    full_response += event["content"]
-                    stream_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
-                elif ev_type == "done":
-                    captured_docs = event.get("docs", [])
-                    rewritten_q = event.get("rewritten_query", prompt_to_process)
-                    captured_guard = event.get("guard_result", {})
+                generator = engine.stream_answer(
+                    question=prompt_to_process,
+                    chat_history=st.session_state.messages[:-1],
+                    company_filter=selected_company,
+                    year_filter=selected_year,
+                )
 
-            # Status kutusunu tamamlandı olarak sonlandır
-            status_box.update(label="✅ Finansal Analiz Tamamlandı", state="complete", expanded=False)
+                for event in generator:
+                    ev_type = event.get("type")
+                    if ev_type == "status":
+                        status_box.write(event.get("message", "Finansal veriler işleniyor..."))
+                    elif ev_type == "content":
+                        if not full_response:
+                            # İlk veri geldiğinde durum kutusunu kapatıp tamamlandı rozetine dönüştür
+                            status_box.update(label="✅ Finansal Raporlar & Dipnotlar İncelendi", state="complete", expanded=False)
+                        full_response += event["content"]
+                        stream_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
+                    elif ev_type == "done":
+                        captured_docs = event.get("docs", [])
+                        rewritten_q = event.get("rewritten_query", prompt_to_process)
+                        captured_guard = event.get("guard_result", {})
 
-            # İmleci kaldır ve nihai cevabı yerleştir
-            if full_response.strip():
-                stream_placeholder.markdown(full_response, unsafe_allow_html=True)
-            else:
-                fallback_msg = "⚠️ Finansal raporlardan veri getirilirken bir aksaklık oluştu. Lütfen sorunuzu tekrar iletiniz."
-                stream_placeholder.markdown(fallback_msg, unsafe_allow_html=True)
-                full_response = fallback_msg
+                # Status kutusunu tamamlandı olarak sonlandır
+                status_box.update(label="✅ Finansal Analiz Tamamlandı", state="complete", expanded=False)
 
-            # Hallucination Guard Doğrulama Rozeti
-            if captured_guard and captured_guard.get("status_badge"):
-                guard_badge_text = captured_guard["status_badge"]
-                guard_color = "#34D399" if captured_guard.get("is_safe", True) else "#FBBF24"
+                # İmleci kaldır ve nihai cevabı yerleştir
+                if full_response.strip():
+                    stream_placeholder.markdown(full_response, unsafe_allow_html=True)
+                else:
+                    fallback_msg = "⚠️ Finansal raporlardan veri getirilirken bir aksaklık oluştu. Lütfen sorunuzu tekrar iletiniz."
+                    stream_placeholder.markdown(fallback_msg, unsafe_allow_html=True)
+                    full_response = fallback_msg
+
+                # Hallucination Guard Doğrulama Rozeti
+                if captured_guard and captured_guard.get("status_badge"):
+                    guard_badge_text = captured_guard["status_badge"]
+                    guard_color = "#34D399" if captured_guard.get("is_safe", True) else "#FBBF24"
+                    st.markdown(f"""
+                    <div style="margin-top: 10px; margin-bottom: 4px; padding: 5px 12px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(52, 211, 153, 0.25); border-radius: 6px; font-size: 0.80rem; color: {guard_color}; display: inline-flex; align-items: center; gap: 8px;">
+                        <span>{guard_badge_text}</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                # 3. Adım Köprü Kartı: Cevap sonuna BIST-Trend-Forecaster butonu ekle
+                detected_or_active_ticker = active_ticker
                 st.markdown(f"""
-                <div style="margin-top: 10px; margin-bottom: 4px; padding: 5px 12px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(52, 211, 153, 0.25); border-radius: 6px; font-size: 0.80rem; color: {guard_color}; display: inline-flex; align-items: center; gap: 8px;">
-                    <span>{guard_badge_text}</span>
+                <div style="margin-top: 14px; padding: 10px 16px; background: #0E1626; border-radius: 8px; border: 1px solid #1E293B; display: inline-flex; align-items: center; gap: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.35);">
+                    <span style="font-size: 0.85rem; color: #E2E8F0;">📈 <strong>{detected_or_active_ticker}</strong> hissesinin teknik model tahminlerini görmek ister misiniz?</span>
+                    <a href="{FORECASTER_BASE_URL}/?ticker={detected_or_active_ticker}" target="_blank" style="background: linear-gradient(135deg, #2563EB, #1D4ED8); color: white; font-size: 0.78rem; font-weight: 600; padding: 5px 12px; border-radius: 6px; text-decoration: none; border: 1px solid rgba(56, 189, 248, 0.35); box-shadow: 0 2px 6px rgba(37,99,235,0.3);">BIST-Trend-Forecaster'a Git ↗</a>
                 </div>
                 """, unsafe_allow_html=True)
 
-            # 3. Adım Köprü Kartı: Cevap sonuna BIST-Trend-Forecaster butonu ekle
-            detected_or_active_ticker = active_ticker
-            st.markdown(f"""
-            <div style="margin-top: 14px; padding: 10px 16px; background: #0E1626; border-radius: 8px; border: 1px solid #1E293B; display: inline-flex; align-items: center; gap: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.35);">
-                <span style="font-size: 0.85rem; color: #E2E8F0;">📈 <strong>{detected_or_active_ticker}</strong> hissesinin teknik model tahminlerini görmek ister misiniz?</span>
-                <a href="{FORECASTER_BASE_URL}/?ticker={detected_or_active_ticker}" target="_blank" style="background: linear-gradient(135deg, #2563EB, #1D4ED8); color: white; font-size: 0.78rem; font-weight: 600; padding: 5px 12px; border-radius: 6px; text-decoration: none; border: 1px solid rgba(56, 189, 248, 0.35); box-shadow: 0 2px 6px rgba(37,99,235,0.3);">BIST-Trend-Forecaster'a Git ↗</a>
-            </div>
-            """, unsafe_allow_html=True)
+                # Kaynakları şık kartlar halinde göster
+                formatted_sources = []
+                if captured_docs:
+                    with st.expander("📌 Referans Alınan KAP Raporları & Sayfalar"):
+                        for s_idx, doc in enumerate(captured_docs):
+                            comp = doc.metadata.get("company", "Bilinmeyen")
+                            yr = doc.metadata.get("year", "")
+                            fname = doc.metadata.get("file_name", os.path.basename(doc.metadata.get("source", "")))
+                            page = doc.metadata.get("page", "Bilinmiyor")
+                            snippet = doc.page_content[:240].replace("\n", " ").strip()
+                            
+                            formatted_sources.append({
+                                "company": comp,
+                                "year": yr,
+                                "file_name": fname,
+                                "page": page,
+                                "snippet": snippet
+                            })
 
-            # Kaynakları şık kartlar halinde göster
-            formatted_sources = []
-            if captured_docs:
-                with st.expander("📌 Referans Alınan KAP Raporları & Sayfalar"):
-                    for s_idx, doc in enumerate(captured_docs):
-                        comp = doc.metadata.get("company", "Bilinmeyen")
-                        yr = doc.metadata.get("year", "")
-                        fname = doc.metadata.get("file_name", os.path.basename(doc.metadata.get("source", "")))
-                        page = doc.metadata.get("page", "Bilinmiyor")
-                        snippet = doc.page_content[:240].replace("\n", " ").strip()
-                        
-                        formatted_sources.append({
-                            "company": comp,
-                            "year": yr,
-                            "file_name": fname,
-                            "page": page,
-                            "snippet": snippet
-                        })
+                            comp_badge = get_company_badge(comp)
+                            st.markdown(
+                                f"""<div class="source-box">
+                                <strong>Kaynak {s_idx+1}:</strong> {comp_badge} | <strong>Yıl:</strong> {yr} | 
+                                <strong>Dosya:</strong> <code>{fname}</code> | <strong>Sayfa:</strong> {page}
+                                <br><br>
+                                <em>"{snippet}..."</em>
+                                </div>""",
+                                unsafe_allow_html=True
+                            )
 
-                        comp_badge = get_company_badge(comp)
-                        st.markdown(
-                            f"""<div class="source-box">
-                            <strong>Kaynak {s_idx+1}:</strong> {comp_badge} | <strong>Yıl:</strong> {yr} | 
-                            <strong>Dosya:</strong> <code>{fname}</code> | <strong>Sayfa:</strong> {page}
-                            <br><br>
-                            <em>"{snippet}..."</em>
-                            </div>""",
-                            unsafe_allow_html=True
-                        )
+                # 3. Asistan mesajını hafızaya kaydet
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": full_response,
+                    "sources": formatted_sources
+                })
 
-            # 3. Asistan mesajını hafızaya kaydet
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": full_response,
-                "sources": formatted_sources
-            })
+            # Yanıt tamamlandığında sohbeti yeniden çizip girdi kutusunu en altta tut
+            st.rerun()
 
 
 # --- 2. SEKME: CANLI FİYAT & MUM GRAFİĞİ ---
