@@ -213,8 +213,12 @@ st.markdown("""
 
 
 # --- ENGINE VE REPORT GENERATOR ÖNBELLEKLEME ---
+def get_vectorstore_version() -> float:
+    idx_p = Path("vectorstore/db_faiss/index.faiss")
+    return idx_p.stat().st_mtime if idx_p.exists() else 0.0
+
 @st.cache_resource(show_spinner=False)
-def load_rag_engine(model_choice: str):
+def load_rag_engine(model_choice: str, vs_version: float = 0.0):
     return FinancialRAGEngine(model_name=model_choice)
 
 @st.cache_resource(show_spinner=False)
@@ -290,6 +294,11 @@ with st.sidebar:
         index=0,
         help="Belirli bir faaliyet veya bilanço yılına odaklanın."
     )
+
+    if st.button("🔄 Sohbeti & Önbelleği Temizle", use_container_width=True, help="Sohbet geçmişini ve bellek önbelleğini sıfırlar"):
+        st.cache_resource.clear()
+        st.session_state.messages = []
+        st.rerun()
 
     st.divider()
 
@@ -464,7 +473,7 @@ if url_ticker:
 st.markdown(badge_html, unsafe_allow_html=True)
 
 # --- RAG MOTORUNU YÜKLE ---
-engine = load_rag_engine(model_option)
+engine = load_rag_engine(model_option, vs_version=get_vectorstore_version())
 
 # --- SOHBET GEÇMİŞİNİ BAŞLAT (DEEP-LINKING UYARLAMASI - 1. ADIM) ---
 if "messages" not in st.session_state or not st.session_state.messages:
