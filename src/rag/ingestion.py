@@ -122,7 +122,7 @@ def add_single_pdf_to_vectorstore(
     vectorstore_path_str: str = VECTORSTORE_PATH_STR,
     chunk_size: int = CHUNK_SIZE,
     chunk_overlap: int = CHUNK_OVERLAP,
-    smart_filter: bool = True,
+    smart_filter: bool = False,
 ) -> bool:
     """
     Yeni indirilen tek bir PDF raporunu mevcut FAISS veritabanına artırımlı (incremental) ekler.

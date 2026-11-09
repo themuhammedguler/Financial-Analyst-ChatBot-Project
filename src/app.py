@@ -378,6 +378,7 @@ with st.sidebar:
                         with st.spinner("Rapor vektör indeksine ekleniyor..."):
                             success = add_single_pdf_to_vectorstore(downloaded_path)
                             if success:
+                                st.cache_resource.clear()
                                 st.success("Rapor başarıyla indekslendi ve analize hazır!")
                             else:
                                 st.error("İndeksleme sırasında bir hata oluştu.")
