@@ -1,0 +1,27 @@
+{
+  "ticker": "SAHOL",
+  "company_name": "Hacı Ömer Sabancı Holding A.Ş.",
+  "report_date": "2026-11-09",
+  "fundamental_summary": "Sabancı Holding, 'Yeni Ekonomi' odaklı dönüşüm stratejisi kapsamında yenilenebilir enerji, iklim teknolojileri ve dijital yatırımlara ağırlık vermektedir. Enerjisa ve Akbank'ın sağlam kâr katkısı NAD büyümesini hızlandırmaktadır.",
+  "sentiment_score": 0.73,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": 4.2,
+    "pb_ratio": 0.92,
+    "net_profit_margin_trend": "Artış",
+    "debt_to_equity": "Düşük/Yönetilebilir",
+    "extra_metrics": {
+      "sector": "Holding",
+      "data_source": "BIST-100 Fundamental Engine & KAP Reports"
+    }
+  },
+  "catalysts": [
+    "ABD'de devreye alınan büyük ölçekli güneş enerjisi (GES) yatırımları",
+    "Düşük F/K ve 1.0 altı PD/DD ile aşırı cazip değerleme çarpanları",
+    "Hisse geri alım programının istikrarlı şekilde uygulanması"
+  ],
+  "risk_factors": [
+    "Küresel finansman maliyetlerinin yeni enerji yatırımları üzerindeki etkisi",
+    "Bankacılık sektöründeki regülasyon oynaklığı"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "ticker": "TKFEN",
+  "company_name": "Tekfen Holding A.Ş.",
+  "report_date": "2026-11-09",
+  "fundamental_summary": "Tekfen Holding A.Ş., portföyündeki enerji, sanayi, finans ve tüketici şirketlerinin dengeli katkısıyla dengeli bir kâr büyümesi ve yüksek net aktif değer (NAD) artışı sağlamıştır. Net nakit pozisyonu yeni stratejik yatırımlar için esneklik sunmaktadır.",
+  "sentiment_score": 0.72,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": 4.8,
+    "pb_ratio": 1.1,
+    "net_profit_margin_trend": "Artış",
+    "debt_to_equity": "Düşük/Yönetilebilir",
+    "extra_metrics": {
+      "sector": "Holding & Taahhüt",
+      "data_source": "BIST-100 Fundamental Engine & KAP Reports"
+    }
+  },
+  "catalysts": [
+    "Net Aktif Değerine (NAD) göre cazip iskonto oranı ve güçlü temettü akışı",
+    "Yenilenebilir enerji, dijital teknolojiler ve yeşil dönüşüme odaklanan yeni yatırım stratejisi",
+    "Döviz cinsi ihracatçı iştiraklerin güçlü nakit üretimi"
+  ],
+  "risk_factors": [
+    "İştirak şirketlerinin faaliyet gösterdiği sektörlerdeki makroekonomik dalgalanmalar",
+    "Küresel ticaret hacmindeki olası yavaşlama"
+  ]
+}

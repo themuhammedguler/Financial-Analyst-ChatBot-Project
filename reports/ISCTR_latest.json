@@ -1,0 +1,27 @@
+{
+  "ticker": "ISCTR",
+  "company_name": "Türkiye İş Bankası A.Ş.",
+  "report_date": "2026-11-09",
+  "fundamental_summary": "Türkiye İş Bankası, geniş şube ve dijital ağından sağladığı tabana yaygın mevduat gücü ve dengeli kredi kompozisyonu ile sektörün en sağlam bilanço yapılarından birine sahiptir. Güçlü iştirak portföyü (Şişecam, TSKB, Anadolu Sigorta) bankaya ilave değer katmaktadır.",
+  "sentiment_score": 0.71,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": 4.1,
+    "pb_ratio": 0.9,
+    "net_profit_margin_trend": "Yatay",
+    "debt_to_equity": "Düşük/Yönetilebilir",
+    "extra_metrics": {
+      "sector": "Bankacılık",
+      "data_source": "BIST-100 Fundamental Engine & KAP Reports"
+    }
+  },
+  "catalysts": [
+    "İştiraklerin holding yapısı altında birleştirilmesi sürecinin yaratacağı değer ve şeffaflık",
+    "Sermaye yeterlilik rasyosunun yasal asgari limitlerin belirgin üzerinde olması",
+    "Cazip temettü dağıtım potansiyeli ve dijital bankacılık verimliliği"
+  ],
+  "risk_factors": [
+    "Makroihtiyati önlemler ve faiz marjı baskısı",
+    "Aktif kalitesinde olası konjonktürel dalgalanmalar"
+  ]
+}

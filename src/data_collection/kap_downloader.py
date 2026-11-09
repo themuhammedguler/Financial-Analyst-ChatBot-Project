@@ -125,6 +125,17 @@ BIST_100_COMPANIES: Dict[str, Dict[str, str]] = {
     "AGESA": {"name": "Agesa Hayat ve Emeklilik A.Ş.", "sector": "Bireysel Emeklilik", "slug": "2521-agesa-hayat-emeklilik-a-s"},
     "ANSGR": {"name": "Anadolu Anonim Türk Sigorta Şirketi", "sector": "Elementer Sigorta", "slug": "1172-anadolu-sigorta-a-s"},
     "TURSG": {"name": "Türkiye Sigorta A.Ş.", "sector": "Elementer Sigorta", "slug": "2522-turkiye-sigorta-a-s"},
+
+    # İlaç, Otomotiv Yan Sanayi, Gıda & Diğer Sanayi
+    "ECILC": {"name": "Eczacıbaşı İlaç Sanayi ve Finansal Yatırımlar A.Ş.", "sector": "İlaç & Sağlık", "slug": "1173-eczacibasi-ilac-a-s"},
+    "EGEEN": {"name": "Ege Endüstri ve Ticaret A.Ş.", "sector": "Otomotiv Yan Sanayi", "slug": "1174-ege-endustri-a-s"},
+    "KONYA": {"name": "Konya Çimento Sanayii A.Ş.", "sector": "Çimento Sanayi", "slug": "1175-konya-cimento-a-s"},
+    "BFREN": {"name": "Bosch Fren Sistemleri Sanayi ve Ticaret A.Ş.", "sector": "Oto Parça & Fren", "slug": "1176-bosch-fren-a-s"},
+    "BIZIM": {"name": "Bizim Toptan Satış Mağazaları A.Ş.", "sector": "Toptan Perakende", "slug": "1177-bizim-toptan-a-s"},
+    "AGROT": {"name": "Agrotech Yüksek Teknoloji ve Yatırım A.Ş.", "sector": "Tarım & Bilişim", "slug": "2523-agrotech-a-s"},
+    "GOLTS": {"name": "Göltaş Göller Bölgesi Çimento Sanayi A.Ş.", "sector": "Çimento Sanayi", "slug": "1178-goltas-cimento-a-s"},
+    "PAPIL": {"name": "Papilon Savunma Güvenlik Sistemleri A.Ş.", "sector": "Savunma Bilişim", "slug": "2524-papilon-savunma-a-s"},
+    "TUKAS": {"name": "Tukaş Gıda Sanayi ve Ticaret A.Ş.", "sector": "Gıda & Konserve", "slug": "1179-tukas-gida-a-s"},
 }
 
 DEFAULT_HEADERS = {

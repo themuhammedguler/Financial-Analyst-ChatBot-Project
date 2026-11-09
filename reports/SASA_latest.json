@@ -1,0 +1,26 @@
+{
+  "ticker": "SASA",
+  "company_name": "SASA Polyester Sanayi A.Ş.",
+  "report_date": "2026-11-09",
+  "fundamental_summary": "SASA, global polimer ve polyester piyasalarındaki aşırı kapasite arzı ve Asya dampingli fiyat rekabeti nedeniyle baskı altındadır. Devam eden devasa PTA tesisi yatırımlarının borçluluk ve finansman giderleri üzerindeki yükü kârlılığı olumsuz etkilemektedir.",
+  "sentiment_score": -0.32,
+  "sentiment_label": "Negatif",
+  "key_metrics": {
+    "pe_ratio": 24.5,
+    "pb_ratio": 2.8,
+    "net_profit_margin_trend": "Artış",
+    "debt_to_equity": "Düşük/Yönetilebilir",
+    "extra_metrics": {
+      "sector": "Polyester & Elyaf",
+      "data_source": "BIST-100 Fundamental Engine & KAP Reports"
+    }
+  },
+  "catalysts": [
+    "Yumurtalık PTA tesisinin tam devreye girmesiyle ithal ikamesi ve hammadde maliyet avantajı",
+    "Küresel petrokimya arz-talep dengesinde gelecekte beklenen toparlanma"
+  ],
+  "risk_factors": [
+    "Yüksek net borç / FAVÖK çarpanı ve artan küresel faiz ortamında borç çevirme maliyeti",
+    "Asya üreticilerinin düşük marjlı rekabet baskısı"
+  ]
+}

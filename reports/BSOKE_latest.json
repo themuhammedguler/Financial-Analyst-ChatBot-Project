@@ -1,0 +1,27 @@
+{
+  "ticker": "BSOKE",
+  "company_name": "Batısöke Söke Çimento Sanayii T.A.Ş.",
+  "report_date": "2026-11-09",
+  "fundamental_summary": "Batısöke Söke Çimento Sanayii T.A.Ş., deprem bölgesi yeniden inşa projeleri, kentsel dönüşüm ve altyapı yatırımları sayesinde iç pazarda kuvvetli satış hacmini muhafaza etmektedir. Alternatif yakıt kullanımı klinker maliyetlerini kontrol altında tutmaktadır.",
+  "sentiment_score": 0.62,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": 8.4,
+    "pb_ratio": 2.1,
+    "net_profit_margin_trend": "Artış",
+    "debt_to_equity": "Düşük/Yönetilebilir",
+    "extra_metrics": {
+      "sector": "Çimento Sanayi",
+      "data_source": "BIST-100 Fundamental Engine & KAP Reports"
+    }
+  },
+  "catalysts": [
+    "Deprem bölgesi imar projeleri ve kentsel dönüşüm kaynaklı kesintisiz çimento talebi",
+    "Liman avantajı sayesinde Akdeniz ve ABD pazarına yönelik klinker/çimento ihracatı",
+    "Atık ısı geri kazanımı ve alternatif yakıt yatırımlarıyla düşen enerji maliyetleri"
+  ],
+  "risk_factors": [
+    "Petrokok, kömür ve elektrik maliyetlerindeki olası artışlar",
+    "Konut sektöründeki faiz kaynaklı yeni ruhsat yavaşlaması"
+  ]
+}

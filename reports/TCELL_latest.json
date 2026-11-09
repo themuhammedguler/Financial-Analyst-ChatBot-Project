@@ -1,0 +1,27 @@
+{
+  "ticker": "TCELL",
+  "company_name": "Turkcell İletişim Hizmetleri A.Ş.",
+  "report_date": "2026-11-09",
+  "fundamental_summary": "Turkcell, enflasyon üzerinde faturalı ARPU artışı ve abone bazı büyümesiyle güçlü bir reel gelir genişlemesi elde etmiştir. Veri merkezleri, bulut bilişim ve Paycell finansal teknolojiler segmentleri yüksek kâr marjı sağlamaktadır.",
+  "sentiment_score": 0.72,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": 8.2,
+    "pb_ratio": 2.1,
+    "net_profit_margin_trend": "Artış",
+    "debt_to_equity": "Orta",
+    "extra_metrics": {
+      "sector": "Telekomünikasyon",
+      "data_source": "BIST-100 Fundamental Engine & KAP Reports"
+    }
+  },
+  "catalysts": [
+    "Faturalı abone tabanının toplam içindeki payının artması ve güçlü fiyatlama gücü",
+    "Genişleyen veri merkezi kapasitesi ve yapay zeka/bulut çözümleri",
+    "Güneş enerjisi santrali yatırımlarıyla azalan elektrik maliyeti"
+  ],
+  "risk_factors": [
+    "5G ihalesi ve altyapı kurulumu kaynaklı gelecekteki sermaye harcamaları (CAPEX)",
+    "Yüksek enflasyon döneminde regüle edilen tavan fiyat baskısı"
+  ]
+}

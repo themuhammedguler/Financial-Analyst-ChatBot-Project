@@ -1,0 +1,27 @@
+{
+  "ticker": "SISE",
+  "company_name": "Türkiye Şişe ve Cam Fabrikaları A.Ş.",
+  "report_date": "2026-11-09",
+  "fundamental_summary": "Şişecam, küresel cam sanayiindeki entegre operasyonları, ABD doğal soda külü yatırımı ve geniş coğrafi dağılımı ile güçlü bir endüstriyel devdir. Enerji maliyetlerindeki normalleşme ve küresel mimari cam talebi kârlılığı desteklemektedir.",
+  "sentiment_score": 0.64,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": 8.0,
+    "pb_ratio": 1.45,
+    "net_profit_margin_trend": "Artış",
+    "debt_to_equity": "Düşük/Yönetilebilir",
+    "extra_metrics": {
+      "sector": "Cam & Sanayi",
+      "data_source": "BIST-100 Fundamental Engine & KAP Reports"
+    }
+  },
+  "catalysts": [
+    "ABD doğal soda külü yatırımının tamamlanmasıyla küresel maliyet liderliği",
+    "Güneş enerjisi panelleri için üretilen fotovoltaik cam talebindeki sıçrama",
+    "Uluslararası güçlü ihracat ağı ve dengeli coğrafi gelir dağılımı"
+  ],
+  "risk_factors": [
+    "Avrupa inşaat ve otomotiv sektörlerindeki geçici durgunluk",
+    "Enerji yoğun üretim süreçleri kaynaklı doğalgaz fiyat oynaklığı"
+  ]
+}

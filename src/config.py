@@ -142,6 +142,16 @@ TICKER_TO_COMPANY = {
     "AGESA": "Agesa Hayat ve Emeklilik",
     "ANSGR": "Anadolu Sigorta",
     "TURSG": "Türkiye Sigorta",
+    # İlaç, Otomotiv Yan Sanayi, Gıda & Diğer Sanayi
+    "ECILC": "Eczacıbaşı İlaç",
+    "EGEEN": "Ege Endüstri",
+    "KONYA": "Konya Çimento",
+    "BFREN": "Bosch Fren Sistemleri",
+    "BIZIM": "Bizim Toptan",
+    "AGROT": "Agrotech Yüksek Teknoloji",
+    "GOLTS": "Göltaş Çimento",
+    "PAPIL": "Papilon Savunma",
+    "TUKAS": "Tukaş",
 }
 
 COMPANY_TO_TICKER = {v: k for k, v in TICKER_TO_COMPANY.items()}

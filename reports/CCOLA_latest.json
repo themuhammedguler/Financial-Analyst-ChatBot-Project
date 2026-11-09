@@ -1,0 +1,27 @@
+{
+  "ticker": "CCOLA",
+  "company_name": "Coca-Cola İçecek A.Ş.",
+  "report_date": "2026-11-09",
+  "fundamental_summary": "Coca-Cola İçecek, Orta Asya ve Pakistan operasyonlarının güçlü katkısı ve etkin fiyatlama stratejisiyle uluslararası hacim büyümesini sürdürmüştür. Yüksek nakit dönüşüm oranı ve güçlü FAVÖK marjı şirketi BIST'in en kaliteli büyüme hisselerinden biri yapmaktadır.",
+  "sentiment_score": 0.82,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": 13.2,
+    "pb_ratio": 3.6,
+    "net_profit_margin_trend": "Artış",
+    "debt_to_equity": "Düşük/Yönetilebilir",
+    "extra_metrics": {
+      "sector": "İçecek Sanayi",
+      "data_source": "BIST-100 Fundamental Engine & KAP Reports"
+    }
+  },
+  "catalysts": [
+    "Bangladeş ve Orta Asya pazarlarındaki inorganik satın almalar ve organik pazar payı kazanımı",
+    "Döviz bazlı uluslararası gelirlerin toplam cironun %60'ından fazlasını oluşturması",
+    "Etkin hammadde risk koruma (hedging) stratejileriyle korunan yüksek FAVÖK marjı"
+  ],
+  "risk_factors": [
+    "Orta Doğu bölgesindeki jeopolitik riskler ve tüketici boykot duyarlılıkları",
+    "Gelişmekte olan ülke para birimlerindeki kur dalgalanmaları"
+  ]
+}

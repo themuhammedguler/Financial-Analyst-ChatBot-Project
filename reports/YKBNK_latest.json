@@ -1,0 +1,27 @@
+{
+  "ticker": "YKBNK",
+  "company_name": "Yapı ve Kredi Bankası A.Ş.",
+  "report_date": "2026-11-09",
+  "fundamental_summary": "Yapı Kredi, tüketici kredileri ve kredi kartlarındaki güçlü pazar payı ile yüksek komisyon geliri üretmektedir. Yüksek sermaye yeterliliği ve güçlü likidite rasyoları bankanın bilanço direncini artırmaktadır.",
+  "sentiment_score": 0.7,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": 4.0,
+    "pb_ratio": 0.94,
+    "net_profit_margin_trend": "Yatay",
+    "debt_to_equity": "Düşük/Yönetilebilir",
+    "extra_metrics": {
+      "sector": "Bankacılık",
+      "data_source": "BIST-100 Fundamental Engine & KAP Reports"
+    }
+  },
+  "catalysts": [
+    "Kredi kartı ve ödeme sistemleri hacminde kesintisiz sektör liderliği",
+    "Mevduat faizlerindeki olası gevşemeyle net faiz marjında hızlı toparlanma potansiyeli",
+    "Yüksek dijital müşteri penetrasyonu"
+  ],
+  "risk_factors": [
+    "Kredi kartı komisyon ve faiz tavanları regülasyonları",
+    "Fonlama maliyetleri oynaklığı"
+  ]
+}

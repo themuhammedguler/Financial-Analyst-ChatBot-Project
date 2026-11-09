@@ -1,0 +1,27 @@
+{
+  "ticker": "EGEEN",
+  "company_name": "Ege Endüstri ve Ticaret A.Ş.",
+  "report_date": "2026-11-09",
+  "fundamental_summary": "Ege Endüstri ve Ticaret A.Ş., Avrupa pazarına yönelik güçlü ticari araç ihracatı ve yüksek kapasite kullanım oranıyla güçlü operasyonel nakit akışı yaratmıştır. Elektrikli ve hibrit dönüşüm yatırımları şirketin uzun vadeli rekabet gücünü artırmaktadır.",
+  "sentiment_score": 0.68,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": 7.8,
+    "pb_ratio": 2.85,
+    "net_profit_margin_trend": "Artış",
+    "debt_to_equity": "Düşük/Yönetilebilir",
+    "extra_metrics": {
+      "sector": "Otomotiv Yan Sanayi",
+      "data_source": "BIST-100 Fundamental Engine & KAP Reports"
+    }
+  },
+  "catalysts": [
+    "Yeni nesil elektrikli/hibrit model üretimlerinin devreye girmesi ve uzun vadeli alım garantili ihracat kontratları",
+    "Yüksek temettü verimliliği ve güçlü özsermaye kârlılığı (ROE %40+)",
+    "Esnek üretim hattı ve döviz bazlı sözleşmelerle kur riskinden doğal korunma"
+  ],
+  "risk_factors": [
+    "İç pazarda taşıt kredisi faiz oranlarının talebi yavaşlatma olasılığı",
+    "Avrupa Birliği genel ekonomik yavaşlamasının ana ihracat siparişlerine yansıması"
+  ]
+}
