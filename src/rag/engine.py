@@ -100,13 +100,19 @@ class FinancialRAGEngine:
             self._vector_db = None
             self._bm25_retriever = None
 
-    def get_llm(self, streaming: bool = True) -> ChatGoogleGenerativeAI:
+    def get_llm(
+        self, 
+        model: Optional[str] = None, 
+        streaming: bool = True, 
+        max_retries: int = 1
+    ) -> ChatGoogleGenerativeAI:
         """İlgili LLM modelini yapılandırır."""
         return ChatGoogleGenerativeAI(
-            model=self.model_name,
+            model=model or self.model_name,
             temperature=self.temperature,
             google_api_key=GOOGLE_API_KEY,
             streaming=streaming,
+            max_retries=max_retries,
         )
 
     def detect_filters(self, query: str) -> Dict[str, Any]:
@@ -249,9 +255,26 @@ class FinancialRAGEngine:
         context_str = "\n".join(context_parts)
         prompt_text = FINANCIAL_PROMPT.format(context=context_str, question=question)
 
-        llm = self.get_llm(streaming=False)
-        response = llm.invoke(prompt_text)
-        answer_text = response.content if hasattr(response, "content") else str(response)
+        fallback_candidates = [self.model_name, DEFAULT_LLM_MODEL, "gemini-3.5-flash", "gemini-3.8-flash"]
+        models_to_try = []
+        for m in fallback_candidates:
+            if m and m not in models_to_try:
+                models_to_try.append(m)
+
+        answer_text = ""
+        for model_to_use in models_to_try:
+            try:
+                llm = self.get_llm(model=model_to_use, streaming=False, max_retries=1)
+                response = llm.invoke(prompt_text)
+                answer_text = response.content if hasattr(response, "content") else str(response)
+                if answer_text:
+                    break
+            except Exception as e:
+                print(f"[RAGEngine] answer_query '{model_to_use}' hatası: {e}. Alternatif deneniyor...")
+                continue
+
+        if not answer_text:
+            answer_text = "Finansal model şu anda yanıt üretemedi. Lütfen daha sonra tekrar deneyiniz."
 
         # Hallucination Guard ile sayısal doğrulama yap
         guard_result = self.guard.verify_claims(answer_text, docs)
@@ -307,16 +330,33 @@ class FinancialRAGEngine:
 
         context_str = "\n".join(context_parts)
         formatted_prompt = FINANCIAL_PROMPT.format(context=context_str, question=question)
-        llm = self.get_llm(streaming=True)
+
+        # Hata toleranslı model sırası (Kota/429 durumunda otomatik fallback)
+        fallback_candidates = [self.model_name, DEFAULT_LLM_MODEL, "gemini-3.5-flash", "gemini-3.8-flash"]
+        models_to_try = []
+        for m in fallback_candidates:
+            if m and m not in models_to_try:
+                models_to_try.append(m)
 
         full_answer = ""
-        try:
-            for chunk in llm.stream(formatted_prompt):
-                if chunk.content:
-                    full_answer += chunk.content
-                    yield {"type": "content", "content": chunk.content}
-        except Exception as e:
-            yield {"type": "content", "content": f"\n\n**Hata oluştu:** {e}"}
+        stream_success = False
+
+        for model_to_use in models_to_try:
+            try:
+                llm = self.get_llm(model=model_to_use, streaming=True, max_retries=1)
+                full_answer = ""
+                for chunk in llm.stream(formatted_prompt):
+                    if chunk.content:
+                        full_answer += chunk.content
+                        yield {"type": "content", "content": chunk.content}
+                stream_success = True
+                break
+            except Exception as e:
+                print(f"[RAGEngine] Model '{model_to_use}' streaming hatası: {e}. Alternatif model deneniyor...")
+                continue
+
+        if not stream_success:
+            yield {"type": "content", "content": "\n\n⚠️ Ücretsiz Gemini API kota sınırına ulaşıldı veya model yanıt veremedi. Lütfen birkaç dakika sonra tekrar deneyin."}
 
         # Hallucination Guard denetimi
         guard_result = self.guard.verify_claims(full_answer, docs)

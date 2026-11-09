@@ -32,12 +32,14 @@ class QueryRewriter:
     bağlamı koruyarak bağımsız arama sorgularına dönüştüren modül.
     """
 
-    def __init__(self, api_key: str = None, model: str = DEFAULT_LLM_MODEL):
+    def __init__(self, api_key: str = None, model: str = None):
         self.api_key = api_key or GOOGLE_API_KEY
+        self.model = model or DEFAULT_LLM_MODEL
         self.llm = ChatGoogleGenerativeAI(
-            model=model,
+            model=self.model,
             temperature=0.0,
             google_api_key=self.api_key,
+            max_retries=1,
         )
         self.chain = REWRITE_PROMPT | self.llm
 
