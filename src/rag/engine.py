@@ -2,6 +2,7 @@ import os
 import re
 from typing import List, Dict, Any, Optional, Generator
 from langchain_community.vectorstores import FAISS
+from langchain_community.retrievers import BM25Retriever
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.documents import Document
 from langchain_core.prompts import PromptTemplate
@@ -19,6 +20,7 @@ from src.config import (
 )
 from src.rag.embeddings import GeminiEmbeddings
 from src.rag.rewriter import QueryRewriter
+from src.rag.guard import HallucinationGuard
 
 
 SYSTEM_PROMPT_TEMPLATE = """Sen, Borsa İstanbul (BIST) şirketlerinin finansal tablolarını, faaliyet raporlarını ve KAP bildirimlerini derinlemesine analiz eden **Kıdemli bir Finansal Analist ve Araştırma Uzmanısın**.
@@ -51,10 +53,11 @@ FINANCIAL_PROMPT = PromptTemplate(
 
 class FinancialRAGEngine:
     """
-    Sektörel seviyede RAG Analiz Motoru.
+    Sektörel seviyede Finansal RAG Analiz Motoru.
     - Çok turlu sohbet hafızası (Query Rewriting)
-    - Metadata filtreleme (Şirket & Yıl bazlı)
-    - MMR (Maximal Marginal Relevance) çeşitlilik araması
+    - Hibrit Arama (Hybrid Search: FAISS Vektör + BM25 Anahtar Kelime)
+    - Metadata filtreleme (BIST 100 Şirketleri & Yıl bazlı)
+    - Hallucination Guard (Sayısal ve İddia Doğrulama Katmanı)
     - Gerçek zamanlı LLM Token Streaming
     """
 
@@ -69,11 +72,13 @@ class FinancialRAGEngine:
         self.temperature = temperature
         self.embeddings = GeminiEmbeddings()
         self.rewriter = QueryRewriter(model=DEFAULT_LLM_MODEL)
+        self.guard = HallucinationGuard()
         self._vector_db = None
+        self._bm25_retriever = None
         self._load_vectorstore()
 
     def _load_vectorstore(self):
-        """FAISS vektör veritabanını yükler."""
+        """FAISS vektör veritabanını ve BM25 seyrek indeksini yükler."""
         if os.path.exists(os.path.join(self.vectorstore_path, "index.faiss")):
             try:
                 self._vector_db = FAISS.load_local(
@@ -81,11 +86,19 @@ class FinancialRAGEngine:
                     self.embeddings,
                     allow_dangerous_deserialization=True
                 )
+                # BM25 Sparse İndeksini bellekteki doküman havuzundan otomatik oluştur
+                all_docs = list(self._vector_db.docstore._dict.values())
+                if all_docs:
+                    self._bm25_retriever = BM25Retriever.from_documents(all_docs)
+                    self._bm25_retriever.k = TOP_K_RETRIEVAL * 2
+                    print(f"[RAGEngine] Hibrit Arama Aktif: {len(all_docs)} parça FAISS ve BM25 ile indekslendi.")
             except Exception as e:
                 print(f"[RAGEngine] Vektör veritabanı yüklenemedi: {e}")
                 self._vector_db = None
+                self._bm25_retriever = None
         else:
             self._vector_db = None
+            self._bm25_retriever = None
 
     def get_llm(self, streaming: bool = True) -> ChatGoogleGenerativeAI:
         """İlgili LLM modelini yapılandırır."""
@@ -120,21 +133,22 @@ class FinancialRAGEngine:
         company_filter: Optional[str] = None,
         year_filter: Optional[int] = None,
         top_k: int = TOP_K_RETRIEVAL,
-        use_mmr: bool = True,
+        use_hybrid: bool = True,
     ) -> List[Document]:
         """
-        Gelişmiş belge getirme (Retrieval).
-        Filtreleme kriterlerine göre FAISS üzerinden MMR veya Benzerlik araması yapar.
+        Gelişmiş Hibrit Belge Getirme (Hybrid Retrieval: Dense FAISS + Sparse BM25).
+        - FAISS: Anlamsal / semantik benzerlik
+        - BM25: Rakam, oran, dipnot numarası ve finansal terim tam eşleşmesi
+        - Metadata filtreleme ve Reciprocal Rank Fusion (RRF) harmanlaması
         """
         if not self._vector_db:
             return []
 
-        # Otomatik filtre tespiti (eğer kullanıcı arayüzden seçmediyse)
+        # Otomatik filtre tespiti
         auto_filters = self.detect_filters(query)
         effective_company = company_filter if company_filter and company_filter != "Tümü" else auto_filters["company"]
         effective_year = year_filter if year_filter and year_filter != "Tümü" else auto_filters["year"]
 
-        # FAISS metadata filter dictionary
         filter_dict = {}
         if effective_company and effective_company != "Tümü":
             filter_dict["company"] = effective_company
@@ -144,40 +158,107 @@ class FinancialRAGEngine:
             except ValueError:
                 pass
 
+        # 1. Dense (FAISS) Arama
+        dense_docs = []
         try:
-            if filter_dict:
-                # Filtreli arama: önce daha geniş bir havuz çekip filtre uygula
-                initial_k = top_k * 4
-                raw_docs = self._vector_db.similarity_search(query, k=initial_k)
-                filtered = []
-                for d in raw_docs:
-                    match = True
-                    for k, v in filter_dict.items():
-                        if d.metadata.get(k) != v:
-                            match = False
-                            break
-                    if match:
-                        filtered.append(d)
-                
-                # Eğer filtrelenmiş sonuç yeterliyse onu dön, yoksa geniş havuzdan devam et
-                if len(filtered) >= 2:
-                    return filtered[:top_k]
-                elif filtered:
-                    return filtered + [d for d in raw_docs if d not in filtered][:top_k - len(filtered)]
-            
-            # Filtresiz veya doğrudan MMR araması
-            if use_mmr:
-                retriever = self._vector_db.as_retriever(
-                    search_type="mmr",
-                    search_kwargs={"k": top_k, "lambda_mult": MMR_LAMBDA, "fetch_k": top_k * 3}
-                )
-                return retriever.invoke(query)
-            else:
-                return self._vector_db.similarity_search(query, k=top_k)
-
+            dense_docs = self._vector_db.similarity_search(query, k=top_k * 2)
         except Exception as e:
-            print(f"[RAGEngine] Retrieval hatası: {e}")
-            return self._vector_db.similarity_search(query, k=top_k)
+            print(f"[RAGEngine] FAISS arama hatası: {e}")
+
+        # 2. Sparse (BM25) Arama
+        sparse_docs = []
+        if use_hybrid and self._bm25_retriever:
+            try:
+                sparse_docs = self._bm25_retriever.invoke(query)
+            except Exception as e:
+                print(f"[RAGEngine] BM25 arama hatası: {e}")
+
+        # 3. Reciprocal Rank Fusion (RRF) ile Skorlama
+        doc_scores: Dict[str, float] = {}
+        doc_map: Dict[str, Document] = {}
+
+        # Dense skorları (Ağırlık: 0.6)
+        for rank, doc in enumerate(dense_docs):
+            key = f"{doc.metadata.get('file_name', '')}_{doc.metadata.get('page', '')}_{doc.page_content[:50]}"
+            doc_scores[key] = doc_scores.get(key, 0.0) + (0.6 / (60 + rank))
+            doc_map[key] = doc
+
+        # Sparse skorları (Ağırlık: 0.4)
+        for rank, doc in enumerate(sparse_docs):
+            key = f"{doc.metadata.get('file_name', '')}_{doc.metadata.get('page', '')}_{doc.page_content[:50]}"
+            doc_scores[key] = doc_scores.get(key, 0.0) + (0.4 / (60 + rank))
+            doc_map[key] = doc
+
+        # RRF skoruna göre azalan sırada sırala
+        ranked_keys = sorted(doc_scores.keys(), key=lambda k: doc_scores[k], reverse=True)
+        combined_docs = [doc_map[k] for k in ranked_keys]
+
+        # 4. Metadata Filtresini Uygula
+        if filter_dict:
+            filtered_docs = []
+            for doc in combined_docs:
+                matches = True
+                for fk, fv in filter_dict.items():
+                    if doc.metadata.get(fk) != fv:
+                        matches = False
+                        break
+                if matches:
+                    filtered_docs.append(doc)
+
+            if len(filtered_docs) >= 2:
+                return filtered_docs[:top_k]
+            elif filtered_docs:
+                # Eşleşenleri en başa koy, kalanı havuzdan tamamla
+                return filtered_docs + [d for d in combined_docs if d not in filtered_docs][:top_k - len(filtered_docs)]
+
+        return combined_docs[:top_k] if combined_docs else dense_docs[:top_k]
+
+    def answer_query(
+        self,
+        question: str,
+        company_filter: Optional[str] = None,
+        year_filter: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """
+        Soruya tek seferde (senkron) yanıt üretir ve Hallucination Guard denetiminden geçirir.
+        Evaluation benchmark'ları ve REST API uç noktaları tarafından kullanılır.
+        """
+        docs = self.retrieve_documents(
+            query=question,
+            company_filter=company_filter,
+            year_filter=year_filter,
+        )
+
+        if not docs:
+            return {
+                "answer": "İlgili şirket veya konuya ilişkin veri tabanında resmi rapor bulunamadı.",
+                "docs": [],
+                "guard_result": {"groundedness_score": 1.0, "is_safe": True}
+            }
+
+        context_parts = []
+        for idx, doc in enumerate(docs):
+            src_name = doc.metadata.get("file_name", "Bilinmiyor")
+            page = doc.metadata.get("page", "-")
+            comp = doc.metadata.get("company", "Bilinmeyen")
+            yr = doc.metadata.get("year", "")
+            context_parts.append(f"--- [KAYNAK {idx+1}] {comp} {yr} (Sayfa {page}) ---\n{doc.page_content}\n")
+
+        context_str = "\n".join(context_parts)
+        prompt_text = FINANCIAL_PROMPT.format(context=context_str, question=question)
+
+        llm = self.get_llm(streaming=False)
+        response = llm.invoke(prompt_text)
+        answer_text = response.content if hasattr(response, "content") else str(response)
+
+        # Hallucination Guard ile sayısal doğrulama yap
+        guard_result = self.guard.verify_claims(answer_text, docs)
+
+        return {
+            "answer": answer_text,
+            "docs": docs,
+            "guard_result": guard_result,
+        }
 
     def stream_answer(
         self,
@@ -188,14 +269,12 @@ class FinancialRAGEngine:
     ) -> Generator[Dict[str, Any], None, None]:
         """
         Soruya canlı streaming olarak token token yanıt üretir.
-        Her yield adımında metin parçası (chunk), tamamlandığında ise kaynak belgeler döner.
+        Her yield adımında metin parçası (chunk), tamamlandığında ise kaynak belgeler
+        ve Hallucination Guard doğrulama skoru döner.
         """
         chat_history = chat_history or []
-
-        # 1. Takip sorusu varsa geçmiş bağlama göre yeniden yaz
         rewritten_query = self.rewriter.rewrite(question, chat_history)
 
-        # 2. Vektör veritabanından en alakalı belgeleri getir
         docs = self.retrieve_documents(
             query=rewritten_query,
             company_filter=company_filter,
@@ -205,38 +284,44 @@ class FinancialRAGEngine:
         if not docs:
             yield {
                 "type": "content",
-                "content": "Veritabanında ilgili soruya ilişkin herhangi bir finansal rapor veya doküman bulunamadı. Lütfen vektör indeksinin oluşturulduğundan ve raporların yüklendiğinden emin olun."
+                "content": "Veritabanında ilgili soruya ilişkin herhangi bir finansal rapor veya doküman bulunamadı."
             }
-            yield {"type": "done", "docs": [], "rewritten_query": rewritten_query}
+            yield {
+                "type": "done",
+                "docs": [],
+                "rewritten_query": rewritten_query,
+                "guard_result": {"groundedness_score": 1.0, "is_safe": True}
+            }
             return
 
-        # 3. Belgeleri bağlam metni olarak formatla
         context_parts = []
         for idx, doc in enumerate(docs):
             src_name = doc.metadata.get("file_name", os.path.basename(doc.metadata.get("source", "Bilinmiyor")))
             page = doc.metadata.get("page", "Belirtilmemiş")
             comp = doc.metadata.get("company", "Bilinmeyen")
             yr = doc.metadata.get("year", "")
-            
             header = f"--- [KAYNAK {idx+1}] Şirket: {comp} | Yıl: {yr} | Dosya: {src_name} | Sayfa: {page} ---"
             context_parts.append(f"{header}\n{doc.page_content}\n")
 
         context_str = "\n".join(context_parts)
-
-        # 4. Prompt'u oluştur ve LLM'e streaming gönder
         formatted_prompt = FINANCIAL_PROMPT.format(context=context_str, question=question)
         llm = self.get_llm(streaming=True)
 
+        full_answer = ""
         try:
             for chunk in llm.stream(formatted_prompt):
                 if chunk.content:
+                    full_answer += chunk.content
                     yield {"type": "content", "content": chunk.content}
         except Exception as e:
             yield {"type": "content", "content": f"\n\n**Hata oluştu:** {e}"}
 
-        # 5. Kaynakları ve sorgu detayını tamamlandı mesajı ile teslim et
+        # Hallucination Guard denetimi
+        guard_result = self.guard.verify_claims(full_answer, docs)
+
         yield {
             "type": "done",
             "docs": docs,
-            "rewritten_query": rewritten_query
+            "rewritten_query": rewritten_query,
+            "guard_result": guard_result,
         }

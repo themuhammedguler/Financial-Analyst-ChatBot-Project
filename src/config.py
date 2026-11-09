@@ -29,56 +29,128 @@ CHUNK_OVERLAP = 200
 TOP_K_RETRIEVAL = 5
 MMR_LAMBDA = 0.7
 
-# Şirket ve Yıl Tanımlamaları
-COMPANIES = {
-    "Akbank": ["akbank", "akb"],
-    "Türk Hava Yolları": ["türk hava yolları", "turk hava yollari", "thy", "thya"],
-    "Tüpraş": ["tüpraş", "tupras"],
-    "Ereğli Demir Çelik": ["eregli", "ereğli", "eregl", "erdemir"],
-    "Şişecam": ["şişecam", "sisecam", "sise"],
-    "Aselsan": ["aselsan", "asels"],
-    "BİM Mağazalar": ["bim", "bimas"],
-    "Ford Otomotiv": ["ford", "froto"],
-    "Garanti BBVA": ["garanti", "garan"],
-    "İş Bankası": ["iş bankası", "is bankasi", "isctr"],
-    "Koç Holding": ["koç holding", "koc holding", "kchol"],
-    "Sabancı Holding": ["sabancı holding", "sabanci holding", "sahol"],
-    "Yapı Kredi": ["yapı kredi", "yapi kredi", "ykbnk"],
-    "Pegasus": ["pegasus", "pgsus"],
-    "Turkcell": ["turkcell", "tcell"],
-}
-
-SUPPORTED_YEARS = [2020, 2021, 2022, 2023, 2024]
+# Şirket ve Yıl Tanımlamaları (2020 - 2026 Dönemi)
+SUPPORTED_YEARS = [2020, 2021, 2022, 2023, 2024, 2025, 2026]
 
 # BIST-Trend-Forecaster Entegrasyonu
 FORECASTER_BASE_URL = "https://bist-trend-forecaster.streamlit.app"
 REPORTS_DIR = ROOT_DIR / "reports"
 
-# Ticker <-> Şirket Eşlemeleri (BIST 100 Entegrasyonu)
+# Ticker <-> Şirket Eşlemeleri (BIST 100 Tam Katalog)
 TICKER_TO_COMPANY = {
+    # Bankacılık & Finans
     "AKBNK": "Akbank",
-    "THYAO": "Türk Hava Yolları",
-    "TUPRS": "Tüpraş",
-    "EREGL": "Ereğli Demir Çelik",
-    "SISE": "Şişecam",
-    "ASELS": "Aselsan",
-    "BIMAS": "BİM Mağazalar",
-    "FROTO": "Ford Otomotiv",
     "GARAN": "Garanti BBVA",
     "ISCTR": "İş Bankası",
-    "KCHOL": "Koç Holding",
-    "SAHOL": "Sabancı Holding",
     "YKBNK": "Yapı Kredi",
-    "PETKM": "Petkim",
+    "HALKB": "Halkbank",
+    "VAKBN": "Vakıfbank",
+    "TSKB": "TSKB",
+    "ALBRK": "Albaraka Türk",
+    # Havacılık & Ulaştırma
+    "THYAO": "Türk Hava Yolları",
     "PGSUS": "Pegasus",
+    "TAVHL": "TAV Havalimanları",
+    "CLEBI": "Çelebi Hava Servisi",
+    # Enerji, Petrol & Rafineri
+    "TUPRS": "Tüpraş",
+    "PETKM": "Petkim",
+    "ENKAI": "Enka İnşaat & Enerji",
+    "ASTOR": "Astor Enerji",
+    "EUPWR": "Europower Enerji",
+    "CWENE": "CW Enerji",
+    "AKFYE": "Akfen Yenilenebilir Enerji",
+    "GWIND": "Galata Wind",
+    "ODAS": "Odaş Elektrik",
+    "ZOREN": "Zorlu Enerji",
+    "ENJSA": "Enerjisa Enerji",
+    "AKSEN": "Aksa Enerji",
+    "ALARK": "Alarko Holding",
+    "CANTE": "Çan2 Termik",
+    "AYDEM": "Aydem Yenilenebilir Enerji",
+    # Demir Çelik & Ağır Sanayi
+    "EREGL": "Ereğli Demir Çelik",
+    "KRDMD": "Kardemir",
+    "KCAER": "Kocaer Çelik",
+    "BRSAN": "Borusan Boru",
+    # Savunma, Teknoloji & Telekomünikasyon
+    "ASELS": "Aselsan",
+    "MIATK": "Mia Teknoloji",
+    "REEDR": "Reeder Teknoloji",
+    "SDTTR": "SDT Uzay ve Savunma",
+    "LOGO": "Logo Yazılım",
+    "KFEIN": "Kafein Yazılım",
     "TCELL": "Turkcell",
     "TTKOM": "Türk Telekom",
-    "ENKAI": "Enka İnşaat",
-    "ARCLK": "Arçelik",
+    # Perakende, Gıda & İçecek
+    "BIMAS": "BİM Mağazalar",
+    "MGROS": "Migros",
+    "SOKM": "Şok Marketler",
+    "CCOLA": "Coca-Cola İçecek",
+    "AEFES": "Anadolu Efes",
+    "ULKER": "Ülker Bisküvi",
+    "TABGD": "TAB Gıda",
+    "EBEBK": "Ebebek Mağazacılık",
+    # Otomotiv & Dayanıklı Tüketim
+    "FROTO": "Ford Otomotiv",
     "TOASO": "Tofaş",
+    "TTRAK": "Türk Traktör",
+    "DOAS": "Doğuş Otomotiv",
+    "OTKAR": "Otokar",
+    "ARCLK": "Arçelik",
+    "VESTL": "Vestel Elektronik",
+    "VESBE": "Vestel Beyaz Eşya",
+    # Holdingler & Yatırım
+    "KCHOL": "Koç Holding",
+    "SAHOL": "Sabancı Holding",
+    "DOHOL": "Doğan Holding",
+    "AGHOL": "AG Anadolu Grubu Holding",
+    "GSDHO": "GSD Holding",
+    "BERA": "Bera Holding",
+    "TKFEN": "Tekfen Holding",
+    # Cam, Çimento & Yapı
+    "SISE": "Şişecam",
+    "OYAKC": "Oyak Çimento",
+    "CIMSA": "Çimsa",
+    "BUCIM": "Bursa Çimento",
+    "NUHCM": "Nuh Çimento",
+    "BSOKE": "Batısöke Çimento",
+    # Kimya, Gübre & Plastik
+    "SASA": "SASA Polyester",
+    "HEKTS": "Hektaş",
+    "GUBRF": "Gübre Fabrikaları",
+    "KORDS": "Kordsa",
+    "KONTR": "Kontrolmatik Teknoloji",
+    "GESAN": "Girişim Elektrik",
+    "ALFAS": "Alfa Solar Enerji",
+    "YEOTK": "YEO Teknoloji",
+    # Madencilik & Kıymetli Madenler
+    "KOZAL": "Koza Altın",
+    "KOZAA": "Koza Madencilik",
+    "IPEKE": "İpek Doğal Enerji",
+    # Sağlık & İlaç
+    "MPARK": "MLP Sağlık (Medical Park)",
+    "GENIL": "Gen İlaç",
+    "SELEC": "Selçuk Ecza Deposu",
+    "ECZYT": "Eczacıbaşı Yatırım",
+    # Gayrimenkul Yatırım Ortaklığı (GYO) & Sigorta
+    "EKGYO": "Emlak Konut GYO",
+    "ISGYO": "İş GYO",
+    "TRGYO": "Torunlar GYO",
+    "SNGYO": "Sinpaş GYO",
+    "KLGYO": "Kiler GYO",
+    "AGESA": "Agesa Hayat ve Emeklilik",
+    "ANSGR": "Anadolu Sigorta",
+    "TURSG": "Türkiye Sigorta",
 }
 
 COMPANY_TO_TICKER = {v: k for k, v in TICKER_TO_COMPANY.items()}
+
+# Hızlı arama için şirket alias sözlüğü
+COMPANIES = {
+    comp_name: [ticker.lower(), comp_name.lower()]
+    for ticker, comp_name in TICKER_TO_COMPANY.items()
+}
 
 
 def get_company_for_ticker(ticker: str) -> str:

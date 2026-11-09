@@ -12,9 +12,9 @@ def infer_metadata_from_path(file_path: Path) -> Dict[str, Any]:
     path_str = str(file_path).lower()
     name_str = file_path.name.lower()
     
-    # 1. Yıl Çıkarımı
-    year_match = re.search(r"(2020|2021|2022|2023|2024)", path_str)
-    year = int(year_match.group(1)) if year_match else 2024
+    # 1. Yıl Çıkarımı (2020 - 2026 dönemi)
+    year_match = re.search(r"(202[0-6])", path_str)
+    year = int(year_match.group(1)) if year_match else 2026
     
     # 2. Şirket Çıkarımı
     from src.config import TICKER_TO_COMPANY, COMPANIES

@@ -22,6 +22,7 @@ dependencies = [
     "langchain-text-splitters>=0.3.0",
     "faiss-cpu>=1.8.0",
     "pypdfium2>=4.30.0",
+    "rank-bm25>=0.2.2",
     "requests>=2.31.0",
     "tqdm>=4.66.0",
     "pydantic>=2.7.0",

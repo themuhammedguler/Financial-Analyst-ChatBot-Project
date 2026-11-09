@@ -204,3 +204,54 @@ class TestFastAPIIntegration:
         assert "key_metrics" in data
         assert "catalysts" in data
         assert "risk_factors" in data
+
+
+class TestHallucinationGuardAndBenchmark:
+    """Halüsinasyon Savunması, 2026 Desteği ve RAG Benchmark Testleri"""
+
+    def test_supported_years_includes_2026(self):
+        from src.config import SUPPORTED_YEARS
+        assert 2025 in SUPPORTED_YEARS
+        assert 2026 in SUPPORTED_YEARS
+        assert SUPPORTED_YEARS[-1] == 2026
+
+    def test_hallucination_guard_claim_extraction(self):
+        from src.rag.guard import HallucinationGuard
+        guard = HallucinationGuard()
+        sample_text = "Akbank 2024 yılında net kârını %57 artırarak 66.49 milyar TL seviyesine çıkarmıştır."
+        claims = guard.extract_numerical_claims(sample_text)
+        assert len(claims) >= 2
+        assert any("66.49" in c or "milyar" in c for c in claims)
+        assert any("%57" in c or "57" in c for c in claims)
+
+    def test_hallucination_guard_verification(self):
+        from src.rag.guard import HallucinationGuard
+        from langchain_core.documents import Document
+
+        guard = HallucinationGuard()
+        sources = [
+            Document(page_content="Akbank 2024 net kârı 66.49 milyar TL ve sermaye yeterlilik rasyosu %20.5 olmuştur.")
+        ]
+        answer_valid = "Şirketin 2024 net kârı 66.49 milyar TL olarak açıklanmıştır."
+        res_valid = guard.verify_claims(answer_valid, sources)
+        assert res_valid["groundedness_score"] == 1.0
+        assert res_valid["is_safe"] is True
+
+        answer_hallucinated = "Şirket uzay turizminden 999 milyar TL gelir elde etmiştir."
+        res_hallucinated = guard.verify_claims(answer_hallucinated, sources)
+        assert res_hallucinated["groundedness_score"] < 0.5
+        assert len(res_hallucinated["unverified_claims"]) > 0
+
+    def test_benchmark_report_content(self):
+        bm_path = REPORTS_DIR / "rag_benchmark_report.json"
+        assert bm_path.exists(), "rag_benchmark_report.json dosyası mevcut olmalıdır."
+
+        with open(bm_path, "r", encoding="utf-8") as bf:
+            bm_data = json.load(bf)
+
+        sm = bm_data["summary_metrics"]
+        assert "faithfulness_score" in sm
+        assert "hallucination_rate" in sm
+        assert "trap_defense_success_percent" in sm
+        assert sm["faithfulness_score"] > 0.70
+        assert bm_data["total_test_cases"] >= 8
