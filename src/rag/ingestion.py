@@ -98,7 +98,9 @@ def filter_high_value_financial_pages(docs: List[Document], max_pages: int = 60)
         "özet finansal", "finansal göstergeler", "gelir tablosu", "bilanço",
         "nakit akış", "favök", "ebitda", "net kâr", "net kar", "temettü",
         "yönetim kurulu başkanı", "genel müdür", "faaliyet sonuçları",
-        "kapasite kullanım", "satış gelirleri", "yatırımlar", "kâr dağıtım"
+        "kapasite kullanım", "satış gelirleri", "yatırımlar", "kâr dağıtım",
+        "filo", "uçak", "yolcu", "rafineri", "üretim kapasitesi", "mağaza",
+        "çalışan sayısı", "ihracat", "operasyonel", "bakiye sipariş"
     ]
 
     # İlk 10 sayfa (Yönetici özeti ve genel bakış) daima dahil edilir
