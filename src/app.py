@@ -1,8 +1,11 @@
 import os
 import sys
 import json
+import io
+import base64
 from pathlib import Path
 from datetime import datetime
+from PIL import Image
 
 # Proje kökünü sys.path'e ekle
 project_root = Path(__file__).resolve().parent.parent
@@ -31,14 +34,45 @@ from src.integration.report_generator import FundamentalReportGenerator
 from src.integration.models import FundamentalReport
 from src.integration.api import get_hybrid_signal
 
-# --- CHATBOT AVATARLARI ---
-ASSISTANT_AVATAR = "💼"  # Kıdemli Finansal Analist / Portföy Yöneticisi
+# --- CHATBOT LOGO VE AVATAR YAPILANDIRMASI ---
+AVATAR_ORIGINAL_PATH = project_root / "png" / "Chatbot_avatar_logo_design_ae724d6f.jpg"
+AVATAR_SQUARE_PATH = project_root / "png" / "chatbot_avatar.png"
+
+CHATBOT_AVATAR = "💼"
+PAGE_FAVICON = "📈"
+LOGO_B64 = ""
+
+try:
+    _loaded_img = None
+    if AVATAR_SQUARE_PATH.exists():
+        _loaded_img = Image.open(AVATAR_SQUARE_PATH)
+        _loaded_img.load()
+    elif AVATAR_ORIGINAL_PATH.exists():
+        _raw = Image.open(AVATAR_ORIGINAL_PATH)
+        w, h = _raw.size
+        min_dim = min(w, h)
+        left = (w - min_dim) // 2
+        top = (h - min_dim) // 2
+        _loaded_img = _raw.crop((left, top, left + min_dim, top + min_dim))
+        _loaded_img.load()
+    
+    if _loaded_img is not None:
+        CHATBOT_AVATAR = _loaded_img
+        PAGE_FAVICON = _loaded_img
+        _buffered = io.BytesIO()
+        _loaded_img.resize((96, 96)).save(_buffered, format="PNG")
+        LOGO_B64 = base64.b64encode(_buffered.getvalue()).decode()
+except Exception:
+    CHATBOT_AVATAR = "💼"
+    PAGE_FAVICON = "📈"
+
+ASSISTANT_AVATAR = CHATBOT_AVATAR
 USER_AVATAR = "👤"
 
 # --- SAYFA YAPILANDIRMASI ---
 st.set_page_config(
     page_title="BIST Finansal Analist Asistanı",
-    page_icon="📈",
+    page_icon=PAGE_FAVICON,
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -201,6 +235,15 @@ st.markdown("""
         margin-bottom: 0.75rem !important;
     }
 
+    /* Özel Chatbot Avatarı Stili */
+    [data-testid="stChatMessage"] [data-testid="stChatMessageAvatarCustom"] img,
+    [data-testid="stChatMessage"] img {
+        border-radius: 50% !important;
+        object-fit: cover !important;
+        border: 1.5px solid rgba(56, 189, 248, 0.45) !important;
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.25) !important;
+    }
+
     /* Hızlı Butonlar (Prompt Chips) ve Standart Butonlar */
     div.stButton > button {
         background-color: #0F172A !important;
@@ -320,9 +363,10 @@ def get_company_badge(company_name: str) -> str:
 
 # --- KENAR ÇUBUĞU (SIDEBAR) ---
 with st.sidebar:
-    st.markdown("""
-    <div style="padding: 12px 14px; margin-bottom: 12px; background: linear-gradient(135deg, #0F172A, #1E293B); border: 1px solid #1E293B; border-radius: 10px; display: flex; align-items: center; gap: 10px;">
-        <span style="font-size: 1.5rem;">📊</span>
+    sidebar_brand_icon = f'<img src="data:image/png;base64,{LOGO_B64}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1.5px solid rgba(56, 189, 248, 0.45); box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);">' if LOGO_B64 else '<span style="font-size: 1.5rem;">📊</span>'
+    st.markdown(f"""
+    <div style="padding: 12px 14px; margin-bottom: 12px; background: linear-gradient(135deg, #0F172A, #1E293B); border: 1px solid #1E293B; border-radius: 10px; display: flex; align-items: center; gap: 12px;">
+        {sidebar_brand_icon}
         <div>
             <div style="font-weight: 700; font-size: 0.96rem; color: #F8FAFC; letter-spacing: -0.01em;">BIST ANALYTICS</div>
             <div style="font-size: 0.73rem; color: #38BDF8; font-weight: 600;">KAP RAG & Temel Analiz</div>
@@ -593,11 +637,14 @@ BIST-Trend-Forecaster Platformu ↗
         )
 
 # --- ANA EKRAN VE BAŞLIK ---
-st.markdown("""
-<div class="main-header">
-    <span style="font-size: 2.1rem;">📈</span>
-    <span>BIST <span class="brand-highlight">Finansal Analist</span> Asistanı</span>
-    <span class="version-tag">v2.2 Ultra-Fast</span>
+main_header_icon = f'<img src="data:image/png;base64,{LOGO_B64}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 12px; border: 2px solid rgba(56, 189, 248, 0.45); box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);">' if LOGO_B64 else '<span style="font-size: 2.1rem; margin-right: 8px;">📈</span>'
+st.markdown(f"""
+<div class="main-header" style="display: flex; align-items: center;">
+    {main_header_icon}
+    <div>
+        <span>BIST <span class="brand-highlight">Finansal Analist</span> Asistanı</span>
+        <span class="version-tag">v2.2 Ultra-Fast</span>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
