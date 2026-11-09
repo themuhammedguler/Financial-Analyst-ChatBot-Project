@@ -12,7 +12,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-REST%20Endpoints-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![CI](https://github.com/themuhammedguler/Financial-Analyst-ChatBot-Project/actions/workflows/ci.yml/badge.svg)](https://github.com/themuhammedguler/Financial-Analyst-ChatBot-Project/actions/workflows/ci.yml)
 [![Docker](https://img.shields.io/badge/Docker-Multi--Container-2496ED?logo=docker&logoColor=white)](docker-compose.yml)
-[![Tests](https://img.shields.io/badge/Tests-25%2F25%20Passing-success?logo=pytest&logoColor=white)](tests/test_integration.py)
+[![Tests](https://img.shields.io/badge/Tests-34%2F34%20Passing-success?logo=pytest&logoColor=white)](tests/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 **Kamuyu Aydınlatma Platformu'nda (KAP) yayımlanan resmi faaliyet raporlarını, bilançoları ve finansal dipnotları analiz eden; Hibrit Vektör Arama, Halüsinasyon Savunması ve Çift Yönlü Karar Destek Entegrasyonuna sahip yeni nesil Finansal RAG Terminali.**
@@ -36,7 +36,10 @@ Platform, teknik analiz ve kantitatif tahmin motoru olan **[BIST-Trend-Forecaste
 | Özellik | Açıklama |
 | :--- | :--- |
 | **🔍 Hibrit Belge Arama (Dense + Sparse)** | Anlamsal benzerlik için **FAISS** vektör aramasını, rasyo, sayı ve dipnot numaraları tam eşleşmesi için **BM25** aramasını **Reciprocal Rank Fusion (RRF)** ile harmanlar. |
-| **⚖️ Çift Şirket Karşılaştırmalı Analiz** | *"THY ile Tüpraş'ın kârlılıklarını karşılaştır"* gibi sorularda çoklu şirket tespiti yaparak dengeli kaynak çeker ve Markdown karşılaştırma matrisi sunar. |
+| **📈 Canlı Piyasa & Mum Grafiği** | Yahoo Finance canlı BIST (.IS) entegrasyonu: Plotly interaktif Candlestick (mum) grafiği, işlem hacmi, SMA 20/50/200 trend çizgileri ve 14 günlük RSI. |
+| **⚖️ Çift Şirket Kıyaslama & Çift Radar** | İki şirketin 5 boyutlu finansal profilini aynı radar üzerinde çakıştıran (Dual Radar) ve rasyoları yan yana mukayese eden **Peer-to-Peer Karşılaştırma Matrisi**. |
+| **📄 Tek Tıkla Kurumsal Rapor İhracı** | Yönetici özeti, 5D karne çubukları, çarpanlar, katalizörler ve Kelly kararını içeren antetli **yazdırılabilir (Print to PDF / HTML) Araştırma Notu**. |
+| **📢 Canlı KAP Akışı & Fırsat Radarı** | BIST şirketlerinin Kamuyu Aydınlatma Platformu'ndaki son dakika bildirimleri (yeni iş ilişkisi, temettü, ihraç) ve yapay zeka duygu etiketlemesi (Pozitif/Nötr/Riskli). |
 | **📊 BIST 100 Tam Kapsam (100/100)** | BIST 100 endeksindeki tüm hisseler için üretilmiş `reports/{ticker}_latest.json` temel analiz ve duygu skoru önbelleği. |
 | **🤖 Hibrit Yatırım Karar Motoru** | RAG Temel Analiz Skoru ile XGBoost Teknik Trendini birleştirerek **GÜÇLÜ AL, AL, TUT, SAT** tavsiyesi ve Kelly sermaye ağırlığı üretir. |
 | **📈 İnteraktif Finansal Sağlık Radarı** | Plotly tabanlı 5 boyutlu kurumsal finansal karne: *Kârlılık, Finansal Sağlık (Borç), Büyüme Katalizörleri, Piyasa Duygusu ve Risk Dayanıklılığı*. |

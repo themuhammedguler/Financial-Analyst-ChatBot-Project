@@ -32,11 +32,11 @@ jobs:
           pip install -r requirements.txt
           pip install pytest httpx
 
-      - name: Run Integration Tests
+      - name: Run Integration & Feature Tests
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY || 'dummy_test_key_for_ci' }}
         run: |
-          pytest -v tests/test_integration.py
+          pytest -v tests/
 
   docker-build:
     name: Docker Build Verification

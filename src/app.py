@@ -33,6 +33,10 @@ from src.rag.ingestion import add_single_pdf_to_vectorstore
 from src.integration.report_generator import FundamentalReportGenerator
 from src.integration.models import FundamentalReport
 from src.integration.api import get_hybrid_signal
+from src.market_data import fetch_ticker_market_data, create_candlestick_chart
+from src.comparison import create_comparison_radar_chart, generate_peer_comparison_summary
+from src.export_report import generate_executive_html_report
+from src.kap_feed import get_recent_kap_disclosures
 
 # --- CHATBOT LOGO VE AVATAR YAPILANDIRMASI ---
 AVATAR_ORIGINAL_PATH = project_root / "png" / "Chatbot_avatar_logo_design_ae724d6f.jpg"
@@ -554,6 +558,21 @@ BIST-Trend-Forecaster Platformu ↗
                 mime="application/json",
                 use_container_width=True
             )
+            # Kurumsal Araştırma Raporu (HTML/PDF) İndirme
+            if active_report_obj:
+                try:
+                    _, m_quick = fetch_ticker_market_data(active_ticker, period="1mo")
+                    exec_html = generate_executive_html_report(active_report_obj, market_data=m_quick, hybrid_signal=hybrid_signal_data)
+                    st.download_button(
+                        label=f"📄 {active_ticker} Araştırma Raporu (HTML/PDF)",
+                        data=exec_html,
+                        file_name=f"{active_ticker}_Finansal_Arastirma_Raporu.html",
+                        mime="text/html",
+                        use_container_width=True,
+                        help="Yazdırılabilir antetli kurumsal araştırma raporu"
+                    )
+                except Exception:
+                    pass
 
     st.divider()
 
@@ -701,162 +720,342 @@ if "messages" not in st.session_state or not st.session_state.messages:
         {"role": "assistant", "content": welcome_content}
     ]
 
-# --- HIZLI ANALİZ ŞABLONLARI (PROMPT CHIPS - 1. ADIM) ---
-st.markdown("##### 💡 Hızlı Finansal Analiz Soruları")
-q_cols = st.columns(4)
+# --- ANA SEKMELER: SOHBET, GRAFİK, KIYASLAMA VE KAP AKIŞI ---
+tab_chat, tab_chart, tab_compare, tab_kap = st.tabs([
+    "💬 Finansal Analist Sohbeti",
+    "📈 Fiyat & Mum Grafiği",
+    "⚖️ Çift Şirket Kıyaslama",
+    "📢 Canlı KAP Akışı & Radar"
+])
 
-if url_ticker:
-    # URL'den gelen hisseye özel hızlı butonlar
-    comp_name_short = url_company_name if url_company_name else url_ticker
-    quick_queries = [
-        (f"📊 {url_ticker} Net Kâr", f"{comp_name_short} ({url_ticker}) son dönem net kârı ve gelirleri nasıl geldi?"),
-        (f"💰 {url_ticker} Temettü", f"{comp_name_short} ({url_ticker}) temettü dağıtım veya sermaye artırımı kararı var mı?"),
-        (f"⚖️ {url_ticker} Borçluluk", f"{comp_name_short} ({url_ticker}) borçluluk durumu, net borç ve finansal yapısı nasıldır?"),
-        (f"🎯 {url_ticker} Beklentiler", f"{comp_name_short} ({url_ticker}) gelecek dönem beklentileri, hedefleri ve yatırım planları nelerdir?"),
-    ]
-else:
-    # Genel hisse soruları
-    quick_queries = [
-        ("Akbank 2024 Net Kâr", "Akbank'ın 2024 yılı net kârı ve aktif büyüklüğü nedir?"),
-        ("THY 2024 Filo & Yolcu", "Türk Hava Yolları'nın 2024 filo büyüklüğü ve yolcu sayısı ne kadardır?"),
-        ("Tüpraş 2024 Rafineri Marjı", "Tüpraş'ın 2024 yılı rafineri kapasite kullanımı ve net rafineri marjı nedir?"),
-        ("Kârlılık Karşılaştırması", "Akbank ve Tüpraş'ın 2023-2024 yıllarındaki net kâr değişimlerini karşılaştırır mısın?"),
-    ]
+with tab_chat:
+    # --- HIZLI ANALİZ ŞABLONLARI (PROMPT CHIPS - 1. ADIM) ---
+    st.markdown("##### 💡 Hızlı Finansal Analiz Soruları")
+    q_cols = st.columns(4)
 
-selected_quick_prompt = None
-for i, (label, query_text) in enumerate(quick_queries):
-    with q_cols[i]:
-        if st.button(label, key=f"quick_btn_{i}", use_container_width=True):
-            selected_quick_prompt = query_text
+    if url_ticker:
+        # URL'den gelen hisseye özel hızlı butonlar
+        comp_name_short = url_company_name if url_company_name else url_ticker
+        quick_queries = [
+            (f"📊 {url_ticker} Net Kâr", f"{comp_name_short} ({url_ticker}) son dönem net kârı ve gelirleri nasıl geldi?"),
+            (f"💰 {url_ticker} Temettü", f"{comp_name_short} ({url_ticker}) temettü dağıtım veya sermaye artırımı kararı var mı?"),
+            (f"⚖️ {url_ticker} Borçluluk", f"{comp_name_short} ({url_ticker}) borçluluk durumu, net borç ve finansal yapısı nasıldır?"),
+            (f"🎯 {url_ticker} Beklentiler", f"{comp_name_short} ({url_ticker}) gelecek dönem beklentileri, hedefleri ve yatırım planları nelerdir?"),
+        ]
+    else:
+        # Genel hisse soruları
+        quick_queries = [
+            ("Akbank 2024 Net Kâr", "Akbank'ın 2024 yılı net kârı ve aktif büyüklüğü nedir?"),
+            ("THY 2024 Filo & Yolcu", "Türk Hava Yolları'nın 2024 filo büyüklüğü ve yolcu sayısı ne kadardır?"),
+            ("Tüpraş 2024 Rafineri Marjı", "Tüpraş'ın 2024 yılı rafineri kapasite kullanımı ve net rafineri marjı nedir?"),
+            ("Kârlılık Karşılaştırması", "Akbank ve Tüpraş'ın 2023-2024 yıllarındaki net kâr değişimlerini karşılaştırır mısın?"),
+        ]
 
-st.divider()
+    selected_quick_prompt = None
+    for i, (label, query_text) in enumerate(quick_queries):
+        with q_cols[i]:
+            if st.button(label, key=f"quick_btn_{i}", use_container_width=True):
+                selected_quick_prompt = query_text
 
-# --- GEÇMİŞ MESAJLARI GÖSTER ---
-for msg in st.session_state.messages:
-    msg_avatar = USER_AVATAR if msg.get("role") == "user" else ASSISTANT_AVATAR
-    with st.chat_message(msg["role"], avatar=msg_avatar):
-        st.markdown(msg["content"], unsafe_allow_html=True)
-        # Eğer kaydedilmiş kaynaklar varsa göster
-        if "sources" in msg and msg["sources"]:
-            with st.expander("📌 Referans Alınan KAP Raporları & Sayfalar"):
-                for s_idx, src in enumerate(msg["sources"]):
-                    comp_badge = get_company_badge(src.get("company", ""))
-                    st.markdown(
-                        f"""<div class="source-box">
-                        <strong>Kaynak {s_idx+1}:</strong> {comp_badge} | <strong>Yıl:</strong> {src.get('year')} | 
-                        <strong>Dosya:</strong> <code>{src.get('file_name')}</code> | <strong>Sayfa:</strong> {src.get('page')}
-                        <br><br>
-                        <em>"{src.get('snippet')}..."</em>
-                        </div>""",
-                        unsafe_allow_html=True
-                    )
+    st.divider()
 
-# --- KULLANICI GİRDİSİ VE ANALİZ DÖNGÜSÜ ---
-user_input = st.chat_input("Finansal bir gösterge veya şirket performansı hakkında soru sorun...")
-prompt_to_process = selected_quick_prompt if selected_quick_prompt else user_input
+    # --- GEÇMİŞ MESAJLARI GÖSTER ---
+    for msg in st.session_state.messages:
+        msg_avatar = USER_AVATAR if msg.get("role") == "user" else ASSISTANT_AVATAR
+        with st.chat_message(msg["role"], avatar=msg_avatar):
+            st.markdown(msg["content"], unsafe_allow_html=True)
+            # Eğer kaydedilmiş kaynaklar varsa göster
+            if "sources" in msg and msg["sources"]:
+                with st.expander("📌 Referans Alınan KAP Raporları & Sayfalar"):
+                    for s_idx, src in enumerate(msg["sources"]):
+                        comp_badge = get_company_badge(src.get("company", ""))
+                        st.markdown(
+                            f"""<div class="source-box">
+                            <strong>Kaynak {s_idx+1}:</strong> {comp_badge} | <strong>Yıl:</strong> {src.get('year')} | 
+                            <strong>Dosya:</strong> <code>{src.get('file_name')}</code> | <strong>Sayfa:</strong> {src.get('page')}
+                            <br><br>
+                            <em>"{src.get('snippet')}..."</em>
+                            </div>""",
+                            unsafe_allow_html=True
+                        )
 
-if prompt_to_process:
-    # 1. Kullanıcı mesajını ekle ve ekrana yazdır
-    st.session_state.messages.append({"role": "user", "content": prompt_to_process})
-    with st.chat_message("user", avatar=USER_AVATAR):
-        st.markdown(prompt_to_process)
+    # --- KULLANICI GİRDİSİ VE ANALİZ DÖNGÜSÜ ---
+    user_input = st.chat_input("Finansal bir gösterge veya şirket performansı hakkında soru sorun...")
+    prompt_to_process = selected_quick_prompt if selected_quick_prompt else user_input
 
-    # 2. Asistan cevabını streaming ile üret
-    with st.chat_message("assistant", avatar=ASSISTANT_AVATAR):
-        full_response = ""
-        captured_docs = []
-        rewritten_q = prompt_to_process
-        captured_guard = {}
+    if prompt_to_process:
+        # 1. Kullanıcı mesajını ekle ve ekrana yazdır
+        st.session_state.messages.append({"role": "user", "content": prompt_to_process})
+        with st.chat_message("user", avatar=USER_AVATAR):
+            st.markdown(prompt_to_process)
 
-        # Canlı Düşünme & Arama Durum Paneli
-        status_box = st.status("📊 Finansal Analist verileri inceliyor...", expanded=True)
-        stream_placeholder = st.empty()
+        # 2. Asistan cevabını streaming ile üret
+        with st.chat_message("assistant", avatar=ASSISTANT_AVATAR):
+            full_response = ""
+            captured_docs = []
+            rewritten_q = prompt_to_process
+            captured_guard = {}
 
-        generator = engine.stream_answer(
-            question=prompt_to_process,
-            chat_history=st.session_state.messages[:-1],
-            company_filter=selected_company,
-            year_filter=selected_year,
-        )
+            # Canlı Düşünme & Arama Durum Paneli
+            status_box = st.status("📊 Finansal Analist verileri inceliyor...", expanded=True)
+            stream_placeholder = st.empty()
 
-        for event in generator:
-            ev_type = event.get("type")
-            if ev_type == "status":
-                status_box.write(event.get("message", "Finansal veriler işleniyor..."))
-            elif ev_type == "content":
-                if not full_response:
-                    # İlk veri geldiğinde durum kutusunu kapatıp tamamlandı rozetine dönüştür
-                    status_box.update(label="✅ Finansal Raporlar & Dipnotlar İncelendi", state="complete", expanded=False)
-                full_response += event["content"]
-                stream_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
-            elif ev_type == "done":
-                captured_docs = event.get("docs", [])
-                rewritten_q = event.get("rewritten_query", prompt_to_process)
-                captured_guard = event.get("guard_result", {})
+            generator = engine.stream_answer(
+                question=prompt_to_process,
+                chat_history=st.session_state.messages[:-1],
+                company_filter=selected_company,
+                year_filter=selected_year,
+            )
 
-        # Status kutusunu tamamlandı olarak sonlandır
-        status_box.update(label="✅ Finansal Analiz Tamamlandı", state="complete", expanded=False)
+            for event in generator:
+                ev_type = event.get("type")
+                if ev_type == "status":
+                    status_box.write(event.get("message", "Finansal veriler işleniyor..."))
+                elif ev_type == "content":
+                    if not full_response:
+                        # İlk veri geldiğinde durum kutusunu kapatıp tamamlandı rozetine dönüştür
+                        status_box.update(label="✅ Finansal Raporlar & Dipnotlar İncelendi", state="complete", expanded=False)
+                    full_response += event["content"]
+                    stream_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
+                elif ev_type == "done":
+                    captured_docs = event.get("docs", [])
+                    rewritten_q = event.get("rewritten_query", prompt_to_process)
+                    captured_guard = event.get("guard_result", {})
 
-        # İmleci kaldır ve nihai cevabı yerleştir
-        if full_response.strip():
-            stream_placeholder.markdown(full_response, unsafe_allow_html=True)
-        else:
-            fallback_msg = "⚠️ Finansal raporlardan veri getirilirken bir aksaklık oluştu. Lütfen sorunuzu tekrar iletiniz."
-            stream_placeholder.markdown(fallback_msg, unsafe_allow_html=True)
-            full_response = fallback_msg
+            # Status kutusunu tamamlandı olarak sonlandır
+            status_box.update(label="✅ Finansal Analiz Tamamlandı", state="complete", expanded=False)
 
-        # Hallucination Guard Doğrulama Rozeti
-        if captured_guard and captured_guard.get("status_badge"):
-            guard_badge_text = captured_guard["status_badge"]
-            guard_color = "#34D399" if captured_guard.get("is_safe", True) else "#FBBF24"
+            # İmleci kaldır ve nihai cevabı yerleştir
+            if full_response.strip():
+                stream_placeholder.markdown(full_response, unsafe_allow_html=True)
+            else:
+                fallback_msg = "⚠️ Finansal raporlardan veri getirilirken bir aksaklık oluştu. Lütfen sorunuzu tekrar iletiniz."
+                stream_placeholder.markdown(fallback_msg, unsafe_allow_html=True)
+                full_response = fallback_msg
+
+            # Hallucination Guard Doğrulama Rozeti
+            if captured_guard and captured_guard.get("status_badge"):
+                guard_badge_text = captured_guard["status_badge"]
+                guard_color = "#34D399" if captured_guard.get("is_safe", True) else "#FBBF24"
+                st.markdown(f"""
+                <div style="margin-top: 10px; margin-bottom: 4px; padding: 5px 12px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(52, 211, 153, 0.25); border-radius: 6px; font-size: 0.80rem; color: {guard_color}; display: inline-flex; align-items: center; gap: 8px;">
+                    <span>{guard_badge_text}</span>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # 3. Adım Köprü Kartı: Cevap sonuna BIST-Trend-Forecaster butonu ekle
+            detected_or_active_ticker = active_ticker
             st.markdown(f"""
-            <div style="margin-top: 10px; margin-bottom: 4px; padding: 5px 12px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(52, 211, 153, 0.25); border-radius: 6px; font-size: 0.80rem; color: {guard_color}; display: inline-flex; align-items: center; gap: 8px;">
-                <span>{guard_badge_text}</span>
+            <div style="margin-top: 14px; padding: 10px 16px; background: #0E1626; border-radius: 8px; border: 1px solid #1E293B; display: inline-flex; align-items: center; gap: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.35);">
+                <span style="font-size: 0.85rem; color: #E2E8F0;">📈 <strong>{detected_or_active_ticker}</strong> hissesinin teknik model tahminlerini görmek ister misiniz?</span>
+                <a href="{FORECASTER_BASE_URL}/?ticker={detected_or_active_ticker}" target="_blank" style="background: linear-gradient(135deg, #2563EB, #1D4ED8); color: white; font-size: 0.78rem; font-weight: 600; padding: 5px 12px; border-radius: 6px; text-decoration: none; border: 1px solid rgba(56, 189, 248, 0.35); box-shadow: 0 2px 6px rgba(37,99,235,0.3);">BIST-Trend-Forecaster'a Git ↗</a>
             </div>
             """, unsafe_allow_html=True)
 
-        # 3. Adım Köprü Kartı: Cevap sonuna BIST-Trend-Forecaster butonu ekle
-        detected_or_active_ticker = active_ticker
-        st.markdown(f"""
-        <div style="margin-top: 14px; padding: 10px 16px; background: #0E1626; border-radius: 8px; border: 1px solid #1E293B; display: inline-flex; align-items: center; gap: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.35);">
-            <span style="font-size: 0.85rem; color: #E2E8F0;">📈 <strong>{detected_or_active_ticker}</strong> hissesinin teknik model tahminlerini görmek ister misiniz?</span>
-            <a href="{FORECASTER_BASE_URL}/?ticker={detected_or_active_ticker}" target="_blank" style="background: linear-gradient(135deg, #2563EB, #1D4ED8); color: white; font-size: 0.78rem; font-weight: 600; padding: 5px 12px; border-radius: 6px; text-decoration: none; border: 1px solid rgba(56, 189, 248, 0.35); box-shadow: 0 2px 6px rgba(37,99,235,0.3);">BIST-Trend-Forecaster'a Git ↗</a>
-        </div>
-        """, unsafe_allow_html=True)
+            # Kaynakları şık kartlar halinde göster
+            formatted_sources = []
+            if captured_docs:
+                with st.expander("📌 Referans Alınan KAP Raporları & Sayfalar"):
+                    for s_idx, doc in enumerate(captured_docs):
+                        comp = doc.metadata.get("company", "Bilinmeyen")
+                        yr = doc.metadata.get("year", "")
+                        fname = doc.metadata.get("file_name", os.path.basename(doc.metadata.get("source", "")))
+                        page = doc.metadata.get("page", "Bilinmiyor")
+                        snippet = doc.page_content[:240].replace("\n", " ").strip()
+                        
+                        formatted_sources.append({
+                            "company": comp,
+                            "year": yr,
+                            "file_name": fname,
+                            "page": page,
+                            "snippet": snippet
+                        })
 
-        # Kaynakları şık kartlar halinde göster
-        formatted_sources = []
-        if captured_docs:
-            with st.expander("📌 Referans Alınan KAP Raporları & Sayfalar"):
-                for s_idx, doc in enumerate(captured_docs):
-                    comp = doc.metadata.get("company", "Bilinmeyen")
-                    yr = doc.metadata.get("year", "")
-                    fname = doc.metadata.get("file_name", os.path.basename(doc.metadata.get("source", "")))
-                    page = doc.metadata.get("page", "Bilinmiyor")
-                    snippet = doc.page_content[:240].replace("\n", " ").strip()
-                    
-                    formatted_sources.append({
-                        "company": comp,
-                        "year": yr,
-                        "file_name": fname,
-                        "page": page,
-                        "snippet": snippet
-                    })
+                        comp_badge = get_company_badge(comp)
+                        st.markdown(
+                            f"""<div class="source-box">
+                            <strong>Kaynak {s_idx+1}:</strong> {comp_badge} | <strong>Yıl:</strong> {yr} | 
+                            <strong>Dosya:</strong> <code>{fname}</code> | <strong>Sayfa:</strong> {page}
+                            <br><br>
+                            <em>"{snippet}..."</em>
+                            </div>""",
+                            unsafe_allow_html=True
+                        )
 
-                    comp_badge = get_company_badge(comp)
-                    st.markdown(
-                        f"""<div class="source-box">
-                        <strong>Kaynak {s_idx+1}:</strong> {comp_badge} | <strong>Yıl:</strong> {yr} | 
-                        <strong>Dosya:</strong> <code>{fname}</code> | <strong>Sayfa:</strong> {page}
-                        <br><br>
-                        <em>"{snippet}..."</em>
-                        </div>""",
-                        unsafe_allow_html=True
-                    )
+            # 3. Asistan mesajını hafızaya kaydet
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": full_response,
+                "sources": formatted_sources
+            })
 
-        # 3. Asistan mesajını hafızaya kaydet
-        st.session_state.messages.append({
-            "role": "assistant",
-            "content": full_response,
-            "sources": formatted_sources
-        })
+
+# --- 2. SEKME: CANLI FİYAT & MUM GRAFİĞİ ---
+with tab_chart:
+    st.markdown("### 📈 BIST Canlı Piyasa ve Fiyat Grafiği")
+    st.caption("Borsa İstanbul gerçek zamanlı fiyatları, hacim analizi, SMA 20/50/200 trend çizgileri ve 14 günlük RSI göstergesi.")
+
+    col_sym, col_period = st.columns([3, 1])
+    with col_sym:
+        chart_ticker_default = active_ticker if (active_ticker and active_ticker != "BIST") else "THYAO"
+        all_tickers = sorted(list(BIST_100_COMPANIES.keys()))
+        def_idx = all_tickers.index(chart_ticker_default) if chart_ticker_default in all_tickers else 0
+        chart_ticker = st.selectbox(
+            "📊 İncelenecek Hisse",
+            options=all_tickers,
+            index=def_idx,
+            format_func=lambda x: f"{x} - {BIST_100_COMPANIES.get(x, {}).get('name', x)}",
+            key="chart_ticker_select"
+        )
+    with col_period:
+        chart_period = st.selectbox(
+            "⏱️ Zaman Aralığı",
+            options=["1mo", "3mo", "6mo", "1y", "2y", "5y"],
+            index=3,
+            format_func=lambda x: {"1mo": "1 Ay", "3mo": "3 Ay", "6mo": "6 Ay", "1y": "1 Yıl", "2y": "2 Yıl", "5y": "5 Yıl"}.get(x, x),
+            key="chart_period_select"
+        )
+
+    with st.spinner(f"{chart_ticker} için canlı piyasa verileri ve grafik yükleniyor..."):
+        df_hist, m_info = fetch_ticker_market_data(chart_ticker, period=chart_period)
+
+    if df_hist is not None and not df_hist.empty:
+        ch_val = m_info.get("change_val") or 0.0
+        ch_pct = m_info.get("change_pct") or 0.0
+        delta_str = f"{ch_val:+.2f} TL ({ch_pct:+.2f}%)"
+
+        m_col1, m_col2, m_col3, m_col4 = st.columns(4)
+        m_col1.metric("Son Kapanış Fiyatı", f"{m_info.get('current_price', 0.0):.2f} TL", delta=delta_str)
+        m_col2.metric("Piyasa Değeri", m_info.get("market_cap_str", "N/A"), help="Şirketin güncel BIST piyasa değeri")
+
+        pe_v = f"{m_info['pe_ratio']:.2f}" if m_info.get("pe_ratio") else "N/A"
+        pb_v = f"{m_info['pb_ratio']:.2f}" if m_info.get("pb_ratio") else "N/A"
+        m_col3.metric("F/K & PD/DD", f"{pe_v} / {pb_v}", help="Fiyat/Kazanç ve Piyasa Değeri/Defter Değeri rasyoları")
+
+        rsi_v = f"{m_info['rsi_14']:.1f}" if m_info.get("rsi_14") else "N/A"
+        m_col4.metric("14 Günlük RSI", rsi_v, help="30 altı aşırı satım, 70 üzeri aşırı alım bölgesi")
+
+        chart_comp_name = BIST_100_COMPANIES.get(chart_ticker, {}).get("name", chart_ticker)
+        fig_candle = create_candlestick_chart(df_hist, chart_ticker, chart_comp_name)
+        st.plotly_chart(fig_candle, use_container_width=True, config={"displayModeBar": True})
+    else:
+        st.warning(f"{chart_ticker} için canlı fiyat verisi alınamadı veya piyasa kapalı. Lütfen daha sonra tekrar deneyiniz.")
+
+
+# --- 3. SEKME: ÇİFT ŞİRKET KIYASLAMA ---
+with tab_compare:
+    st.markdown("### ⚖️ Çift Şirket Karşılaştırmalı Analiz (Peer-to-Peer Matrix)")
+    st.caption("İki BIST şirketinin KAP temel analiz verilerini, duygu skorlarını ve 5 boyutlu finansal sağlık profillerini yan yana kıyaslayın.")
+
+    all_tickers = sorted(list(BIST_100_COMPANIES.keys()))
+    col_c1, col_c2 = st.columns(2)
+    with col_c1:
+        comp_a_default = active_ticker if (active_ticker and active_ticker != "BIST") else "THYAO"
+        idx_a = all_tickers.index(comp_a_default) if comp_a_default in all_tickers else 0
+        ticker_a = st.selectbox("🏢 1. Şirket (Baz)", options=all_tickers, index=idx_a, key="compare_ticker_a")
+    with col_c2:
+        idx_b = all_tickers.index("PGSUS") if "PGSUS" in all_tickers else 1
+        ticker_b = st.selectbox("🏢 2. Şirket (Kıyaslanan)", options=all_tickers, index=idx_b, key="compare_ticker_b")
+
+    rep_gen = load_report_generator()
+    rep_a = None
+    rep_b = None
+
+    with st.spinner(f"{ticker_a} ve {ticker_b} verileri hazırlanıyor..."):
+        try:
+            rep_a = rep_gen.generate_report(ticker_a)
+            rep_b = rep_gen.generate_report(ticker_b)
+        except Exception as e:
+            st.error(f"Rapor yüklenirken hata: {e}")
+
+    if rep_a and rep_b:
+        col_rad, col_summary = st.columns([1.1, 1.0])
+        with col_rad:
+            st.markdown("##### 🎯 5 Boyutlu Finansal Sağlık Radarı")
+            fig_comp = create_comparison_radar_chart(rep_a, rep_b)
+            st.plotly_chart(fig_comp, use_container_width=True, config={"displayModeBar": False})
+        with col_summary:
+            st.markdown("##### 📌 Analitik Mukayese Sentezi")
+            comp_summary = generate_peer_comparison_summary(rep_a, rep_b)
+            st.info(f"**Karşılaştırma Değerlendirmesi:**\n\n{comp_summary['verdict_text']}")
+
+            st.markdown(f"""
+            <div style="background:#0F172A; border:1px solid #1E293B; border-radius:8px; padding:12px; margin-top:10px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span style="color:#38BDF8; font-weight:700;">{rep_a.ticker} Genel Sağlık Skoru:</span>
+                    <span style="color:#F8FAFC; font-weight:700;">{comp_summary['score1']}/100</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:#F59E0B; font-weight:700;">{rep_b.ticker} Genel Sağlık Skoru:</span>
+                    <span style="color:#F8FAFC; font-weight:700;">{comp_summary['score2']}/100</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("##### 📊 Finansal Göstergeler ve Kıyaslama Tablosu")
+        matrix_md = f"""
+| Finansal Metrik | **{rep_a.ticker}** ({rep_a.company_name}) | **{rep_b.ticker}** ({rep_b.company_name}) |
+| :--- | :--- | :--- |
+| **Piyasa Duygu Skoru** | {rep_a.sentiment_label} ({rep_a.sentiment_score:+.2f}) | {rep_b.sentiment_label} ({rep_b.sentiment_score:+.2f}) |
+| **Kâr Marjı Trendi** | {rep_a.key_metrics.net_profit_margin_trend} | {rep_b.key_metrics.net_profit_margin_trend} |
+| **Borçluluk Yapısı** | {rep_a.key_metrics.debt_to_equity} | {rep_b.key_metrics.debt_to_equity} |
+| **F/K Rasyosu** | {rep_a.key_metrics.pe_ratio or 'N/A'} | {rep_b.key_metrics.pe_ratio or 'N/A'} |
+| **PD/DD Rasyosu** | {rep_a.key_metrics.pb_ratio or 'N/A'} | {rep_b.key_metrics.pb_ratio or 'N/A'} |
+| **Kritik Büyüme Katalizörü** | {rep_a.catalysts[0] if rep_a.catalysts else 'N/A'} | {rep_b.catalysts[0] if rep_b.catalysts else 'N/A'} |
+| **Temel Finansal Risk** | {rep_a.risk_factors[0] if rep_a.risk_factors else 'N/A'} | {rep_b.risk_factors[0] if rep_b.risk_factors else 'N/A'} |
+"""
+        st.markdown(matrix_md)
+
+
+# --- 4. SEKME: CANLI KAP BİLDİRİMLERİ ---
+with tab_kap:
+    st.markdown("### 📢 Canlı KAP Bildirimleri & Son Dakika Fırsat Radarı")
+    st.caption("Borsa İstanbul şirketlerinin Kamuyu Aydınlatma Platformu'nda (KAP) yayımlanan son dakika bildirimleri ve anlık yapay zeka duygu analizi.")
+
+    col_kf1, col_kf2 = st.columns([1, 1])
+    with col_kf1:
+        kap_ticker_filter = st.selectbox(
+            "🔍 Şirket Filtrele",
+            options=["Tümü"] + sorted(list(BIST_100_COMPANIES.keys())),
+            index=0,
+            key="kap_filter_ticker"
+        )
+    with col_kf2:
+        kap_cat_filter = st.selectbox(
+            "🏷️ Kategori",
+            options=["Tümü", "Yeni İş İlişkisi", "Temettü", "Operasyonel", "Yatırım", "Finansman"],
+            index=0,
+            key="kap_filter_cat"
+        )
+
+    disclosures = get_recent_kap_disclosures(ticker_filter=kap_ticker_filter, category_filter=kap_cat_filter)
+
+    if disclosures:
+        for item in disclosures:
+            st.markdown(f"""
+            <div style="background: #0D1422; border: 1px solid #182236; border-radius: 10px; padding: 14px 16px; margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-weight: 800; font-size: 0.95rem; color: #38BDF8;">{item['ticker']}</span>
+                        <span style="color: #94A3B8; font-size: 0.82rem;">{item['company_name']}</span>
+                        <span style="background: rgba(148, 163, 184, 0.1); color: #94A3B8; padding: 2px 8px; border-radius: 4px; font-size: 0.72rem;">{item['category']}</span>
+                    </div>
+                    <div>
+                        {item['badge_html']}
+                    </div>
+                </div>
+                <div style="font-weight: 600; font-size: 0.88rem; color: #F8FAFC; margin-bottom: 6px;">
+                    {item['title']}
+                </div>
+                <div style="color: #CBD5E1; font-size: 0.82rem; line-height: 1.5; margin-bottom: 8px;">
+                    {item['summary']}
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #64748B;">
+                    <span>🕒 {item['time_str']}</span>
+                    <a href="{item['kap_url']}" target="_blank" style="color: #38BDF8; text-decoration: none; font-weight: 600;">KAP Bildirimini Aç ↗</a>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.info("Seçili filtrelere uygun KAP bildirimi bulunamadı.")
+
