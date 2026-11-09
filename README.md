@@ -1,4 +1,4 @@
-# 💼 BIST Finansal Analist Asistanı (Enterprise RAG Platformu)
+# 💼 BIST Finansal Analist Asistanı
 
 <div align="center">
 
