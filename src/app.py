@@ -11,6 +11,7 @@ if str(project_root) not in sys.path:
 
 import streamlit as st
 from src.config import (
+    GOOGLE_API_KEY,
     DEFAULT_LLM_MODEL,
     ADVANCED_LLM_MODEL,
     COMPANIES,
