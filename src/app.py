@@ -301,21 +301,69 @@ st.markdown("""
         box-shadow: 0 0 12px rgba(56, 189, 248, 0.25) !important;
     }
 
-    /* Chat Input kutusu ve taban yerleşimi */
+    /* Taban Chat Input Barı (Modern, Pürüzsüz & Tek Parça Tasarım) */
+    [data-testid="stBottom"] {
+        background: linear-gradient(180deg, rgba(10, 15, 29, 0) 0%, rgba(10, 15, 29, 0.95) 40%, #0A0F1D 100%) !important;
+        padding-bottom: 1.2rem !important;
+        padding-top: 0.8rem !important;
+    }
+    [data-testid="stBottom"] > div {
+        background-color: transparent !important;
+    }
     [data-testid="stChatInput"] {
         background-color: transparent !important;
-        border-radius: 12px !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
         z-index: 99 !important;
     }
-    [data-testid="stChatInput"] textarea {
-        background-color: #0D1422 !important;
-        color: #F8FAFC !important;
-        border: 1px solid #1E293B !important;
-        border-radius: 10px !important;
+    /* Tek ve Pürüzsüz Dış Çerçeve */
+    [data-testid="stChatInput"] > div {
+        background-color: #0E1626 !important;
+        border: 1.5px solid #1E293B !important;
+        border-radius: 16px !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        padding: 4px 8px !important;
     }
-    [data-testid="stChatInput"] textarea:focus {
+    [data-testid="stChatInput"] > div:hover {
+        border-color: #334155 !important;
+    }
+    [data-testid="stChatInput"] > div:focus-within {
+        background-color: #0F1A2E !important;
         border-color: #38BDF8 !important;
-        box-shadow: 0 0 10px rgba(56, 189, 248, 0.25) !important;
+        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15), 0 8px 25px rgba(0, 0, 0, 0.5) !important;
+    }
+    /* İçteki Textarea: Kutu hissi yok, şeffaf ve pürüzsüz */
+    [data-testid="stChatInput"] textarea,
+    [data-testid="stChatInput"] div[data-baseweb="base-input"],
+    [data-testid="stChatInput"] div[data-baseweb="textarea"] {
+        background-color: transparent !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        color: #F8FAFC !important;
+        font-size: 0.96rem !important;
+        line-height: 1.5 !important;
+    }
+    [data-testid="stChatInput"] textarea::placeholder {
+        color: #64748B !important;
+        font-weight: 400 !important;
+    }
+    /* Gönder Butonu (Şık & Canlı) */
+    [data-testid="stChatInputSubmitButton"] button,
+    [data-testid="stChatInput"] button {
+        background-color: transparent !important;
+        border: none !important;
+        color: #38BDF8 !important;
+        border-radius: 10px !important;
+        transition: all 0.2s ease !important;
+    }
+    [data-testid="stChatInputSubmitButton"] button:hover,
+    [data-testid="stChatInput"] button:hover {
+        background-color: rgba(56, 189, 248, 0.15) !important;
+        color: #7DD3FC !important;
+        transform: scale(1.05) !important;
     }
 </style>
 """, unsafe_allow_html=True)
