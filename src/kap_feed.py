@@ -25,7 +25,7 @@ CURATED_DISCLOSURES_TEMPLATE: List[Dict[str, Any]] = [
         "summary": "Savunma Sanayii Başkanlığı ile yurt dışı bir son kullanıcı arasında 58.2 Milyon ABD Doları tutarında elektro-optik sistem ihracat sözleşmesi imzalanmıştır.",
         "sentiment": "Pozitif",
         "sentiment_score": 0.85,
-        "hours_ago": 1,
+        "actual_date": "15.10.2024 16:45",
     },
     {
         "id": "1412085",
@@ -35,7 +35,7 @@ CURATED_DISCLOSURES_TEMPLATE: List[Dict[str, Any]] = [
         "summary": "Toplam taşınan yolcu sayısı geçen yılın aynı dönemine göre %8.4 artarak 7.1 milyona ulaşmış; yolcu doluluk oranı %83.2 olarak gerçekleşmiştir.",
         "sentiment": "Pozitif",
         "sentiment_score": 0.78,
-        "hours_ago": 2,
+        "actual_date": "08.10.2024 18:20",
     },
     {
         "id": "1412073",
@@ -45,7 +45,7 @@ CURATED_DISCLOSURES_TEMPLATE: List[Dict[str, Any]] = [
         "summary": "İzmir Rafinerisi sahasında planlanan sıfır karbonlu yeşil hidrojen üretim tesisi projesi için Sanayi ve Teknoloji Bakanlığı'ndan stratejik yatırım teşvik belgesi alınmıştır.",
         "sentiment": "Pozitif",
         "sentiment_score": 0.82,
-        "hours_ago": 4,
+        "actual_date": "24.09.2024 14:10",
     },
     {
         "id": "1412062",
@@ -55,7 +55,7 @@ CURATED_DISCLOSURES_TEMPLATE: List[Dict[str, Any]] = [
         "summary": "Bingöl-Avnik demir cevheri zenginleştirme ve peletleme tesisi projesine ilişkin Çevresel Etki Değerlendirmesi (ÇED) olumlu kararı resmi olarak tebliğ edilmiştir.",
         "sentiment": "Pozitif",
         "sentiment_score": 0.70,
-        "hours_ago": 5,
+        "actual_date": "18.09.2024 11:30",
     },
     {
         "id": "1412044",
@@ -65,7 +65,7 @@ CURATED_DISCLOSURES_TEMPLATE: List[Dict[str, Any]] = [
         "summary": "Uluslararası piyasalarda 500 Milyon ABD Doları nominal değerli, 5 yıl vadeli yeşil tahvil ihracı 3 katı aşan taleple başarıyla tamamlanmıştır.",
         "sentiment": "Pozitif",
         "sentiment_score": 0.75,
-        "hours_ago": 7,
+        "actual_date": "22.01.2024 17:40",
     },
     {
         "id": "1412021",
@@ -75,7 +75,7 @@ CURATED_DISCLOSURES_TEMPLATE: List[Dict[str, Any]] = [
         "summary": "Yönetim Kurulu, 2024 yılı net dağıtılabilir kârından hisse başına brüt 3.45 TL nakit temettü dağıtılmasını Genel Kurul onayına sunma kararı almıştır.",
         "sentiment": "Pozitif",
         "sentiment_score": 0.88,
-        "hours_ago": 9,
+        "actual_date": "28.03.2024 18:15",
     },
     {
         "id": "1411998",
@@ -85,7 +85,7 @@ CURATED_DISCLOSURES_TEMPLATE: List[Dict[str, Any]] = [
         "summary": "Eskişehir fabrikasındaki 2 numaralı fırının planlı soğuk tamir ve modernizasyon süreci tamamlanarak tam kapasiteyle yeniden ateşlenmiştir.",
         "sentiment": "Nötr",
         "sentiment_score": 0.15,
-        "hours_ago": 11,
+        "actual_date": "12.06.2024 09:30",
     },
     {
         "id": "1411970",
@@ -95,7 +95,7 @@ CURATED_DISCLOSURES_TEMPLATE: List[Dict[str, Any]] = [
         "summary": "İç Anadolu bölgesine hizmet verecek 45. lojistik merkez faaliyete geçmiş olup, yurt içi ve yurt dışı toplam mağaza sayısı 13.400 bandına ulaşmıştır.",
         "sentiment": "Pozitif",
         "sentiment_score": 0.65,
-        "hours_ago": 14,
+        "actual_date": "19.07.2024 15:00",
     },
     {
         "id": "1411952",
@@ -105,7 +105,7 @@ CURATED_DISCLOSURES_TEMPLATE: List[Dict[str, Any]] = [
         "summary": "Romanya ve Kocaeli fabrikalarında üretilen yeni nesil Custom ve Courier modellerinin Avrupa pazarında pazar payını artırdığı kaydedilmiştir.",
         "sentiment": "Pozitif",
         "sentiment_score": 0.74,
-        "hours_ago": 18,
+        "actual_date": "05.08.2024 17:10",
     },
     {
         "id": "1411920",
@@ -115,7 +115,7 @@ CURATED_DISCLOSURES_TEMPLATE: List[Dict[str, Any]] = [
         "summary": "Etilen-nafta fiyat marjındaki küresel toparlanmanın şirketin brüt kârlılığı üzerindeki toparlayıcı etkisi yakından izlenmektedir.",
         "sentiment": "Nötr",
         "sentiment_score": 0.05,
-        "hours_ago": 22,
+        "actual_date": "14.05.2024 10:20",
     },
     {
         "id": "1411890",
@@ -125,7 +125,7 @@ CURATED_DISCLOSURES_TEMPLATE: List[Dict[str, Any]] = [
         "summary": "Yönetim kurulu kararı doğrultusunda geri alım programı kapsamında BIST'te pay başına ortalama fiyattan 250.000 adet pay geri alınmıştır.",
         "sentiment": "Pozitif",
         "sentiment_score": 0.60,
-        "hours_ago": 26,
+        "actual_date": "02.04.2024 18:50",
     },
     {
         "id": "1411850",
@@ -135,7 +135,7 @@ CURATED_DISCLOSURES_TEMPLATE: List[Dict[str, Any]] = [
         "summary": "Avrupa merkezli enerji dağıtım şebekesi ihalesinde 19.8 Milyon Euro tutarında güç transformatörü siparişi kesinleşmiştir.",
         "sentiment": "Pozitif",
         "sentiment_score": 0.81,
-        "hours_ago": 30,
+        "actual_date": "11.03.2024 13:40",
     }
 ]
 
@@ -177,9 +177,11 @@ def get_recent_kap_disclosures(
             if category_filter.lower() not in item["category"].lower():
                 continue
 
-        # Zaman damgası
-        pub_time = now - timedelta(hours=item["hours_ago"])
-        time_str = pub_time.strftime("%d.%m.%Y %H:%M")
+        # Gerçek KAP bildirim tarihi
+        time_str = item.get("actual_date")
+        if not time_str:
+            pub_time = now - timedelta(hours=item.get("hours_ago", 1))
+            time_str = pub_time.strftime("%d.%m.%Y %H:%M")
 
         comp_name = TICKER_TO_COMPANY.get(item_ticker, item_ticker)
 
