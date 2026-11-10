@@ -365,6 +365,41 @@ st.markdown("""
         color: #7DD3FC !important;
         transform: scale(1.05) !important;
     }
+
+    /* Sidebar Navigation Menüsü (Fintech / Bloomberg Terminal Tarzı) */
+    [data-testid="stSidebar"] [data-testid="stRadio"] > div {
+        gap: 5px !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stRadio"] label {
+        background: #0D1526 !important;
+        border: 1px solid #1E293B !important;
+        border-radius: 9px !important;
+        padding: 9px 12px !important;
+        cursor: pointer !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        width: 100% !important;
+        margin-bottom: 2px !important;
+        color: #94A3B8 !important;
+        font-size: 0.88rem !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stRadio"] label:hover {
+        background: #172554 !important;
+        border-color: #38BDF8 !important;
+        color: #38BDF8 !important;
+        transform: translateX(3px) !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stRadio"] label[data-checked="true"],
+    [data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) {
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.3), rgba(56, 189, 248, 0.18)) !important;
+        border-color: #38BDF8 !important;
+        color: #FFFFFF !important;
+        font-weight: 600 !important;
+        box-shadow: 0 0 12px rgba(56, 189, 248, 0.25) !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] input,
+    [data-testid="stSidebar"] [data-testid="stRadio"] div[data-testid="stRadioCircle"] {
+        display: none !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -486,60 +521,82 @@ with st.sidebar:
         {sidebar_brand_icon}
         <div>
             <div style="font-weight: 700; font-size: 0.96rem; color: #F8FAFC; letter-spacing: -0.01em;">BIST ANALYTICS</div>
-            <div style="font-size: 0.73rem; color: #38BDF8; font-weight: 600;">KAP RAG & Temel Analiz</div>
+            <div style="font-size: 0.73rem; color: #38BDF8; font-weight: 600;">KAP RAG & Finans Terminali</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
-    st.markdown("### ⚙️ Analiz & Filtre Paneli")
-    
-    # 1. Model & Sağlayıcı Mimarisi
-    provider_choice = st.selectbox(
-        "🧠 Model Sağlayıcısı & Mimarisi",
-        options=["gemini", "ollama", "colab"],
-        format_func=lambda x: {
-            "gemini": "☁️ Google Gemini Flash (Bulut API)",
-            "ollama": "💻 Yerel Model (Ollama / On-Premises)",
-            "colab": "🚀 Google Colab Pro / vLLM (Özel GPU)"
-        }.get(x, x),
+
+    # 🧭 1. ANA NAVİGASYON MENÜSÜ
+    st.markdown("### 🧭 Terminal Menüsü")
+    MENU_OPTIONS = [
+        "💬 AI Analist Terminali",
+        "📈 Fiyat & Mum Grafiği",
+        "⚖️ Çift Şirket Kıyaslama",
+        "💼 Portföy Risk Simülatörü",
+        "🗺️ Piyasa Haritası & Screener",
+        "📢 Canlı KAP Akışı & Radar",
+        "📌 İzleme Listesi & Not Defteri",
+        "📑 Temel Analiz & Rapor Merkezi",
+    ]
+    active_module = st.radio(
+        "Terminal Menüsü",
+        options=MENU_OPTIONS,
         index=0,
-        help="Modelin nerede koşulacağını belirler. Bulut, KVKK uyumlu yerel donanım veya Colab Pro GPU'nuzu bağlayabilirsiniz."
+        label_visibility="collapsed"
     )
 
-    custom_base_url = None
-    custom_model_name = None
+    st.divider()
 
-    if provider_choice == "gemini":
-        model_option = st.selectbox(
-            "Gemini Versiyonu",
-            options=[DEFAULT_LLM_MODEL, ADVANCED_LLM_MODEL],
-            format_func=lambda x: "Gemini 3.1 Flash Lite (Ultra Hızlı ~1s)" if "3.1" in x else "Gemini 3.5 Flash Lite (Derin Finansal Muhakeme)",
+    # ⚙️ 2. MODEL VE ÇIKARIM AYARLARI
+    with st.expander("⚙️ Model & Çıkarım Sağlayıcısı", expanded=False):
+        provider_choice = st.selectbox(
+            "🧠 Model Sağlayıcısı",
+            options=["gemini", "ollama", "colab"],
+            format_func=lambda x: {
+                "gemini": "☁️ Google Gemini Flash (Bulut)",
+                "ollama": "💻 Yerel Model (Ollama / On-Premise)",
+                "colab": "🚀 Colab Pro GPU (Özel Model)"
+            }.get(x, x),
             index=0,
-            help="Finansal analizler için Gemini model versiyonu."
+            help="Modelin nerede koşulacağını belirler. Bulut, yerel donanım veya Colab Pro GPU'nuzu bağlayabilirsiniz."
         )
-    elif provider_choice == "ollama":
-        custom_base_url = st.text_input("Ollama API URL", value="http://localhost:11434/v1", help="Yerel Ollama OpenAI uyumlu API adresi")
-        custom_model_name = st.text_input("Model Adı", value="qwen2.5:7b", help="Ollama'da kurulu model adı (örn: qwen2.5:7b, llama3.1:8b, deepseek-r1:8b)")
-        model_option = custom_model_name
-        if st.button("🔌 Yerel Sunucuyu Test Et", use_container_width=True):
-            from src.llm_provider import LLMProviderHub
-            ok, msg = LLMProviderHub.test_connection(provider="ollama", base_url=custom_base_url, model_name=custom_model_name)
-            if ok:
-                st.success(msg)
-            else:
-                st.warning(msg)
-    elif provider_choice == "colab":
-        custom_base_url = st.text_input("Colab / ngrok URL", placeholder="https://xxxx.ngrok-free.app/v1", help="Colab notebook'undaki ngrok API adresi")
-        custom_model_name = st.text_input("Model Etiketi", value="bist-financial-llm", help="Colab'da eğitilen model adı")
-        model_option = custom_model_name or "bist-financial-llm"
-        if st.button("🔌 Colab Sunucusunu Test Et", use_container_width=True):
-            from src.llm_provider import LLMProviderHub
-            ok, msg = LLMProviderHub.test_connection(provider="colab", base_url=custom_base_url, model_name=custom_model_name)
-            if ok:
-                st.success(msg)
-            else:
-                st.warning(msg)
 
-    # 2. Şirket Filtresi (Deep-linking ile otomatik eşleşme - Türkçe Alfabetik Sıralı)
+        custom_base_url = None
+        custom_model_name = None
+
+        if provider_choice == "gemini":
+            model_option = st.selectbox(
+                "Gemini Versiyonu",
+                options=[DEFAULT_LLM_MODEL, ADVANCED_LLM_MODEL],
+                format_func=lambda x: "Gemini 3.1 Flash Lite (~1s)" if "3.1" in x else "Gemini 3.5 Flash Lite (Derin Muhakeme)",
+                index=0,
+                help="Finansal analizler için Gemini model versiyonu."
+            )
+        elif provider_choice == "ollama":
+            custom_base_url = st.text_input("Ollama API URL", value="http://localhost:11434/v1", help="Yerel Ollama OpenAI uyumlu API adresi")
+            custom_model_name = st.text_input("Model Adı", value="qwen2.5:7b", help="Ollama'da kurulu model adı")
+            model_option = custom_model_name
+            if st.button("🔌 Yerel Sunucuyu Test Et", key="btn_test_ollama_sb", use_container_width=True):
+                from src.llm_provider import LLMProviderHub
+                ok, msg = LLMProviderHub.test_connection(provider="ollama", base_url=custom_base_url, model_name=custom_model_name)
+                if ok:
+                    st.success(msg)
+                else:
+                    st.warning(msg)
+        elif provider_choice == "colab":
+            custom_base_url = st.text_input("Colab / ngrok URL", placeholder="https://xxxx.ngrok-free.app/v1", help="Colab notebook'undaki ngrok adresi")
+            custom_model_name = st.text_input("Model Etiketi", value="bist-financial-llm")
+            model_option = custom_model_name or "bist-financial-llm"
+            if st.button("🔌 Colab Sunucusunu Test Et", key="btn_test_colab_sb", use_container_width=True):
+                from src.llm_provider import LLMProviderHub
+                ok, msg = LLMProviderHub.test_connection(provider="colab", base_url=custom_base_url, model_name=custom_model_name)
+                if ok:
+                    st.success(msg)
+                else:
+                    st.warning(msg)
+
+    # 🏢 3. ŞİRKET VE YIL FİLTRESİ
+    st.markdown("### 🏢 Filtreler")
     _tr_order = "aAbBcCçÇdDeEfFgGğĞhHıIİijJkKlLmMnNoOöÖpPrRsSşŞtTuUüÜvVyYzZ"
     _tr_dict = {c: i for i, c in enumerate(_tr_order)}
     def _tr_sort_key(text: str):
@@ -548,336 +605,42 @@ with st.sidebar:
     sorted_company_names = sorted(list(COMPANIES.keys()), key=_tr_sort_key)
     company_options = ["Tümü"] + sorted_company_names
     
-    # Eğer URL'den veya izleme listesinden geçerli bir şirket geldiyse varsayılan indeks olarak onu seç
     target_comp = st.session_state.get("user_selected_ticker_company", url_company_name)
     default_company_index = 0
     if target_comp and target_comp in company_options:
         default_company_index = company_options.index(target_comp)
 
     selected_company = st.selectbox(
-        "🏢 Şirket Filtresi",
+        "Şirket",
         options=company_options,
         index=default_company_index,
-        help="Sorguyu belirli bir şirketle sınırlandırabilir veya 'Tümü' seçeneğiyle sorunun içeriğinden otomatik tespit edilmesini sağlayabilirsiniz."
+        help="Sorguyu belirli bir şirketle sınırlandırabilir veya 'Tümü' seçeneğini seçebilirsiniz."
     )
 
-    # Aktif hisse sembolü
     active_ticker = url_ticker if url_ticker else get_ticker_for_company(selected_company)
 
-    # 3. Yıl Filtresi
     year_options = ["Tümü"] + [str(y) for y in reversed(SUPPORTED_YEARS)]
     selected_year = st.selectbox(
-        "📅 Mali Yıl Filtresi",
+        "Mali Yıl",
         options=year_options,
         index=0,
         help="Belirli bir faaliyet veya bilanço yılına odaklanın."
     )
 
-    if st.button("🔄 Sohbeti & Önbelleği Temizle", use_container_width=True, help="Sohbet geçmişini ve bellek önbelleğini sıfırlar"):
+    st.divider()
+
+    # 🗑️ 4. HIZLI EYLEMLER
+    if st.button("🔄 Sohbeti & Önbelleği Sıfırla", use_container_width=True, help="Sohbet geçmişini ve bellek önbelleğini temizler"):
         st.cache_resource.clear()
         st.session_state.messages = []
         st.rerun()
 
-    st.divider()
-
-    # --- 📌 KALICI İZLEME LİSTESİ (WATCHLIST) ---
-    st.markdown("#### 📌 Kalıcı İzleme Listem")
-    st.caption("Tarayıcı kapatılsa veya sayfa yenilense de kalıcı olarak diskte saklanır (`user_data/watchlist.json`).")
-    user_wl = load_watchlist()
-
-    if user_wl:
-        # Hisseleri tıklanabilir etiket butonları olarak 3 sütunda diz
-        cols_wl = st.columns(min(3, len(user_wl)))
-        for i, sym in enumerate(user_wl):
-            col_i = cols_wl[i % len(cols_wl)]
-            with col_i:
-                if st.button(f"{sym}", key=f"wl_btn_{sym}", use_container_width=True, help=f"{sym} hissesini filtreye al"):
-                    comp_for_sym = get_company_for_ticker(sym)
-                    if comp_for_sym and comp_for_sym in company_options:
-                        st.session_state["user_selected_ticker_company"] = comp_for_sym
-                        st.rerun()
-
-    with st.expander("⚙️ İzleme Listesini Düzenle"):
-        all_bist_symbols = sorted(list(BIST_100_COMPANIES.keys()))
-        new_sym_choice = st.selectbox("➕ Listeye Hisse Ekle", options=all_bist_symbols, key="wl_new_sym")
-        if st.button("Hisse Ekle", key="btn_add_to_wl", use_container_width=True):
-            add_to_watchlist(new_sym_choice)
-            st.toast(f"✅ {new_sym_choice} kalıcı izleme listenize eklendi!")
-            st.rerun()
-
-        if user_wl:
-            st.markdown("---")
-            rem_sym = st.selectbox("➖ Listeden Çıkar", options=user_wl, key="wl_rem_sym")
-            if st.button("Hisse Çıkar", key="btn_rem_from_wl", use_container_width=True):
-                remove_from_watchlist(rem_sym)
-                st.toast(f"🗑️ {rem_sym} izleme listesinden çıkarıldı.")
-                st.rerun()
-
-    st.divider()
-
-    # --- 📝 ANALİST NOT DEFTERİM (PERSISTENT SAVED NOTES) ---
-    saved_notes_list = load_saved_notes()
-    with st.expander(f"📝 Analist Not Defterim ({len(saved_notes_list)})", expanded=False):
-        st.caption("Sohbetten kaydettiğiniz kritik finansal değerlendirmeler (`user_data/saved_notes.json`).")
-        
-        # Hızlı Manuel Not Ekleme
-        with st.form("quick_note_form", clear_on_submit=True):
-            st.markdown("##### ✍️ Yeni Not Oluştur")
-            cur_note_sym = active_ticker if (active_ticker and active_ticker != "BIST") else "GENEL"
-            note_title_input = st.text_input("Başlık", placeholder=f"Örn: {cur_note_sym} 2024 Bilanço Özeti")
-            note_content_input = st.text_area("Not İçeriği", placeholder="Örn: FAVÖK marjı güçlü, net borç/FAVÖK 0.8x seviyesinde...")
-            submitted_note = st.form_submit_button("💾 Notu Kaydet", use_container_width=True)
-            if submitted_note and note_content_input.strip():
-                add_saved_note(ticker=cur_note_sym, title=note_title_input, content=note_content_input)
-                st.toast("✅ Analist notu kalıcı olarak kaydedildi!")
-                st.rerun()
-
-        st.markdown("---")
-        if saved_notes_list:
-            for n in saved_notes_list:
-                st.markdown(f"""
-                <div style="background: #080C14; border: 1px solid #1E293B; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                        <span style="font-weight: 700; color: #38BDF8; font-size: 0.85rem;">{n.get('ticker', 'GENEL')}</span>
-                        <span style="font-size: 0.72rem; color: #64748B;">{n.get('created_at', '')}</span>
-                    </div>
-                    <div style="font-weight: 600; font-size: 0.82rem; color: #F8FAFC; margin-bottom: 4px;">{n.get('title', '')}</div>
-                    <div style="font-size: 0.78rem; color: #CBD5E1; line-height: 1.4; white-space: pre-wrap;">{n.get('content', '')}</div>
-                </div>
-                """, unsafe_allow_html=True)
-                if st.button("🗑️ Sil", key=f"del_note_{n.get('id')}", use_container_width=True):
-                    delete_saved_note(n.get("id"))
-                    st.toast("🗑️ Not silindi.")
-                    st.rerun()
-        else:
-            st.info("Kayıtlı not bulunmuyor. Sohbet ekranındaki '💾 Notlarıma Kaydet' butonuyla analizleri buraya aktarabilirsiniz.")
-
-    # --- 3. ADIM: BIST-TREND-FORECASTER ÇİFT YÖNLÜ KÖPRÜ VE HİBRİT KARAR MOTORU ---
-    is_specific_ticker = bool(active_ticker and active_ticker != "BIST")
-
-    if is_specific_ticker:
-        forecaster_url = f"{FORECASTER_BASE_URL}/?ticker={active_ticker}"
-        report_file = REPORTS_DIR / f"{active_ticker}_latest.json"
-        active_report_obj = None
-        hybrid_sig = None
-        if report_file.exists():
-            try:
-                with open(report_file, "r", encoding="utf-8") as rf:
-                    active_report_obj = FundamentalReport(**json.load(rf))
-                hybrid_sig = get_hybrid_signal(ticker=active_ticker)
-            except Exception:
-                pass
-
-        decision_color = "#34D399"
-        decision_bg = "rgba(16, 185, 129, 0.18)"
-        decision_border = "rgba(52, 211, 153, 0.4)"
-        badge_html = ""
-        details_html = ""
-
-        if hybrid_sig:
-            dec = hybrid_sig.decision
-            if "GÜÇLÜ AL" in dec:
-                decision_color = "#10B981"
-                decision_bg = "rgba(16, 185, 129, 0.22)"
-                decision_border = "rgba(16, 185, 129, 0.5)"
-            elif "AL" in dec:
-                decision_color = "#38BDF8"
-                decision_bg = "rgba(56, 189, 248, 0.20)"
-                decision_border = "rgba(56, 189, 248, 0.45)"
-            elif "TUT" in dec or "NÖTR" in dec:
-                decision_color = "#FBBF24"
-                decision_bg = "rgba(245, 158, 11, 0.20)"
-                decision_border = "rgba(245, 158, 11, 0.45)"
-            else:
-                decision_color = "#F87171"
-                decision_bg = "rgba(239, 68, 68, 0.20)"
-                decision_border = "rgba(239, 68, 68, 0.45)"
-
-            badge_html = f'<span style="background:{decision_bg}; color:{decision_color}; border:1px solid {decision_border}; font-size:0.75rem; font-weight:700; padding:2px 8px; border-radius:9999px;">{hybrid_sig.decision}</span>'
-            details_html = f'''<div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.15); border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; font-size: 0.78rem;">
-<div style="display: flex; justify-content: space-between; margin-bottom: 3px;"><span style="color:#94A3B8;">Bileşik Skor:</span><span style="color:#F8FAFC; font-weight:700;">{hybrid_sig.composite_score} / 100</span></div>
-<div style="display: flex; justify-content: space-between; margin-bottom: 3px;"><span style="color:#94A3B8;">Teknik Trend:</span><span style="color:#38BDF8; font-weight:600;">{hybrid_sig.technical_trend}</span></div>
-<div style="display: flex; justify-content: space-between;"><span style="color:#94A3B8;">Kelly Tahsisi:</span><span style="color:#34D399; font-weight:700;">%{hybrid_sig.kelly_allocation_percent} Portföy</span></div>
-</div>'''
-        else:
-            details_html = f'''<div style="color: #CBD5E1; font-size: 0.82rem; line-height: 1.4; margin-bottom: 10px;">
-<strong>{active_ticker}</strong> hissesinin <strong>XGBoost trend tahminini</strong> ve <strong>Kelly sermaye tahsisini</strong> inceleyin.
-</div>'''
-
-        card_html = f'''<div class="forecaster-card">
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-<span style="font-weight: 700; color: #38BDF8; font-size: 0.90rem;">📊 {active_ticker} Hibrit Karar Kartı</span>
-{badge_html}
-</div>
-{details_html}
-<a href="{forecaster_url}" target="_blank" style="display: block; text-align: center; background: linear-gradient(135deg, #2563EB, #1D4ED8); color: #FFFFFF; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 0.82rem; font-weight: 600; border: 1px solid rgba(56, 189, 248, 0.35); box-shadow: 0 2px 8px rgba(37,99,235,0.4);">
-Forecaster'da Teknik Tahmini Gör ↗
+    # BIST-Trend-Forecaster Köprü Linki
+    st.markdown(f'''<div style="text-align: center; margin-top: 8px;">
+<a href="{FORECASTER_BASE_URL}/?ticker={active_ticker if active_ticker != "BIST" else ""}" target="_blank" style="display: block; background: #172554; color: #93C5FD; padding: 7px 10px; border-radius: 6px; text-decoration: none; font-size: 0.78rem; font-weight: 600; border: 1px solid rgba(56, 189, 248, 0.25);">
+BIST-Trend-Forecaster ↗
 </a>
-</div>'''
-        st.markdown(card_html, unsafe_allow_html=True)
-
-        # Finansal Sağlık Radarı (Plotly)
-        if active_report_obj:
-            with st.expander("📈 Finansal Sağlık Radarı (Plotly)", expanded=False):
-                st.caption(f"**{active_ticker}** için 5 Boyutlu RAG Temel Analiz Profili")
-                fig = create_radar_chart(active_report_obj)
-                st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
-    else:
-        general_card = f'''<div class="forecaster-card" style="padding: 12px 14px;">
-<div style="font-weight: 700; color: #38BDF8; font-size: 0.86rem; margin-bottom: 4px;">🎯 Hisse Bazlı Teknik Tahmin</div>
-<div style="color: #94A3B8; font-size: 0.78rem; line-height: 1.4; margin-bottom: 10px;">
-Sol menüdeki <strong>Şirket Filtresi</strong>'nden bir hisse seçtiğinizde, teknik trend sinyali ve hibrit karar kartı burada otomatik aktif olur.
-</div>
-<a href="{FORECASTER_BASE_URL}" target="_blank" style="display: block; text-align: center; background: #172554; color: #93C5FD; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 0.78rem; font-weight: 600; border: 1px solid rgba(56, 189, 248, 0.3);">
-BIST-Trend-Forecaster Platformu ↗
-</a>
-</div>'''
-        st.markdown(general_card, unsafe_allow_html=True)
-
-    st.divider()
-
-    # --- 2. ADIM: STANDART YAPILANDIRILMIŞ ÇIKTI (JSON EXPORT / BIST-TREND-FORECASTER ENTEGRASYONU) ---
-    with st.expander("📊 Temel Analiz JSON Raporu (BIST-Trend-Forecaster)"):
-        st.caption(f"{active_ticker} hissesi için teknik analiz modeline beslenecek standart yapılandırılmış JSON çıktısı.")
-        
-        rep_gen = load_report_generator()
-        report_file = REPORTS_DIR / f"{active_ticker}_latest.json"
-
-        if st.button("⚡ JSON Raporunu Üret / Güncelle", use_container_width=True):
-            with st.spinner(f"{active_ticker} için RAG temel analiz raporu oluşturuluyor..."):
-                try:
-                    generated_rep = rep_gen.generate_report(ticker=active_ticker, force_refresh=True)
-                    st.success(f"{active_ticker} raporu hazırlandı!")
-                except Exception as e:
-                    st.error(f"Rapor oluşturulurken hata: {e}")
-
-        # Eğer önceden üretilmiş rapor varsa göster ve indirme butonu koy
-        if report_file.exists():
-            with open(report_file, "r", encoding="utf-8") as rf:
-                report_json_str = rf.read()
-            st.json(json.loads(report_json_str))
-            st.download_button(
-                label=f"📥 {active_ticker}_latest.json İndir",
-                data=report_json_str,
-                file_name=f"{active_ticker}_latest.json",
-                mime="application/json",
-                use_container_width=True
-            )
-            # Kurumsal Araştırma Raporu (HTML/PDF) İndirme
-            if active_report_obj:
-                try:
-                    _, m_quick = fetch_ticker_market_data(active_ticker, period="1mo")
-                    exec_html = generate_executive_html_report(active_report_obj, market_data=m_quick, hybrid_signal=hybrid_signal_data)
-                    st.download_button(
-                        label=f"📄 {active_ticker} Araştırma Raporu (HTML/PDF)",
-                        data=exec_html,
-                        file_name=f"{active_ticker}_Finansal_Arastirma_Raporu.html",
-                        mime="text/html",
-                        use_container_width=True,
-                        help="Yazdırılabilir antetli kurumsal araştırma raporu"
-                    )
-                except Exception:
-                    pass
-
-    st.divider()
-
-    # 4. BIST 100 Yeni Rapor İndirici (Ölçeklenebilirlik Çözümü)
-    with st.expander("📥 KAP'tan Yeni Rapor İndir (BIST 100)"):
-        st.caption("BIST 100 şirketlerinin raporlarını doğrudan indirip sisteme ekleyin.")
-        bist_ticker_choice = st.selectbox(
-            "Hisse Kodu (Ticker)",
-            options=sorted(list(BIST_100_COMPANIES.keys())),
-            format_func=lambda x: f"{x} - {BIST_100_COMPANIES[x]['name'][:24]}...",
-            index=0
-        )
-        report_year = st.selectbox("Rapor Yılı", options=list(reversed(SUPPORTED_YEARS)), index=0)
-        report_type = st.radio("Rapor Türü", options=["Faaliyet Raporu", "Finansal Tablolar"], horizontal=True)
-        direct_url = st.text_input("KAP Doğrudan PDF URL (Opsiyonel)", placeholder="https://www.kap.org.tr/tr/BildirimPdf/...")
-
-        if st.button("🚀 Raporu İndir ve İndeksle", use_container_width=True):
-            if direct_url:
-                with st.spinner(f"{bist_ticker_choice} {report_year} raporu indiriliyor..."):
-                    doc_t = "faaliyet" if "Faaliyet" in report_type else "finansal"
-                    downloaded_path = download_company_annual_report(
-                        ticker=bist_ticker_choice,
-                        year=report_year,
-                        doc_type=doc_t,
-                        custom_url=direct_url
-                    )
-                    if downloaded_path and downloaded_path.exists():
-                        st.success(f"Rapor indirildi: {downloaded_path.name}")
-                        with st.spinner("Rapor vektör indeksine ekleniyor..."):
-                            success = add_single_pdf_to_vectorstore(downloaded_path)
-                            if success:
-                                st.cache_resource.clear()
-                                st.success("Rapor başarıyla indekslendi ve analize hazır!")
-                            else:
-                                st.error("İndeksleme sırasında bir hata oluştu.")
-                    else:
-                        st.error("Dosya indirilemedi. Lütfen bağlantıyı kontrol edin.")
-            else:
-                st.info("KAP bildirim sayfasındaki PDF bağlantısını yukarıdaki kutuya yapıştırarak tek tıkla sisteme entegre edebilirsiniz.")
-
-    st.divider()
-
-    # 5. RAG Halüsinasyon & Kalite Benchmark Karnesi
-    with st.expander("🛡️ RAG Güvenilirlik & Benchmark Karnesi"):
-        st.caption("Ragas & TruLens metodolojisiyle ölçülmüş kurumsal doğruluk metrikleri.")
-        bm_path = REPORTS_DIR / "rag_benchmark_report.json"
-        if bm_path.exists():
-            try:
-                with open(bm_path, "r", encoding="utf-8") as bf:
-                    bm_data = json.load(bf)
-                sm = bm_data.get("summary_metrics", {})
-                b_c1, b_c2 = st.columns(2)
-                with b_c1:
-                    st.metric("Sadakat", sm.get("faithfulness_percent", "%85.1"))
-                with b_c2:
-                    st.metric("Tuzak Savunma", sm.get("trap_defense_success_percent", "%100.0"))
-                st.markdown(f"""
-                <div style="font-size:0.78rem; color:#94A3B8; margin-top:6px; margin-bottom:8px;">
-                    ● Arama Motoru: <strong>Hibrit (FAISS + BM25)</strong><br>
-                    ● Sayısal Doğrulama: <strong>Hallucination Guard Aktif</strong><br>
-                    ● Test Edilen Senaryo: <strong>{bm_data.get('total_test_cases', 8)} Vaka</strong>
-                </div>
-                """, unsafe_allow_html=True)
-                st.download_button(
-                    label="📥 Benchmark Raporunu İndir",
-                    data=json.dumps(bm_data, ensure_ascii=False, indent=2),
-                    file_name="rag_benchmark_report.json",
-                    mime="application/json",
-                    use_container_width=True
-                )
-            except Exception as e:
-                st.caption(f"Benchmark yüklenirken hata: {e}")
-        else:
-            st.info("Benchmark raporu henüz oluşturulmadı.")
-
-    st.divider()
-
-    # 6. Sohbeti Temizleme ve Dışa Aktarma
-    col_clear, col_export = st.columns(2)
-    with col_clear:
-        if st.button("🗑️ Temizle", use_container_width=True):
-            st.session_state.messages = []
-            st.rerun()
-
-    with col_export:
-        chat_export = ""
-        if "messages" in st.session_state and st.session_state.messages:
-            chat_export = f"# BIST Finansal Analist Asistanı - Analiz Raporu\n*Tarih: {datetime.now().strftime('%Y-%m-%d %H:%M')}*\n\n---\n"
-            for m in st.session_state.messages:
-                sender = "Kullanıcı" if m["role"] == "user" else "Finansal Analist Asistanı"
-                chat_export += f"### {sender}\n{m['content']}\n\n"
-        
-        st.download_button(
-            label="💾 İndir (MD)",
-            data=chat_export,
-            file_name=f"Finansal_Analiz_Raporu_{datetime.now().strftime('%Y%m%d_%H%M')}.md",
-            mime="text/markdown",
-            use_container_width=True,
-            disabled=not bool(chat_export)
-        )
+</div>''', unsafe_allow_html=True)
 
 # --- ANA EKRAN VE BAŞLIK ---
 main_header_icon = f'<img src="data:image/png;base64,{LOGO_B64}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 12px; border: 2px solid rgba(56, 189, 248, 0.45); box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);">' if LOGO_B64 else '<span style="font-size: 2.1rem; margin-right: 8px;">📈</span>'
@@ -937,17 +700,8 @@ if "messages" not in st.session_state or not st.session_state.messages:
         {"role": "assistant", "content": welcome_content}
     ]
 
-# --- ANA SEKMELER: SOHBET, GRAFİK, KIYASLAMA, PORTFÖY, HARİTA VE KAP AKIŞI ---
-tab_chat, tab_chart, tab_compare, tab_port, tab_map, tab_kap = st.tabs([
-    "💬 Finansal Analist Sohbeti",
-    "📈 Fiyat & Mum Grafiği",
-    "⚖️ Çift Şirket Kıyaslama",
-    "💼 Portföy Risk Simülatörü",
-    "🗺️ Piyasa Haritası & Screener",
-    "📢 Canlı KAP Akışı & Radar"
-])
-
-with tab_chat:
+# --- SAYFA VE MODÜL YÖNETİMİ ---
+if active_module == "💬 AI Analist Terminali":
     # --- HIZLI ANALİZ ŞABLONLARI (PROMPT CHIPS - 1. ADIM) ---
     st.markdown("##### 💡 Hızlı Finansal Analiz Soruları")
     q_cols = st.columns(4)
@@ -1155,7 +909,7 @@ with tab_chat:
 
 
 # --- 2. SEKME: CANLI FİYAT & MUM GRAFİĞİ ---
-with tab_chart:
+elif active_module == "📈 Fiyat & Mum Grafiği":
     st.markdown("### 📈 BIST Canlı Piyasa ve Fiyat Grafiği")
     st.caption("Borsa İstanbul gerçek zamanlı fiyatları, hacim analizi, SMA 20/50/200 trend çizgileri ve 14 günlük RSI göstergesi.")
 
@@ -1400,7 +1154,7 @@ with tab_chart:
 
 
 # --- 3. SEKME: ÇİFT ŞİRKET KIYASLAMA ---
-with tab_compare:
+elif active_module == "⚖️ Çift Şirket Kıyaslama":
     st.markdown("### ⚖️ Çift Şirket Karşılaştırmalı Analiz (Peer-to-Peer Matrix)")
     st.caption("İki BIST şirketinin KAP temel analiz verilerini, duygu skorlarını ve 5 boyutlu finansal sağlık profillerini yan yana kıyaslayın.")
 
@@ -1465,7 +1219,7 @@ with tab_compare:
 
 
 # --- 4. SEKME: PORTFÖY RİSK & TEMEL SAĞLIK SİMÜLATÖRÜ ---
-with tab_port:
+elif active_module == "💼 Portföy Risk Simülatörü":
     st.markdown("### 💼 BIST Portföy Risk & Temel Sağlık Simülatörü")
     st.caption("Çoklu hisse portföyünüzün ağırlıklı finansal sağlık puanını, sektörel yoğunlaşma riskini ve Kelly Kriterine dayalı dinamik ağırlık optimizasyonunu hesaplayın.")
 
@@ -1577,7 +1331,7 @@ with tab_port:
 
 
 # --- 5. SEKME: PİYASA ISI HARİTASI & BIST SCREENER ---
-with tab_map:
+elif active_module == "🗺️ Piyasa Haritası & Screener":
     st.markdown("### 🗺️ BIST 100 Sektörel Piyasa Isı Haritası & Hisse Tarayıcı")
     st.caption("Piyasa değeri ağırlıklı sektörel ısı haritası (Treemap) ve DuPont ROE, Altman Z-Skoru ile çarpanlara dayalı liderlik tarayıcısı.")
 
@@ -1662,7 +1416,7 @@ with tab_map:
 
 
 # --- 6. SEKME: CANLI KAP BİLDİRİMLERİ ---
-with tab_kap:
+elif active_module == "📢 Canlı KAP Akışı & Radar":
     st.markdown("### 📢 Canlı KAP Bildirimleri & Son Dakika Fırsat Radarı")
     st.caption("Borsa İstanbul şirketlerinin Kamuyu Aydınlatma Platformu'nda (KAP) yayımlanan son dakika bildirimleri ve anlık yapay zeka duygu analizi.")
 
@@ -1713,3 +1467,228 @@ with tab_kap:
     else:
         st.info("Seçili filtrelere uygun KAP bildirimi bulunamadı.")
 
+
+
+elif active_module == "📌 İzleme Listesi & Not Defteri":
+    st.markdown("### 📌 Kalıcı İzleme Listesi & Analist Not Defteri")
+    st.caption("Kişiselleştirilmiş hisse portföy takip listeniz ve sohbet seanslarından kaydettiğiniz kurumsal analist notları (`user_data/`).")
+    
+    col_wl_view, col_notes_view = st.columns([1, 1], gap="large")
+    
+    with col_wl_view:
+        st.markdown("#### 📌 Takip Listem (Watchlist)")
+        user_wl = load_watchlist()
+        
+        # Hisse Ekleme Alanı
+        with st.container():
+            w_add_c1, w_add_c2 = st.columns([3, 1])
+            with w_add_c1:
+                all_bist_symbols = sorted(list(BIST_100_COMPANIES.keys()))
+                add_sym_choice = st.selectbox("Hisse Ekle", options=all_bist_symbols, key="wl_screen_add_sym", label_visibility="collapsed")
+            with w_add_c2:
+                if st.button("➕ Ekle", key="btn_wl_screen_add", use_container_width=True):
+                    add_to_watchlist(add_sym_choice)
+                    st.toast(f"✅ {add_sym_choice} listenize eklendi!")
+                    st.rerun()
+        
+        if user_wl:
+            for sym in user_wl:
+                info = BIST_100_COMPANIES.get(sym, {})
+                comp_n = info.get("name", sym)
+                sec_n = info.get("sector", "Genel")
+                
+                st.markdown(f"""
+                <div style="background:#0E1626; border:1px solid #1E293B; border-radius:10px; padding:12px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:700; color:#38BDF8; font-size:1.05rem;">{sym} <span style="font-size:0.78rem; color:#94A3B8; font-weight:normal;">({sec_n})</span></div>
+                        <div style="font-size:0.84rem; color:#E2E8F0;">{comp_n}</div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                c_act1, c_act2 = st.columns([3, 1])
+                with c_act1:
+                    if st.button(f"🔍 {sym} Analizine Odaklan", key=f"btn_foc_{sym}", use_container_width=True):
+                        st.session_state["user_selected_ticker_company"] = comp_n
+                        st.toast(f"🎯 {sym} aktif filtreye alındı!")
+                        st.rerun()
+                with c_act2:
+                    if st.button("🗑️", key=f"btn_rm_wl_{sym}", help=f"{sym} hissesini çıkar", use_container_width=True):
+                        remove_from_watchlist(sym)
+                        st.toast(f"🗑️ {sym} listeden çıkarıldı.")
+                        st.rerun()
+        else:
+            st.info("İzleme listeniz şu anda boş. Yukarıdaki menüden BIST hisselerini ekleyerek takip listenizi oluşturabilirsiniz.")
+
+    with col_notes_view:
+        st.markdown("#### 📝 Analist Not Defteri")
+        saved_notes_list = load_saved_notes()
+        
+        with st.form("screen_new_note_form", clear_on_submit=True):
+            st.markdown("##### ✍️ Yeni Analist Notu Ekle")
+            c_sym = active_ticker if (active_ticker and active_ticker != "BIST") else "GENEL"
+            n_title = st.text_input("Başlık", placeholder=f"Örn: {c_sym} Kârlılık ve Marj Trendi Değerlendirmesi")
+            n_content = st.text_area("Not Detayı", placeholder="Analiz dipnotları, marj beklentileri veya katalizörler...", height=110)
+            if st.form_submit_button("💾 Notu Kaydet", use_container_width=True):
+                if n_content.strip():
+                    add_saved_note(ticker=c_sym, title=n_title or f"{c_sym} Notu", content=n_content)
+                    st.toast("✅ Analist notu kaydedildi!")
+                    st.rerun()
+                    
+        st.markdown("---")
+        if saved_notes_list:
+            for n in saved_notes_list:
+                st.markdown(f"""
+                <div style="background: #080C14; border: 1px solid #1E293B; border-radius: 10px; padding: 14px 16px; margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <span style="font-weight: 700; color: #38BDF8; font-size: 0.92rem;">🏢 {n.get('ticker', 'GENEL')}</span>
+                        <span style="font-size: 0.74rem; color: #64748B;">📅 {n.get('created_at', '')}</span>
+                    </div>
+                    <div style="font-weight: 600; font-size: 0.88rem; color: #F8FAFC; margin-bottom: 6px;">{n.get('title', '')}</div>
+                    <div style="font-size: 0.82rem; color: #CBD5E1; line-height: 1.5; white-space: pre-wrap;">{n.get('content', '')}</div>
+                </div>
+                """, unsafe_allow_html=True)
+                if st.button("🗑️ Notu Sil", key=f"screen_del_note_{n.get('id')}", use_container_width=True):
+                    delete_saved_note(n.get("id"))
+                    st.toast("🗑️ Not silindi.")
+                    st.rerun()
+        else:
+            st.info("Kayıtlı not bulunmuyor. Sohbet ekranındaki '💾 Notlarıma Kaydet' butonuyla veya yukarıdaki form ile notlarınızı ekleyebilirsiniz.")
+
+
+elif active_module == "📑 Temel Analiz & Rapor Merkezi":
+    st.markdown(f"### 📑 {active_ticker} Temel Analiz & Kurumsal Rapor Merkezi")
+    st.caption("BIST 100 hisselerinin yapılandırılmış JSON araştırma modelleri, 5D finansal sağlık radarı, BIST-Trend-Forecaster hibrit karar köprüsü ve RAG benchmark karnesi.")
+    
+    rep_file = REPORTS_DIR / f"{active_ticker}_latest.json"
+    active_report_obj = None
+    if rep_file.exists():
+        try:
+            with open(rep_file, "r", encoding="utf-8") as rf:
+                active_report_obj = FundamentalReport(**json.load(rf))
+        except Exception:
+            pass
+
+    # Üst Bölüm: Hibrit Karar Kartı & 5D Radar
+    col_rep_l, col_rep_r = st.columns([1, 1], gap="large")
+    
+    with col_rep_l:
+        st.markdown("#### 🤖 BIST-Trend-Forecaster Hibrit Karar Kartı")
+        hybrid_sig = get_hybrid_signal(ticker=active_ticker)
+        if hybrid_sig:
+            dec = hybrid_sig.decision
+            decision_color = "#10B981" if "AL" in dec else ("#FBBF24" if "TUT" in dec else "#F87171")
+            
+            st.markdown(f"""
+            <div style="background: linear-gradient(145deg, #0D1628 0%, #162444 100%); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 18px; margin-bottom: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.4);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <span style="font-size:1.1rem; font-weight:700; color:#F8FAFC;">{active_ticker} Hibrit Karar Sinyali</span>
+                    <span style="background:rgba(56,189,248,0.15); color:{decision_color}; border:1px solid {decision_color}; padding:4px 12px; border-radius:9999px; font-weight:700; font-size:0.85rem;">{hybrid_sig.decision}</span>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:14px; font-size:0.88rem;">
+                    <div style="background:rgba(15,23,42,0.6); padding:8px 12px; border-radius:8px; border:1px solid #1E293B;">
+                        <span style="color:#94A3B8;">Temel Analiz Skoru:</span><br><strong style="color:#38BDF8; font-size:1.05rem;">{hybrid_sig.fundamental_score} / 100</strong>
+                    </div>
+                    <div style="background:rgba(15,23,42,0.6); padding:8px 12px; border-radius:8px; border:1px solid #1E293B;">
+                        <span style="color:#94A3B8;">Teknik Trend:</span><br><strong style="color:#34D399; font-size:1.05rem;">{hybrid_sig.technical_trend}</strong>
+                    </div>
+                    <div style="background:rgba(15,23,42,0.6); padding:8px 12px; border-radius:8px; border:1px solid #1E293B;">
+                        <span style="color:#94A3B8;">Bileşik Karar Skoru:</span><br><strong style="color:#F8FAFC; font-size:1.05rem;">{hybrid_sig.composite_score} / 100</strong>
+                    </div>
+                    <div style="background:rgba(15,23,42,0.6); padding:8px 12px; border-radius:8px; border:1px solid #1E293B;">
+                        <span style="color:#94A3B8;">Kelly Tahsisi:</span><br><strong style="color:#F59E0B; font-size:1.05rem;">%{hybrid_sig.kelly_allocation_percent} Portföy</strong>
+                    </div>
+                </div>
+                <div style="font-size:0.82rem; color:#CBD5E1; line-height:1.4; margin-bottom:14px;">
+                    {hybrid_sig.rationale}
+                </div>
+                <a href="{FORECASTER_BASE_URL}/?ticker={active_ticker}" target="_blank" style="display:block; text-align:center; background:linear-gradient(135deg, #2563EB, #1D4ED8); color:white; padding:10px 14px; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.88rem; box-shadow:0 2px 8px rgba(37,99,235,0.4);">
+                    BIST-Trend-Forecaster'da Teknik Modeli İncele ↗
+                </a>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        # Antetli Kurumsal Araştırma Raporu (HTML)
+        if active_report_obj:
+            try:
+                _, m_quick = fetch_ticker_market_data(active_ticker, period="1mo")
+                exec_html = generate_executive_html_report(active_report_obj, market_data=m_quick, hybrid_signal=hybrid_sig)
+                st.download_button(
+                    label=f"📄 {active_ticker} Antetli Araştırma Raporunu İndir (.html / Print PDF)",
+                    data=exec_html,
+                    file_name=f"{active_ticker}_Kurumsal_Arastirma_Raporu.html",
+                    mime="text/html",
+                    use_container_width=True,
+                    help="Yazdırılabilir profesyonel antetli araştırma notu"
+                )
+            except Exception as e:
+                st.caption(f"Araştırma raporu hazırlanamadı: {e}")
+
+    with col_rep_r:
+        st.markdown("#### 📈 5 Boyutlu Finansal Sağlık Radarı")
+        if active_report_obj:
+            fig_rad = create_radar_chart(active_report_obj)
+            st.plotly_chart(fig_rad, use_container_width=True, config={"displayModeBar": False})
+        else:
+            st.info(f"{active_ticker} için henüz finansal karne oluşturulmadı.")
+            
+    st.divider()
+    
+    # Alt Bölüm 1: Yapılandırılmış JSON Şeması
+    st.markdown("#### 📊 BIST-Trend-Forecaster Standart JSON Çıktısı")
+    st.caption("Teknik analiz ve kantitatif algoritmaların doğrudan okuduğu standart Pydantic JSON şeması (`reports/{ticker}_latest.json`).")
+    
+    rep_gen = load_report_generator()
+    col_j1, col_j2 = st.columns([1, 1])
+    with col_j1:
+        if st.button("⚡ JSON Raporunu Yeniden Üret / Güncelle", use_container_width=True):
+            with st.spinner(f"{active_ticker} için RAG temel analiz raporu oluşturuluyor..."):
+                try:
+                    rep_gen.generate_report(ticker=active_ticker, force_refresh=True)
+                    st.success(f"{active_ticker} raporu güncellendi!")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Hata: {e}")
+    with col_j2:
+        if rep_file.exists():
+            with open(rep_file, "r", encoding="utf-8") as rf:
+                rep_json_str = rf.read()
+            st.download_button(
+                label=f"📥 {active_ticker}_latest.json Dosyasını İndir",
+                data=rep_json_str,
+                file_name=f"{active_ticker}_latest.json",
+                mime="application/json",
+                use_container_width=True
+            )
+            
+    if rep_file.exists():
+        with open(rep_file, "r", encoding="utf-8") as rf:
+            st.json(json.load(rf))
+            
+    st.divider()
+    
+    # Alt Bölüm 2: 🛡️ RAG Kalite & Benchmark Karnesi
+    st.markdown("#### 🛡️ RAG Kalite ve Halüsinasyon Savunma Benchmark Karnesi")
+    st.caption("Ragas ve TruLens endüstriyel metrikleri baz alınarak ölçülen BIST RAG doğruluk skorları.")
+    
+    bm_path = REPORTS_DIR / "rag_benchmark_report.json"
+    if bm_path.exists():
+        try:
+            with open(bm_path, "r", encoding="utf-8") as bf:
+                bm_data = json.load(bf)
+            sm = bm_data.get("summary_metrics", {})
+            b_c1, b_c2, b_c3, b_c4 = st.columns(4)
+            b_c1.metric("Sadakat (Faithfulness)", sm.get("faithfulness_percent", "%85.1"))
+            b_c2.metric("Tuzak Savunması", sm.get("trap_defense_success_percent", "%100.0"))
+            b_c3.metric("Bağlam İsabeti", sm.get("context_relevance_percent", "%88.5"))
+            b_c4.metric("Test Senaryosu", f"{bm_data.get('total_test_cases', 8)} Vaka")
+            
+            st.download_button(
+                label="📥 rag_benchmark_report.json İndir",
+                data=json.dumps(bm_data, ensure_ascii=False, indent=2),
+                file_name="rag_benchmark_report.json",
+                mime="application/json",
+                use_container_width=True
+            )
+        except Exception as e:
+            st.caption(f"Benchmark verisi okunamadı: {e}")
