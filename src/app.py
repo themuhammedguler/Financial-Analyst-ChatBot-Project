@@ -985,6 +985,10 @@ with tab_chat:
     user_input = st.chat_input("Finansal bir gösterge veya şirket performansı hakkında soru sorun...")
     prompt_to_process = selected_quick_prompt if selected_quick_prompt else user_input
 
+    # Yeni soru gönderildiği anda beklemeden doğrudan listeye ekle (1-2 sn kaybolmayı engeller)
+    if prompt_to_process:
+        st.session_state.messages.append({"role": "user", "content": prompt_to_process})
+
     # --- GEÇMİŞ VE YENİ MESAJLARI KONTEYNER İÇİNDE RENDER ET ---
     with chat_container:
         for m_idx, msg in enumerate(st.session_state.messages):
@@ -1018,38 +1022,8 @@ with tab_chat:
                             st.toast("✅ Analist değerlendirmesi kalıcı not defterinize kaydedildi!")
                             st.rerun()
 
-        # Sohbet İndirme ve Dışa Aktarma Eylem Çubuğu
-        if len(st.session_state.messages) > 1:
-            st.markdown("---")
-            exp_col1, exp_col2, _ = st.columns([1.1, 1.3, 2.0])
-            with exp_col1:
-                md_export = export_chat_history_markdown(st.session_state.messages, current_ticker=active_ticker or "BIST")
-                st.download_button(
-                    "📥 Seansı İndir (.md)",
-                    data=md_export,
-                    file_name=f"BIST_Sohbet_{active_ticker}_{datetime.now().strftime('%Y%m%d_%H%M')}.md",
-                    mime="text/markdown",
-                    use_container_width=True,
-                    help="Tüm araştırma ve analiz seansını Markdown olarak indir"
-                )
-            with exp_col2:
-                html_export = export_chat_history_html(st.session_state.messages, current_ticker=active_ticker or "BIST")
-                st.download_button(
-                    "📄 Raporu İndir (.html / Yazdır)",
-                    data=html_export,
-                    file_name=f"BIST_Sohbet_{active_ticker}_{datetime.now().strftime('%Y%m%d_%H%M')}.html",
-                    mime="text/html",
-                    use_container_width=True,
-                    help="Profesyonel antetli araştırma formatında yazdırılabilir HTML raporu"
-                )
-
+        # Eğer yeni bir soru işleniyorsa, asistan cevabını canlı streaming ile üret
         if prompt_to_process:
-            # 1. Kullanıcı mesajını ekle ve ekrana yazdır
-            st.session_state.messages.append({"role": "user", "content": prompt_to_process})
-            with st.chat_message("user", avatar=USER_AVATAR):
-                st.markdown(prompt_to_process)
-
-            # 2. Asistan cevabını streaming ile üret
             with st.chat_message("assistant", avatar=ASSISTANT_AVATAR):
                 full_response = ""
                 captured_docs = []
@@ -1151,6 +1125,33 @@ with tab_chat:
 
             # Yanıt tamamlandığında sohbeti yeniden çizip girdi kutusunu en altta tut
             st.rerun()
+
+    # --- SOHBETİ İNDİR VE DIŞA AKTAR EYLEM ÇUBUĞU (GİRDİ KUTUSUNUN / SOHBETİN TABANINDA) ---
+    if len(st.session_state.messages) > 1 and not prompt_to_process:
+        st.markdown("<div style='margin-top: 18px; margin-bottom: 8px;'></div>", unsafe_allow_html=True)
+        exp_col1, exp_col2, _ = st.columns([1.2, 1.5, 2.3])
+        with exp_col1:
+            md_export = export_chat_history_markdown(st.session_state.messages, current_ticker=active_ticker or "BIST")
+            st.download_button(
+                "📥 Seansı İndir (.md)",
+                data=md_export,
+                file_name=f"BIST_Sohbet_{active_ticker}_{datetime.now().strftime('%Y%m%d_%H%M')}.md",
+                mime="text/markdown",
+                key="btn_dl_chat_md_bottom",
+                use_container_width=True,
+                help="Tüm araştırma ve analiz seansını Markdown olarak indir"
+            )
+        with exp_col2:
+            html_export = export_chat_history_html(st.session_state.messages, current_ticker=active_ticker or "BIST")
+            st.download_button(
+                "📄 Raporu İndir (.html / Yazdır)",
+                data=html_export,
+                file_name=f"BIST_Sohbet_{active_ticker}_{datetime.now().strftime('%Y%m%d_%H%M')}.html",
+                mime="text/html",
+                key="btn_dl_chat_html_bottom",
+                use_container_width=True,
+                help="Profesyonel antetli araştırma formatında yazdırılabilir HTML raporu"
+            )
 
 
 # --- 2. SEKME: CANLI FİYAT & MUM GRAFİĞİ ---
