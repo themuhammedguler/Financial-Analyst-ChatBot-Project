@@ -17,7 +17,6 @@ import requests
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_community.chat_models import ChatOpenAI
 
 from src.config import (
     GOOGLE_API_KEY,
@@ -26,6 +25,22 @@ from src.config import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _get_chat_openai_class():
+    """ChatOpenAI sınıfını esnek ve uyumlu şekilde içe aktarır."""
+    try:
+        from langchain_openai import ChatOpenAI
+        return ChatOpenAI
+    except ImportError:
+        pass
+    try:
+        from langchain_community.chat_models.openai import ChatOpenAI
+        return ChatOpenAI
+    except ImportError:
+        pass
+    from langchain_community.chat_models import ChatOpenAI
+    return ChatOpenAI
 
 # Desteklenen Model Sağlayıcıları
 PROVIDER_GEMINI = "gemini"
@@ -63,7 +78,8 @@ class LLMProviderHub:
             url = base_url or DEFAULT_OLLAMA_URL
             model = model_name or DEFAULT_LOCAL_MODEL
             logger.info(f"[LLMProvider] Yerel Ollama modeli bağlanıyor: {model} ({url})")
-            return ChatOpenAI(
+            ChatOpenAI_cls = _get_chat_openai_class()
+            return ChatOpenAI_cls(
                 base_url=url,
                 api_key=api_key or "ollama",
                 model=model,
@@ -77,7 +93,8 @@ class LLMProviderHub:
             url = base_url or DEFAULT_COLAB_URL
             model = model_name or "bist-financial-llm"
             logger.info(f"[LLMProvider] Colab/Özel GPU sunucusu bağlanıyor: {model} ({url})")
-            return ChatOpenAI(
+            ChatOpenAI_cls = _get_chat_openai_class()
+            return ChatOpenAI_cls(
                 base_url=url,
                 api_key=api_key or "colab-secret-key",
                 model=model,

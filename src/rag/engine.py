@@ -466,7 +466,8 @@ class FinancialRAGEngine:
                     continue
 
         if not stream_success:
-            err_msg = f"\n\n⚠️ Gemini API şu anda yoğunluk nedeniyle yanıt veremedi ({last_error[:60] if last_error else 'Kota aşımı'}). Lütfen sorunuzu birkaç saniye sonra tekrar iletiniz."
+            provider_label = "Gemini API" if self.provider == "gemini" else f"Özel Model Sağlayıcısı ({self.provider})"
+            err_msg = f"\n\n⚠️ {provider_label} yanıt üretirken bir sorunla karşılaştı: {last_error if last_error else 'Kota aşımı veya zaman aşımı'}. Lütfen ayarlarınızı kontrol ediniz."
             full_answer = err_msg
             yield {"type": "content", "content": err_msg}
 
