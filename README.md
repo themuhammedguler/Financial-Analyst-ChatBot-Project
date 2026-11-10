@@ -12,7 +12,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-REST%20Endpoints-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![CI](https://github.com/themuhammedguler/Financial-Analyst-ChatBot-Project/actions/workflows/ci.yml/badge.svg)](https://github.com/themuhammedguler/Financial-Analyst-ChatBot-Project/actions/workflows/ci.yml)
 [![Docker](https://img.shields.io/badge/Docker-Multi--Container-2496ED?logo=docker&logoColor=white)](docker-compose.yml)
-[![Tests](https://img.shields.io/badge/Tests-48%2F48%20Passing-success?logo=pytest&logoColor=white)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-54%2F54%20Passing-success?logo=pytest&logoColor=white)](tests/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 <br/>
@@ -44,6 +44,9 @@ Platform, teknik analiz ve kantitatif tahmin motoru olan **[BIST-Trend-Forecaste
 | **🧠 Bağlamsal Vektör Hafızası (Contextual RAG)** | Tablo ve dipnot bütünlüğünü koruyan **Table-Aware Parser** ve her parçaya şirket/yıl/bölüm üstbilgisi enjekte eden **Contextual Chunking** mimarisi. |
 | **🔍 Hibrit Belge Arama (Dense + Sparse)** | Anlamsal benzerlik için **FAISS** vektör aramasını, rasyo, sayı ve dipnot numaraları tam eşleşmesi için **BM25** aramasını **Reciprocal Rank Fusion (RRF)** ile harmanlar. |
 | **📈 Canlı Piyasa & Mum Grafiği** | Yahoo Finance canlı BIST (.IS) entegrasyonu: Plotly interaktif Candlestick (mum) grafiği, işlem hacmi, SMA 20/50/200 trend çizgileri ve 14 günlük RSI. |
+| **🎯 Bilanço & Kâr Sürprizi Analizörü** | Son dönem bilanço net kâr ve hasılatının önceki yılla karşılaştırılması (YoY Growth %), FAVÖK marj trendi ve **Kâr Sürprizi Tespiti**. |
+| **🗺️ Sektörel Piyasa Isı Haritası (Treemap)** | BIST 100 sektörleri ve şirketlerinin piyasa değeri kutu büyüklüğü ve anlık değişim yüzdesi (% Yeşil / Kırmızı) ile **Finviz/TradingView tarzı interaktif haritası**. |
+| **📊 BIST Screener / Liderlik Sıralaması** | Sektör filtreleme, asgari DuPont ROE, asgari Altman Z-Skoru ve çarpanlara göre hisseleri sıralayan dinamik **Lider Tablosu (Leaderboard)**. |
 | **🔬 DuPont & Altman Z-Skoru** | **3 Aşamalı DuPont Modeli** (Net Kâr Marjı × Aktif Devir Hızı × Finansal Kaldıraç) ve **Altman Z-Skoru** ile iflas/stres dayanıklılık analizi. |
 | **💼 Portföy Risk Simülatörü** | Çoklu hisse portföyü, ağırlıklı sağlık & duygu puanı, sektörel çeşitlendirme (Donut) ve **Kelly Kriteri dinamik yeniden dengeleme (rebalancing)**. |
 | **⚖️ Çift Şirket Kıyaslama & Çift Radar** | İki şirketin 5 boyutlu finansal profilini aynı radar üzerinde çakıştıran (Dual Radar) ve rasyoları yan yana mukayese eden **Peer-to-Peer Karşılaştırma Matrisi**. |
@@ -262,11 +265,13 @@ pytest tests/ -v
 ```
 
 ```
-collected 42 items
-tests/test_features.py ......................... [ 21%]
-tests/test_integration.py ...................... [ 80%]
+collected 54 items
+tests/test_features.py ......................... [ 16%]
+tests/test_heatmap_screener_surprise.py ........ [ 27%]
+tests/test_integration.py ...................... [ 74%]
+tests/test_parser_and_ingestion.py ............. [ 85%]
 tests/test_portfolio_dupont.py ................ [100%]
-======================= 42 passed, 1 warning in 15.40s =======================
+======================= 54 passed, 1 warning in 140s =======================
 ```
 
 ---

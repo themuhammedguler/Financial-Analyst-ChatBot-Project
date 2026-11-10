@@ -40,6 +40,9 @@ from src.export_report import generate_executive_html_report
 from src.kap_feed import get_recent_kap_disclosures
 from src.portfolio import analyze_portfolio, create_sector_donut_chart, create_portfolio_radar_chart
 from src.dupont_analysis import calculate_dupont_model, calculate_altman_z_score, create_dupont_breakdown_chart
+from src.market_heatmap import get_heatmap_dataset, create_bist_treemap
+from src.screener import build_screener_universe, filter_and_rank_screener
+from src.earnings_surprise import analyze_earnings_surprise, create_growth_comparison_chart
 
 # --- CHATBOT LOGO VE AVATAR YAPILANDIRMASI ---
 AVATAR_ORIGINAL_PATH = project_root / "png" / "Chatbot_avatar_logo_design_ae724d6f.jpg"
@@ -740,12 +743,13 @@ if "messages" not in st.session_state or not st.session_state.messages:
         {"role": "assistant", "content": welcome_content}
     ]
 
-# --- ANA SEKMELER: SOHBET, GRAFİK, KIYASLAMA, PORTFÖY VE KAP AKIŞI ---
-tab_chat, tab_chart, tab_compare, tab_port, tab_kap = st.tabs([
+# --- ANA SEKMELER: SOHBET, GRAFİK, KIYASLAMA, PORTFÖY, HARİTA VE KAP AKIŞI ---
+tab_chat, tab_chart, tab_compare, tab_port, tab_map, tab_kap = st.tabs([
     "💬 Finansal Analist Sohbeti",
     "📈 Fiyat & Mum Grafiği",
     "⚖️ Çift Şirket Kıyaslama",
     "💼 Portföy Risk Simülatörü",
+    "🗺️ Piyasa Haritası & Screener",
     "📢 Canlı KAP Akışı & Radar"
 ])
 
@@ -1030,6 +1034,40 @@ with tab_chart:
     fig_dupont = create_dupont_breakdown_chart(dupont_res, chart_ticker)
     st.plotly_chart(fig_dupont, use_container_width=True, config={"displayModeBar": False})
 
+    # --- 🎯 BİLANÇO & KÂR SÜRPRİZİ ANALİZÖRÜ ---
+    st.markdown("---")
+    st.markdown(f"#### 🎯 {chart_ticker} Bilanço & Kâr Sürprizi Analizörü (YoY Growth)")
+    st.caption("Son dönem mali tablolarındaki net kâr ve hasılatın geçen yılın aynı dönemine göre büyüme hızı ve kâr sürprizi tespiti.")
+
+    surprise_data = analyze_earnings_surprise(chart_ticker)
+
+    col_s1, col_s2, col_s3, col_s4 = st.columns(4)
+    np_delta = f"%{surprise_data['net_profit_growth_pct']:+.1f}"
+    col_s1.metric("Yıllık Net Kâr Büyümesi", f"%{surprise_data['net_profit_growth_pct']:.1f}", delta=np_delta, help="Önceki yılın aynı dönemine göre Net Kâr değişimi")
+
+    rev_delta = f"%{surprise_data['revenue_growth_pct']:+.1f}"
+    col_s2.metric("Yıllık Satış (Hasılat) Büyümesi", f"%{surprise_data['revenue_growth_pct']:.1f}", delta=rev_delta, help="Önceki yılın aynı dönemine göre Hasılat değişimi")
+
+    col_s3.metric("FAVÖK Marj Trendi", surprise_data.get("margin_trend", "Dengeli"), help="Operasyonel kârlılık marjının genişleme/daralma yönü")
+    col_s4.metric("Kâr Sürprizi Derecesi", surprise_data.get("surprise_category", "Pozitif").split(" ")[1] if " " in surprise_data.get("surprise_category", "") else surprise_data.get("surprise_category", "Nötr"), help="Bilanço kâr sürprizi kategorisi")
+
+    col_chart_s, col_text_s = st.columns([1.2, 1])
+    with col_chart_s:
+        fig_surprise = create_growth_comparison_chart(surprise_data, chart_ticker)
+        st.plotly_chart(fig_surprise, use_container_width=True, config={"displayModeBar": False})
+
+    with col_text_s:
+        st.markdown(f"""
+        <div style="background: #0D1422; border-left: 4px solid {surprise_data['surprise_badge_color']}; padding: 14px 16px; border-radius: 8px; margin-top: 25px;">
+            <div style="font-size: 0.95rem; font-weight: 700; color: #F8FAFC; margin-bottom: 8px;">
+                {surprise_data['surprise_category']}
+            </div>
+            <p style="font-size: 0.85rem; color: #CBD5E1; line-height: 1.5; margin-bottom: 0;">
+                {surprise_data['analyst_takeaway']}
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
 
 # --- 3. SEKME: ÇİFT ŞİRKET KIYASLAMA ---
 with tab_compare:
@@ -1208,7 +1246,91 @@ with tab_port:
             st.info("Portföy simülatörünü çalıştırmak için lütfen sol menüden en az bir hisse ekleyiniz.")
 
 
-# --- 5. SEKME: CANLI KAP BİLDİRİMLERİ ---
+# --- 5. SEKME: PİYASA ISI HARİTASI & BIST SCREENER ---
+with tab_map:
+    st.markdown("### 🗺️ BIST 100 Sektörel Piyasa Isı Haritası & Hisse Tarayıcı")
+    st.caption("Piyasa değeri ağırlıklı sektörel ısı haritası (Treemap) ve DuPont ROE, Altman Z-Skoru ile çarpanlara dayalı liderlik tarayıcısı.")
+
+    # 1. BÖLÜM: PİYASA ISI HARİTASI (TREEMAP)
+    col_t_title, col_t_btn = st.columns([3, 1])
+    with col_t_title:
+        st.markdown("##### 🌐 Canlı Sektörel Piyasa Dağılımı")
+    with col_t_btn:
+        refresh_heat = st.button("🔄 Haritayı Yenile", key="btn_refresh_heat", use_container_width=True)
+
+    with st.spinner("BIST 100 sektörel piyasa haritası derleniyor..."):
+        df_heatmap = get_heatmap_dataset()
+        fig_treemap = create_bist_treemap(df_heatmap)
+        st.plotly_chart(fig_treemap, use_container_width=True, config={"displayModeBar": True})
+
+    st.divider()
+
+    # 2. BÖLÜM: BIST SCREENER / LEADERBOARD
+    st.markdown("##### 📊 Sektörel Liderlik & Rasyo Filtreleme Tablosu (BIST Screener)")
+    st.caption("DuPont Özkaynak Kârlılığı, Altman Dayanıklılık Z-Skoru, F/K Çarpanları ve Birleşik Kalite Puanına göre hisseleri filtreleyin.")
+
+    all_sectors = ["Tümü"] + sorted(list(set(BIST_100_COMPANIES[t].get("sector", "Genel") for t in BIST_100_COMPANIES)))
+
+    col_flt1, col_flt2, col_flt3, col_flt4 = st.columns(4)
+    with col_flt1:
+        scr_sector = st.selectbox("Sektör Seçimi", options=all_sectors, index=0, key="scr_sec_sel")
+    with col_flt2:
+        scr_min_roe = st.slider("Asgari DuPont ROE (%)", min_value=0.0, max_value=40.0, value=10.0, step=2.0, key="scr_roe_sl")
+    with col_flt3:
+        scr_min_z = st.slider("Asgari Altman Z-Skoru", min_value=0.0, max_value=3.5, value=1.2, step=0.1, help="1.23 altı stres bölgesi, 2.90 üzeri güvenli bölge", key="scr_z_sl")
+    with col_flt4:
+        scr_sort_by = st.selectbox(
+            "Sıralama Ölçütü",
+            options=["composite_score", "roe_pct", "z_score", "pe_ratio"],
+            format_func=lambda x: {
+                "composite_score": "⭐ Birleşik Kalite Skoru",
+                "roe_pct": "📈 DuPont ROE (%)",
+                "z_score": "🛡️ Altman Z-Skoru",
+                "pe_ratio": "💰 F/K Oranı (En Düşük)"
+            }.get(x, x),
+            key="scr_sort_sel"
+        )
+
+    # Sıralama yönü (F/K için azalan yerine artan tercih edilir)
+    sort_ascending = (scr_sort_by == "pe_ratio")
+
+    with st.spinner("BIST rasyo evreni taranıyor..."):
+        df_screener_raw = build_screener_universe()
+        df_ranked = filter_and_rank_screener(
+            df_screener_raw,
+            sector=scr_sector,
+            min_roe=scr_min_roe,
+            min_z_score=scr_min_z,
+            sort_by=scr_sort_by,
+            ascending=sort_ascending,
+            top_n=30
+        )
+
+    if not df_ranked.empty:
+        # Formatlanmış kurumsal gösterim tablosu
+        display_df = pd.DataFrame([
+            {
+                "Hisse": r["ticker"],
+                "Şirket": r["company_name"],
+                "Sektör": r["sector"],
+                "DuPont ROE": f"%{r['roe_pct']:.1f}",
+                "Net Marj": f"%{r['net_margin_pct']:.1f}",
+                "Altman Z": f"{r['z_score']:.2f}",
+                "Risk Bölgesi": r["zone"].split(" ")[0] if " " in r["zone"] else r["zone"],
+                "F/K": f"{r['pe_ratio']:.2f}",
+                "PD/DD": f"{r['pb_ratio']:.2f}",
+                "Kalite Skoru": f"{r['composite_score']:.1f}",
+                "Analist Kararı": r["decision"]
+            }
+            for _, r in df_ranked.iterrows()
+        ])
+        st.dataframe(display_df, use_container_width=True, hide_index=True)
+        st.caption(f"Filtrelere uyan toplam **{len(df_ranked)}** hisse listelendi. Sıralama ölçütü: **{scr_sort_by}**.")
+    else:
+        st.warning("Belirlenen kriterlere uyan hisse bulunamadı. Lütfen filtre parametrelerini genişletiniz.")
+
+
+# --- 6. SEKME: CANLI KAP BİLDİRİMLERİ ---
 with tab_kap:
     st.markdown("### 📢 Canlı KAP Bildirimleri & Son Dakika Fırsat Radarı")
     st.caption("Borsa İstanbul şirketlerinin Kamuyu Aydınlatma Platformu'nda (KAP) yayımlanan son dakika bildirimleri ve anlık yapay zeka duygu analizi.")
