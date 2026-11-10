@@ -53,6 +53,8 @@ from src.user_storage import (
     load_saved_notes,
     add_saved_note,
     delete_saved_note,
+    load_model_settings,
+    save_model_settings,
 )
 from src.chat_export import export_chat_history_markdown, export_chat_history_html
 
@@ -625,35 +627,57 @@ with st.sidebar:
 
     st.divider()
 
-    # ⚙️ 2. MODEL VE ÇIKARIM AYARLARI
+    # ⚙️ 2. MODEL VE ÇIKARIM AYARLARI (Kalıcı Hafıza Destekli - Sayfa Yenilense de Hatırlanır)
+    saved_model_cfg = load_model_settings()
+    provider_options = ["gemini", "ollama", "colab"]
+    saved_prov = saved_model_cfg.get("provider", "gemini")
+    default_prov_idx = provider_options.index(saved_prov) if saved_prov in provider_options else 0
+
     with st.expander("⚙️ Model & Çıkarım Sağlayıcısı", expanded=False):
         provider_choice = st.selectbox(
             "🧠 Model Sağlayıcısı",
-            options=["gemini", "ollama", "colab"],
+            options=provider_options,
             format_func=lambda x: {
                 "gemini": "☁️ Google Gemini Flash (Bulut)",
                 "ollama": "💻 Yerel Model (Ollama / On-Premise)",
                 "colab": "🚀 Colab Pro GPU (Özel Model)"
             }.get(x, x),
-            index=0,
-            help="Modelin nerede koşulacağını belirler. Bulut, yerel donanım veya Colab Pro GPU'nuzu bağlayabilirsiniz."
+            index=default_prov_idx,
+            help="Seçiminiz otomatik kaydedilir; sayfa yenilense veya kapatılıp açılsa da hatırlanır."
         )
 
         custom_base_url = None
         custom_model_name = None
 
         if provider_choice == "gemini":
+            gemini_opts = [DEFAULT_LLM_MODEL, ADVANCED_LLM_MODEL]
+            saved_gem = saved_model_cfg.get("gemini_model", DEFAULT_LLM_MODEL)
+            default_gem_idx = gemini_opts.index(saved_gem) if saved_gem in gemini_opts else 0
             model_option = st.selectbox(
                 "Gemini Versiyonu",
-                options=[DEFAULT_LLM_MODEL, ADVANCED_LLM_MODEL],
+                options=gemini_opts,
                 format_func=lambda x: "Gemini 3.1 Flash Lite (~1s)" if "3.1" in x else "Gemini 3.5 Flash Lite (Derin Muhakeme)",
-                index=0,
+                index=default_gem_idx,
                 help="Finansal analizler için Gemini model versiyonu."
             )
+            save_model_settings({"provider": provider_choice, "gemini_model": model_option})
         elif provider_choice == "ollama":
-            custom_base_url = st.text_input("Ollama API URL", value="http://localhost:11434/v1", help="Yerel Ollama OpenAI uyumlu API adresi")
-            custom_model_name = st.text_input("Model Adı", value="qwen2.5:7b", help="Ollama'da kurulu model adı")
+            custom_base_url = st.text_input(
+                "Ollama API URL",
+                value=saved_model_cfg.get("ollama_url") or "http://localhost:11434/v1",
+                help="Yerel Ollama OpenAI uyumlu API adresi (Otomatik kaydedilir)"
+            )
+            custom_model_name = st.text_input(
+                "Model Adı",
+                value=saved_model_cfg.get("ollama_model") or "qwen2.5:7b",
+                help="Ollama'da kurulu model adı"
+            )
             model_option = custom_model_name
+            save_model_settings({
+                "provider": provider_choice,
+                "ollama_url": custom_base_url,
+                "ollama_model": custom_model_name,
+            })
             if st.button("🔌 Yerel Sunucuyu Test Et", key="btn_test_ollama_sb", use_container_width=True):
                 from src.llm_provider import LLMProviderHub
                 ok, msg = LLMProviderHub.test_connection(provider="ollama", base_url=custom_base_url, model_name=custom_model_name)
@@ -662,9 +686,22 @@ with st.sidebar:
                 else:
                     st.warning(msg)
         elif provider_choice == "colab":
-            custom_base_url = st.text_input("Colab / ngrok URL", placeholder="https://xxxx.ngrok-free.app/v1", help="Colab notebook'undaki ngrok adresi")
-            custom_model_name = st.text_input("Model Etiketi", value="bist-financial-llm")
+            custom_base_url = st.text_input(
+                "Colab / ngrok URL",
+                value=saved_model_cfg.get("colab_url") or "",
+                placeholder="https://xxxx.ngrok-free.app/v1",
+                help="Colab notebook'undaki ngrok adresi (Bir kez girmeniz yeterlidir, otomatik kaydedilir)"
+            )
+            custom_model_name = st.text_input(
+                "Model Etiketi",
+                value=saved_model_cfg.get("colab_model") or "bist-financial-llm"
+            )
             model_option = custom_model_name or "bist-financial-llm"
+            save_model_settings({
+                "provider": provider_choice,
+                "colab_url": custom_base_url,
+                "colab_model": custom_model_name,
+            })
             if st.button("🔌 Colab Sunucusunu Test Et", key="btn_test_colab_sb", use_container_width=True):
                 from src.llm_provider import LLMProviderHub
                 ok, msg = LLMProviderHub.test_connection(provider="colab", base_url=custom_base_url, model_name=custom_model_name)

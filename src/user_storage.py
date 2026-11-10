@@ -22,8 +22,18 @@ logger = logging.getLogger(__name__)
 USER_DATA_DIR = ROOT_DIR / "user_data"
 WATCHLIST_FILE = USER_DATA_DIR / "watchlist.json"
 NOTES_FILE = USER_DATA_DIR / "saved_notes.json"
+MODEL_SETTINGS_FILE = USER_DATA_DIR / "model_settings.json"
 
 DEFAULT_WATCHLIST: List[str] = ["THYAO", "ASELS", "TUPRS", "EREGL", "BIMAS"]
+
+DEFAULT_MODEL_SETTINGS: Dict[str, str] = {
+    "provider": "gemini",
+    "gemini_model": "gemini-3.1-flash-lite",
+    "ollama_url": "http://localhost:11434/v1",
+    "ollama_model": "qwen2.5:7b",
+    "colab_url": "https://attentive-uncanny-usual.ngrok-free.dev/v1",
+    "colab_model": "bist-financial-llm",
+}
 
 
 def _ensure_dir() -> None:
@@ -166,3 +176,46 @@ def delete_saved_note(note_id: str) -> bool:
         save_saved_notes(filtered)
         return True
     return False
+
+
+def load_model_settings() -> Dict[str, str]:
+    """Kalıcı model sağlayıcı ve sunucu URL ayarlarını diskten okur."""
+    _ensure_dir()
+    settings = dict(DEFAULT_MODEL_SETTINGS)
+    if not MODEL_SETTINGS_FILE.exists():
+        return settings
+
+    try:
+        with open(MODEL_SETTINGS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            if isinstance(data, dict):
+                for k, v in data.items():
+                    if k in settings and isinstance(v, str):
+                        settings[k] = v.strip()
+    except Exception as e:
+        logger.warning(f"Model ayarları okunamadı ({e}), varsayılana dönülüyor.")
+
+    return settings
+
+
+def save_model_settings(updates: Dict[str, str]) -> Dict[str, str]:
+    """Model sağlayıcı ve URL seçimlerini kalıcı olarak diske kaydeder."""
+    _ensure_dir()
+    current = load_model_settings()
+    changed = False
+    for k, v in updates.items():
+        if k in current and isinstance(v, str):
+            val = v.strip()
+            if current[k] != val:
+                current[k] = val
+                changed = True
+
+    if changed or not MODEL_SETTINGS_FILE.exists():
+        try:
+            with open(MODEL_SETTINGS_FILE, "w", encoding="utf-8") as f:
+                json.dump(current, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            logger.error(f"Model ayarları kaydedilemedi: {e}")
+
+    return current
+
