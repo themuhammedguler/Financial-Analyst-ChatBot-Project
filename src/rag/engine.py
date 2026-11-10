@@ -430,25 +430,26 @@ class FinancialRAGEngine:
         stream_success = False
         last_error = ""
 
-        for model_to_use in models_to_try:
-            try:
-                llm = self.get_llm(model=model_to_use, streaming=True, max_retries=1)
-                full_answer = ""
-                for chunk in llm.stream(formatted_prompt):
-                    raw_c = chunk.content if hasattr(chunk, "content") else chunk
-                    chunk_text = extract_text_from_content(raw_c)
-                    if chunk_text:
-                        full_answer += chunk_text
-                        yield {"type": "content", "content": chunk_text}
-                if full_answer and full_answer.strip():
-                    stream_success = True
-                    break
-            except Exception as e:
-                last_error = str(e)
-                print(f"[RAGEngine] Model '{model_to_use}' streaming hatası: {e}. Alternatif model deneniyor...")
-                continue
+        if self.provider not in ("colab", "custom"):
+            for model_to_use in models_to_try:
+                try:
+                    llm = self.get_llm(model=model_to_use, streaming=True, max_retries=1)
+                    full_answer = ""
+                    for chunk in llm.stream(formatted_prompt):
+                        raw_c = chunk.content if hasattr(chunk, "content") else chunk
+                        chunk_text = extract_text_from_content(raw_c)
+                        if chunk_text:
+                            full_answer += chunk_text
+                            yield {"type": "content", "content": chunk_text}
+                    if full_answer and full_answer.strip():
+                        stream_success = True
+                        break
+                except Exception as e:
+                    last_error = str(e)
+                    print(f"[RAGEngine] Model '{model_to_use}' streaming hatası: {e}. Alternatif model deneniyor...")
+                    continue
 
-        # Eğer streaming soketi kesildiyse standart senkron çağrı ile kurtarma dene
+        # Colab / Özel JSON sunucusu veya streaming kesintisi için doğrudan senkron çağrı
         if not stream_success:
             for model_to_use in models_to_try:
                 try:

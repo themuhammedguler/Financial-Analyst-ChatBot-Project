@@ -99,9 +99,9 @@ class LLMProviderHub:
                 api_key=api_key or "colab-secret-key",
                 model=model,
                 temperature=temperature,
-                streaming=streaming,
+                streaming=False,
                 max_retries=max_retries,
-                model_kwargs={"repetition_penalty": 1.15},
+                extra_body={"repetition_penalty": 1.18},
             )
 
         # 3. GOOGLE GEMINI (Varsayılan Bulut)
