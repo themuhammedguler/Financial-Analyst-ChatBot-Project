@@ -1433,7 +1433,7 @@ elif active_module == "📢 Canlı KAP Akışı & Radar":
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #64748B;">
                     <span>🕒 {item['time_str']}</span>
-                    <a href="{item['kap_url']}" target="_blank" style="color: #38BDF8; text-decoration: none; font-weight: 600;">KAP Bildirimini Aç ↗</a>
+                    <a href="{item['kap_url']}" target="_blank" style="color: #38BDF8; text-decoration: none; font-weight: 600; background: rgba(56, 189, 248, 0.08); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.25);">🏢 {item['ticker']} Resmi KAP Bildirimleri ↗</a>
                 </div>
             </div>
             """, unsafe_allow_html=True)

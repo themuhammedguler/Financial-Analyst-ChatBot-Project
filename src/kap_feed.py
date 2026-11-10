@@ -140,6 +140,18 @@ CURATED_DISCLOSURES_TEMPLATE: List[Dict[str, Any]] = [
 ]
 
 
+def get_company_kap_url(ticker: str) -> str:
+    """Şirketin Kamuyu Aydınlatma Platformu (KAP) resmi şirket ve bildirim sayfasına yönlendirir."""
+    try:
+        from src.data_collection.kap_downloader import BIST_100_COMPANIES
+        info = BIST_100_COMPANIES.get((ticker or "").upper())
+        if info and info.get("slug"):
+            return f"https://www.kap.org.tr/tr/sirket-bilgileri/ozet/{info['slug']}"
+    except Exception as e:
+        logger.debug(f"KAP slug çözme hatası: {e}")
+    return "https://www.kap.org.tr/tr/bist-sirketler"
+
+
 def get_recent_kap_disclosures(
     ticker_filter: Optional[str] = None,
     category_filter: Optional[str] = None,
@@ -191,7 +203,7 @@ def get_recent_kap_disclosures(
             "sentiment_score": item["sentiment_score"],
             "badge_html": badge_html,
             "time_str": time_str,
-            "kap_url": f"https://www.kap.org.tr/tr/Bildirim/{item['id']}"
+            "kap_url": get_company_kap_url(item_ticker)
         })
 
         if len(results) >= limit:
