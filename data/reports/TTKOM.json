@@ -1,0 +1,41 @@
+{
+  "ticker": "TTKOM",
+  "company_name": "Türk Telekomünikasyon A.Ş.",
+  "report_date": "2026-11-09",
+  "fundamental_summary": "Türk Telekom, Türkiye çapındaki geniş fiber omurga altyapısı ve kurumsal internet talebiyle güçlü bir nakit akışı sergilemektedir. İmtiyaz sözleşmesi uzatma beklentisi şirketin uzun vadeli değerlemesini destekleyen ana katalizördür.",
+  "sentiment_score": 0.68,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": 7.6,
+    "pb_ratio": 1.85,
+    "net_profit_margin_trend": "Artış",
+    "debt_to_equity": "Orta",
+    "extra_metrics": {
+      "sector": "Telekomünikasyon",
+      "data_source": "BIST-100 Fundamental Engine & KAP Reports"
+    }
+  },
+  "catalysts": [
+    "İmtiyaz hakkının uzatılmasına yönelik olumlu süreç ve netleşen yatırım vizyonu",
+    "Fiber altyapının hane erişiminde 33 milyonu aşması",
+    "Toptan ve perakende data gelirlerinde güçlü reel büyüme"
+  ],
+  "risk_factors": [
+    "Geniş altyapı yatırımları nedeniyle faiz ve borç servis maliyeti",
+    "Makroekonomik kur oynaklığı"
+  ],
+  "recent_disclosures": [
+    {
+      "Tarih": "2026-11-03",
+      "Kategori": "Özel Durum Açıklaması",
+      "Başlık": "Türk Telekom kurumsal yönetim ilkelerine uyum ve dönemsel faaliyet özeti duyuruldu.",
+      "Etki": "Nötr"
+    },
+    {
+      "Tarih": "2026-10-28",
+      "Kategori": "Finansal Rapor Bildirimi",
+      "Başlık": "Türk Telekom 2024 yılı 9 aylık konsolide finansal tablolar ve dipnotları açıklandı.",
+      "Etki": "Pozitif"
+    }
+  ]
+}

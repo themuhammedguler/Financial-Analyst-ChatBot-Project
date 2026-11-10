@@ -1,0 +1,41 @@
+{
+  "ticker": "FROTO",
+  "company_name": "Ford Otomotiv Sanayi A.Ş.",
+  "report_date": "2026-11-09",
+  "fundamental_summary": "Ford Otosan, Craiova fabrikasının tam entegrasyonu ve yeni nesil Courier/Custom modellerinin güçlü ihracat talebiyle 2024 yılında rekor üretim ve ihracat gelirine ulaşmıştır. Elektrikli ticari araç pazarındaki öncü konumu ve uzun vadeli Ford kontratları kârlılığı garanti altına almaktadır.",
+  "sentiment_score": 0.78,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": 6.8,
+    "pb_ratio": 2.9,
+    "net_profit_margin_trend": "Artış",
+    "debt_to_equity": "Düşük/Yönetilebilir",
+    "extra_metrics": {
+      "sector": "Otomotiv",
+      "data_source": "BIST-100 Fundamental Engine & KAP Reports"
+    }
+  },
+  "catalysts": [
+    "Yeni nesil elektrikli Transit ve Custom teslimatlarının tam kapasiteye ulaşması",
+    "Romanya Craiova tesisinin yüksek marjlı katkısı",
+    "Yüksek temettü verimliliği ve döviz bazlı güçlü ihracat gelirleri"
+  ],
+  "risk_factors": [
+    "Avrupa ticari araç pazarındaki olası dönemsel talep yavaşlaması",
+    "Elektrikli araç dönüşümünde batarya maliyet dinamikleri"
+  ],
+  "recent_disclosures": [
+    {
+      "Tarih": "2026-11-01",
+      "Kategori": "Üretim & Satış",
+      "Başlık": "Yeni nesil elektrikli ticari araç ihracat hacmi ve fabrika kapasite güncellemesi.",
+      "Etki": "Pozitif"
+    },
+    {
+      "Tarih": "2026-10-25",
+      "Kategori": "Finansal Rapor Bildirimi",
+      "Başlık": "3. Çeyrek finansal tabloları ve temettü ödeme takvimi.",
+      "Etki": "Pozitif"
+    }
+  ]
+}

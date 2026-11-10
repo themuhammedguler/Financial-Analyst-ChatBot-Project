@@ -16,7 +16,7 @@ from src.config import (
     extract_text_from_content,
 )
 from src.rag.engine import FinancialRAGEngine
-from src.integration.models import FundamentalReport, KeyMetrics
+from src.integration.models import FundamentalReport, KeyMetrics, RecentDisclosure
 
 
 STRUCTURED_REPORT_PROMPT_TEMPLATE = """Sen, Borsa İstanbul (BIST) şirketleri için kantitatif ve temel analiz raporları hazırlayan uzman bir Finansal Araştırma Direktörüsün.
@@ -42,6 +42,7 @@ KURALLAR:
    - `debt_to_equity`: "Düşük/Yönetilebilir", "Orta" veya "Yüksek"
 6. `catalysts`: Şirketin gelecekteki hisse performansını yukarı taşıyabilecek en az 2 adet somut büyüme/fırsat faktörü (liste).
 7. `risk_factors`: Şirketin kârlılığını veya operasyonlarını tehdit eden en az 2 adet finansal/makro risk faktörü (liste).
+8. `recent_disclosures`: Şirketin son dönemde yayımladığı dikkat çeken en az 2 adet KAP bildirimini içeren liste. Her bildirimde "Tarih" (YYYY-MM-DD), "Kategori", "Başlık" ve "Etki" ("Pozitif", "Nötr" veya "Negatif") alanları bulunmalıdır.
 
 JSON FORMATI:
 {{
@@ -64,6 +65,20 @@ JSON FORMATI:
   "risk_factors": [
     "Risk 1",
     "Risk 2"
+  ],
+  "recent_disclosures": [
+    {{
+      "Tarih": "2026-11-05",
+      "Kategori": "Özel Durum Açıklaması",
+      "Başlık": "Yeni uçak filosu alımı ve finansman anlaşması tamamlandı.",
+      "Etki": "Pozitif"
+    }},
+    {{
+      "Tarih": "2026-10-28",
+      "Kategori": "Finansal Rapor Bildirimi",
+      "Başlık": "2024 yılı 9 aylık konsolide finansal tablolar açıklandı.",
+      "Etki": "Pozitif"
+    }}
   ]
 }}
 """
@@ -121,7 +136,20 @@ class FundamentalReportGenerator:
         # Eğer önceden üretilmişse ve zorla yenileme istenmemişse diskten oku
         if not force_refresh and report_file.exists():
             try:
-                return FundamentalReport.load_from_file(report_file)
+                rep = FundamentalReport.load_from_file(report_file)
+                if not rep.recent_disclosures:
+                    from src.kap_feed import get_company_recent_disclosures
+                    rep.recent_disclosures = [
+                        RecentDisclosure(**d) for d in get_company_recent_disclosures(ticker_clean)
+                    ]
+                    rep.save_to_file(report_file)
+                    try:
+                        data_rep_dir = Path("data/reports")
+                        data_rep_dir.mkdir(parents=True, exist_ok=True)
+                        rep.save_to_file(data_rep_dir / f"{ticker_clean}.json")
+                    except Exception:
+                        pass
+                return rep
             except Exception as e:
                 print(f"[ReportGenerator] Önbellekteki rapor okunamadı, yeniden üretiliyor: {e}")
 
@@ -157,11 +185,25 @@ class FundamentalReportGenerator:
         raw_c = response.content if hasattr(response, "content") else response
         parsed_data = self._extract_json_from_response(extract_text_from_content(raw_c))
 
-        # 3. Pydantic ile şemayı doğrula
+        # 3. Son dönem KAP bildirimlerini doğrula ve entegre et
+        if not parsed_data.get("recent_disclosures"):
+            from src.kap_feed import get_company_recent_disclosures
+            parsed_data["recent_disclosures"] = get_company_recent_disclosures(ticker_clean)
+
+        # 4. Pydantic ile şemayı doğrula
         report = FundamentalReport(**parsed_data)
 
-        # 4. Diske kaydet (reports/{ticker}_latest.json)
+        # 5. Diske kaydet (reports/{ticker}_latest.json)
         report.save_to_file(report_file)
+
+        # data/reports/{ticker}.json hedefini de senkronize et
+        try:
+            data_rep_dir = Path("data/reports")
+            data_rep_dir.mkdir(parents=True, exist_ok=True)
+            report.save_to_file(data_rep_dir / f"{ticker_clean}.json")
+        except Exception:
+            pass
+
         print(f"[ReportGenerator] {ticker_clean} temel analiz raporu kaydedildi: {report_file}")
 
         return report

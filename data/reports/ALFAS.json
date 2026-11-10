@@ -1,0 +1,41 @@
+{
+  "ticker": "ALFAS",
+  "company_name": "Alfa Solar Enerji Sanayi ve Ticaret A.Ş.",
+  "report_date": "2026-11-09",
+  "fundamental_summary": "Alfa Solar Enerji Sanayi ve Ticaret A.Ş., 2024 yılı boyunca operasyonel verimlilik ve pazar payı kazanımlarıyla güçlü ciro artışı ve dengeli bir kârlılık profili kaydetmiştir. İhracat pazarlarındaki çeşitlilik ve sağlam işletme sermayesi yapısı finansal direnci desteklemektedir.",
+  "sentiment_score": 0.55,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": 7.5,
+    "pb_ratio": 1.8,
+    "net_profit_margin_trend": "Artış",
+    "debt_to_equity": "Düşük/Yönetilebilir",
+    "extra_metrics": {
+      "sector": "Fotovoltaik Panel",
+      "data_source": "BIST-100 Fundamental Engine & KAP Reports"
+    }
+  },
+  "catalysts": [
+    "Güçlü operasyonel nakit akışı ve kapasite artırıcı verimlilik yatırımları",
+    "İhracat pazarlarında yeni coğrafyalara açılım ve döviz bazlı gelir büyümesi",
+    "Sektör ortalamalarına göre makul değerleme çarpanları ve sağlam bilanço"
+  ],
+  "risk_factors": [
+    "Makroekonomik faiz ve döviz kuru oynaklıkları",
+    "Genel faaliyet giderleri ve hammadde maliyet baskısı"
+  ],
+  "recent_disclosures": [
+    {
+      "Tarih": "2026-11-03",
+      "Kategori": "Özel Durum Açıklaması",
+      "Başlık": "Alfa Solar Enerji kurumsal yönetim ilkelerine uyum ve dönemsel faaliyet özeti duyuruldu.",
+      "Etki": "Nötr"
+    },
+    {
+      "Tarih": "2026-10-28",
+      "Kategori": "Finansal Rapor Bildirimi",
+      "Başlık": "Alfa Solar Enerji 2024 yılı 9 aylık konsolide finansal tablolar ve dipnotları açıklandı.",
+      "Etki": "Pozitif"
+    }
+  ]
+}

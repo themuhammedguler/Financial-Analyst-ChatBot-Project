@@ -1,0 +1,37 @@
+{
+  "ticker": "TUPRS",
+  "company_name": "Tüpraş",
+  "report_date": "2024-12-31",
+  "fundamental_summary": "Tüpraş, 2024 yılında 2023'e kıyasla hasılat ve kârlılıkta ciddi düşüşler yaşamıştır; brüt kar ve net kar önemli ölçüde azalmıştır. Şirketin toplam varlıkları gerilerken, kısa vadeli yükümlülüklerdeki belirgin azalma ve maddi duran varlıklardaki artış finansal yapının güçlendiğini ve yatırım faaliyetlerinin devam ettiğini göstermektedir. Ancak, operasyonel performansdaki zayıflık dikkat çekicidir.",
+  "sentiment_score": -0.6,
+  "sentiment_label": "Negatif",
+  "key_metrics": {
+    "pe_ratio": null,
+    "pb_ratio": null,
+    "net_profit_margin_trend": "Azalış",
+    "debt_to_equity": "Orta",
+    "extra_metrics": {}
+  },
+  "catalysts": [
+    "Maddi duran varlıklardaki artış ve enerji üretimi alanındaki genişleme potansiyeli, gelecekteki büyüme ve verimlilik artışlarına zemin hazırlamaktadır.",
+    "Kısa vadeli yükümlülüklerdeki ve özellikle uzun vadeli borçlanmaların kısa vadeli kısımlarındaki belirgin azalma, şirketin finansal yapısını güçlendirerek gelecekteki operasyonel esnekliğini artırmaktadır."
+  ],
+  "risk_factors": [
+    "2024 yılında hasılat ve net kârlılıkta yaşanan önemli düşüş, şirketin operasyonel performansında ciddi zorluklar veya piyasa koşullarındaki olumsuzluklar olduğunu göstermektedir.",
+    "Finansman gelirleri ve giderleri tablosunda yer alan 'Parasal kayıp/kazanç' kalemindeki önemli parasal kayıp (14.582.760 TL), şirketin enflasyon ve kur dalgalanmalarına karşı hassasiyetini ortaya koymaktadır."
+  ],
+  "recent_disclosures": [
+    {
+      "Tarih": "2026-11-06",
+      "Kategori": "Yatırım Teşviki",
+      "Başlık": "İzmir Rafinerisi yeşil hidrojen ve sıfır karbon yatırımı için stratejik teşvik belgesi alındı.",
+      "Etki": "Pozitif"
+    },
+    {
+      "Tarih": "2026-10-26",
+      "Kategori": "Finansal Rapor Bildirimi",
+      "Başlık": "9 aylık net rafineri marjları ve kâr dağıtım avansı bildirimi.",
+      "Etki": "Pozitif"
+    }
+  ]
+}

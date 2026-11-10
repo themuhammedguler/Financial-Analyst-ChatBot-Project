@@ -23,5 +23,19 @@
   "risk_factors": [
     "Gıda enflasyonu ve satın alma gücü kaynaklı sepet kompozisyonu değişimleri",
     "Asgari ücret düzenlemelerinin faaliyet giderlerine yansıması"
+  ],
+  "recent_disclosures": [
+    {
+      "Tarih": "2026-11-03",
+      "Kategori": "Özel Durum Açıklaması",
+      "Başlık": "Migros kurumsal yönetim ilkelerine uyum ve dönemsel faaliyet özeti duyuruldu.",
+      "Etki": "Nötr"
+    },
+    {
+      "Tarih": "2026-10-28",
+      "Kategori": "Finansal Rapor Bildirimi",
+      "Başlık": "Migros 2024 yılı 9 aylık konsolide finansal tablolar ve dipnotları açıklandı.",
+      "Etki": "Pozitif"
+    }
   ]
 }

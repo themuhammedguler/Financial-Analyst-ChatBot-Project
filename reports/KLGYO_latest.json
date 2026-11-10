@@ -23,5 +23,19 @@
   "risk_factors": [
     "Yüksek ipotekli konut kredisi faiz oranlarının bireysel alıcı talebini sınırlaması",
     "İnşaat maliyet endeksindeki yukarı yönlü baskı"
+  ],
+  "recent_disclosures": [
+    {
+      "Tarih": "2026-11-03",
+      "Kategori": "Özel Durum Açıklaması",
+      "Başlık": "Kiler GYO kurumsal yönetim ilkelerine uyum ve dönemsel faaliyet özeti duyuruldu.",
+      "Etki": "Nötr"
+    },
+    {
+      "Tarih": "2026-10-28",
+      "Kategori": "Finansal Rapor Bildirimi",
+      "Başlık": "Kiler GYO 2024 yılı 9 aylık konsolide finansal tablolar ve dipnotları açıklandı.",
+      "Etki": "Pozitif"
+    }
   ]
 }

@@ -22,5 +22,19 @@
   "risk_factors": [
     "Tarım kredilerindeki sıkılaşma ve çiftçi alım gücündeki zayıflama",
     "Finansman giderlerinin net kârı eritme riski"
+  ],
+  "recent_disclosures": [
+    {
+      "Tarih": "2026-11-03",
+      "Kategori": "Özel Durum Açıklaması",
+      "Başlık": "Hektaş kurumsal yönetim ilkelerine uyum ve dönemsel faaliyet özeti duyuruldu.",
+      "Etki": "Nötr"
+    },
+    {
+      "Tarih": "2026-10-28",
+      "Kategori": "Finansal Rapor Bildirimi",
+      "Başlık": "Hektaş 2024 yılı 9 aylık konsolide finansal tablolar ve dipnotları açıklandı.",
+      "Etki": "Pozitif"
+    }
   ]
 }

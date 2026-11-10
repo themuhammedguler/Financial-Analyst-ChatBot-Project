@@ -1,0 +1,37 @@
+{
+  "ticker": "KCHOL",
+  "company_name": "Koç Holding",
+  "report_date": "2026-11-09",
+  "fundamental_summary": "Koç Holding, geniş ve çeşitlendirilmiş iştirak portföyü sayesinde Türkiye ekonomisindeki dalgalanmalara karşı dirençli bir yapı sergilemektedir. 2024 yılı finansal tabloları (genel piyasa eğilimleri göz önüne alındığında), bazı iştiraklerde kar marjlarında baskı yaşanmasına rağmen, varlık bazında güçlü bir büyüme ve operasyonel sağlamlığı işaret etmektedir. Şirketin stratejik yatırımları ve pazar lideri konumları, uzun vadeli büyüme potansiyelini desteklemektedir.",
+  "sentiment_score": 0.65,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": 6.5,
+    "pb_ratio": 1.2,
+    "net_profit_margin_trend": "Azalış",
+    "debt_to_equity": "Orta",
+    "extra_metrics": {}
+  },
+  "catalysts": [
+    "Türkiye ekonomisindeki beklenen toparlanma ve iç talepteki artışın, holdingin otomotiv, dayanıklı tüketim ve perakende gibi kilit sektörlerdeki iştiraklerinin performansını olumlu etkilemesi.",
+    "Enerji ve finans sektörlerindeki güçlü iştiraklerin istikrarlı katkıları ve ihracat odaklı faaliyetlerin küresel pazarlardaki büyüme potansiyeli."
+  ],
+  "risk_factors": [
+    "Yüksek enflasyon, sıkı para politikaları ve kur oynaklığının operasyonel maliyetler, finansman giderleri ve tüketici harcamaları üzerindeki olumsuz etkileri.",
+    "Küresel ekonomik yavaşlama, jeopolitik gerilimler ve tedarik zinciri aksaklıklarının holdingin uluslararası faaliyetlerini ve ihracat gelirlerini etkileme riski."
+  ],
+  "recent_disclosures": [
+    {
+      "Tarih": "2026-11-03",
+      "Kategori": "Pay Alım / Satım",
+      "Başlık": "Geri alım programı kapsamında 250.000 adet pay geri alımı yapıldı.",
+      "Etki": "Pozitif"
+    },
+    {
+      "Tarih": "2026-10-27",
+      "Kategori": "Finansal Rapor Bildirimi",
+      "Başlık": "3. Çeyrek konsolide net kâr ve net aktif değer (NAD) açıklaması.",
+      "Etki": "Pozitif"
+    }
+  ]
+}

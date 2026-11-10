@@ -1,0 +1,45 @@
+{
+  "ticker": "THYAO",
+  "company_name": "Türk Hava Yolları",
+  "report_date": "2025-02-15",
+  "fundamental_summary": "Türk Hava Yolları, 2024 yılında güçlü bir finansal büyüme ve iyileşen bir sermaye yapısı sergilemiştir. Şirketin toplam varlıkları ve özkaynakları önemli ölçüde artarken, net borç oranı belirgin bir şekilde iyileşmiştir. Nakit ve nakit benzerlerindeki güçlü artış ve ertelenmiş gelirlerdeki yükseliş, operasyonel gücü ve gelecekteki gelir potansiyelini desteklemektedir. Ancak, iştiraklerden elde edilen kar payındaki düşüş ve artan operasyonel giderler, karlılık üzerinde baskı oluşturmaktadır.",
+  "sentiment_score": 0.8,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": null,
+    "pb_ratio": null,
+    "net_profit_margin_trend": "Azalış",
+    "debt_to_equity": "Düşük/Yönetilebilir",
+    "extra_metrics": {}
+  },
+  "catalysts": [
+    "Güçlü nakit pozisyonu ve artan likidite, şirkete operasyonel esneklik ve yatırım kapasitesi sağlamaktadır.",
+    "Ertelenmiş gelirlerdeki önemli artış, gelecekteki gelir akışları için güçlü bir gösterge ve talep potansiyeli sunmaktadır.",
+    "İyileşen sermaye yapısı ve azalan net borç oranı, finansal istikrarı artırarak şirketin borçlanma maliyetlerini düşürebilir ve büyüme projelerini destekleyebilir."
+  ],
+  "risk_factors": [
+    "Akaryakıt ve personel giderleri gibi ana operasyonel maliyetlerdeki önemli artışlar, şirketin karlılığı üzerinde baskı oluşturmaya devam etmektedir.",
+    "Uluslararası bir havayolu şirketi olması nedeniyle kur riski ve faiz oranı riski gibi finansal risk faktörlerine yüksek maruziyet, döviz kurları ve faiz oranlarındaki dalgalanmaların finansal performansı olumsuz etkileme potansiyeli taşımaktadır.",
+    "Özkaynak yöntemiyle değerlenen yatırımlardan elde edilen kar payındaki düşüş, bazı iştiraklerdeki karlılık baskısına işaret etmektedir."
+  ],
+  "recent_disclosures": [
+    {
+      "Tarih": "2026-11-05",
+      "Kategori": "Özel Durum Açıklaması",
+      "Başlık": "Yeni uçak filosu alımı ve finansman anlaşması tamamlandı.",
+      "Etki": "Pozitif"
+    },
+    {
+      "Tarih": "2026-10-28",
+      "Kategori": "Finansal Rapor Bildirimi",
+      "Başlık": "2024 yılı 9 aylık konsolide finansal tablolar açıklandı.",
+      "Etki": "Pozitif"
+    },
+    {
+      "Tarih": "2026-10-15",
+      "Kategori": "Operasyonel Veri",
+      "Başlık": "Aylık yolcu taşıma ve kapasite kullanım sonuçları yayımlandı.",
+      "Etki": "Pozitif"
+    }
+  ]
+}

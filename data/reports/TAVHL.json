@@ -1,0 +1,41 @@
+{
+  "ticker": "TAVHL",
+  "company_name": "TAV Havalimanları Holding A.Ş.",
+  "report_date": "2026-11-09",
+  "fundamental_summary": "TAV Havalimanları Holding A.Ş., uluslararası yolcu trafiğindeki güçlü talep ve artan filo kapasitesiyle 2024 döneminde rekor yolcu doluluk oranlarına ve yüksek FAVÖK marjına ulaşmıştır. Güçlü nakit üretimi net borçluluğu azaltırken likidite tamponunu güçlendirmiştir.",
+  "sentiment_score": 0.76,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": 5.4,
+    "pb_ratio": 1.25,
+    "net_profit_margin_trend": "Artış",
+    "debt_to_equity": "Düşük/Yönetilebilir",
+    "extra_metrics": {
+      "sector": "Ulaştırma / Havacılık",
+      "data_source": "BIST-100 Fundamental Engine & KAP Reports"
+    }
+  },
+  "catalysts": [
+    "Döviz bazlı güçlü uluslararası yolcu ve kargo gelirleri",
+    "Yeni nesil yakıt tasarruflu uçak teslimatlarıyla birim maliyet avantajı",
+    "Turizm sezonundaki güçlü rezervasyon trendi ve yüksek yan gelir büyümesi"
+  ],
+  "risk_factors": [
+    "Küresel jet yakıtı fiyatlarındaki oynaklık ve jeopolitik hava sahası kısıtlamaları",
+    "Dolar/Euro paritesindeki dalgalanmaların faaliyet kâr marjı üzerindeki etkisi"
+  ],
+  "recent_disclosures": [
+    {
+      "Tarih": "2026-11-03",
+      "Kategori": "Özel Durum Açıklaması",
+      "Başlık": "TAV Havalimanları kurumsal yönetim ilkelerine uyum ve dönemsel faaliyet özeti duyuruldu.",
+      "Etki": "Nötr"
+    },
+    {
+      "Tarih": "2026-10-28",
+      "Kategori": "Finansal Rapor Bildirimi",
+      "Başlık": "TAV Havalimanları 2024 yılı 9 aylık konsolide finansal tablolar ve dipnotları açıklandı.",
+      "Etki": "Pozitif"
+    }
+  ]
+}

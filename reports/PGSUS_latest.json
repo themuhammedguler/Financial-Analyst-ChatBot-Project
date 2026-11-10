@@ -23,5 +23,19 @@
   "risk_factors": [
     "Jeopolitik gerilimlerin bölgesel hava trafiği üzerindeki olası kısıtları",
     "Havacılık sektöründe artan personel ve yer hizmetleri maliyetleri"
+  ],
+  "recent_disclosures": [
+    {
+      "Tarih": "2026-11-03",
+      "Kategori": "Özel Durum Açıklaması",
+      "Başlık": "Pegasus kurumsal yönetim ilkelerine uyum ve dönemsel faaliyet özeti duyuruldu.",
+      "Etki": "Nötr"
+    },
+    {
+      "Tarih": "2026-10-28",
+      "Kategori": "Finansal Rapor Bildirimi",
+      "Başlık": "Pegasus 2024 yılı 9 aylık konsolide finansal tablolar ve dipnotları açıklandı.",
+      "Etki": "Pozitif"
+    }
   ]
 }

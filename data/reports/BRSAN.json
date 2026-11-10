@@ -1,0 +1,37 @@
+{
+  "ticker": "BRSAN",
+  "company_name": "Borusan Boru",
+  "report_date": "2024-12-31",
+  "fundamental_summary": "Borusan Boru, 2024 yılında hasılat ve brüt kârda güçlü bir büyüme sergilemiştir. Nakit ve nakit benzerlerinde önemli bir artış kaydedilirken, borçluluk seviyeleri de yükselmiştir. Faaliyet giderlerindeki artış ve brüt kar marjındaki hafif düşüş, net karlılık üzerinde baskı oluşturabilir.",
+  "sentiment_score": 0.55,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": null,
+    "pb_ratio": null,
+    "net_profit_margin_trend": "Azalış",
+    "debt_to_equity": "Orta",
+    "extra_metrics": {}
+  },
+  "catalysts": [
+    "Hasılat ve brüt kârda kaydedilen güçlü büyüme, şirketin pazar konumunu ve operasyonel performansını desteklemektedir.",
+    "Nakit ve nakit benzerlerindeki önemli artış, şirkete gelecekteki yatırım ve büyüme fırsatları için finansal esneklik sağlamaktadır."
+  ],
+  "risk_factors": [
+    "Toplam borçluluk seviyesindeki belirgin artış ve yükselen faiz giderleri, şirketin finansal riskini ve karlılığı üzerindeki baskıyı artırmaktadır.",
+    "Faaliyet giderlerindeki hızlı artış ve brüt kar marjındaki hafif düşüş, net kar marjını olumsuz etkileyerek operasyonel karlılıkta zorluklara yol açabilir."
+  ],
+  "recent_disclosures": [
+    {
+      "Tarih": "2026-11-03",
+      "Kategori": "Özel Durum Açıklaması",
+      "Başlık": "Borusan Boru kurumsal yönetim ilkelerine uyum ve dönemsel faaliyet özeti duyuruldu.",
+      "Etki": "Nötr"
+    },
+    {
+      "Tarih": "2026-10-28",
+      "Kategori": "Finansal Rapor Bildirimi",
+      "Başlık": "Borusan Boru 2024 yılı 9 aylık konsolide finansal tablolar ve dipnotları açıklandı.",
+      "Etki": "Pozitif"
+    }
+  ]
+}

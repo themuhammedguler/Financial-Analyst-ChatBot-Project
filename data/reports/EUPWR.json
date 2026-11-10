@@ -1,0 +1,41 @@
+{
+  "ticker": "EUPWR",
+  "company_name": "Europower Enerji ve Otomasyon A.Ş.",
+  "report_date": "2026-11-09",
+  "fundamental_summary": "Europower Enerji ve Otomasyon A.Ş., transformatör, şebeke ekipmanları ve yenilenebilir enerji altyapı talebindeki küresel patlamayla güçlü ciro büyümesi yakalamıştır. Yurtdışı ihracat payının artması yüksek kâr marjlarını desteklemektedir.",
+  "sentiment_score": 0.74,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": 11.2,
+    "pb_ratio": 3.2,
+    "net_profit_margin_trend": "Artış",
+    "debt_to_equity": "Orta",
+    "extra_metrics": {
+      "sector": "Elektrik & Enerji",
+      "data_source": "BIST-100 Fundamental Engine & KAP Reports"
+    }
+  },
+  "catalysts": [
+    "Yeşil enerji dönüşümü ve elektrik şebekesi modernizasyonu nedeniyle küresel yüksek talep",
+    "Yüksek kârlılığa sahip döviz bazlı ihracat siparişlerinin portföydeki payının büyümesi",
+    "Yeni üretim tesisleri ile kapasite artırımı ve ölçek ekonomisi"
+  ],
+  "risk_factors": [
+    "Bakır ve silisli sac gibi ana girdi maliyetlerindeki emtia fiyat dalgalanmaları",
+    "Enerji santrali yatırımlarında finansman ve faiz maliyetleri"
+  ],
+  "recent_disclosures": [
+    {
+      "Tarih": "2026-11-03",
+      "Kategori": "Özel Durum Açıklaması",
+      "Başlık": "Europower Enerji kurumsal yönetim ilkelerine uyum ve dönemsel faaliyet özeti duyuruldu.",
+      "Etki": "Nötr"
+    },
+    {
+      "Tarih": "2026-10-28",
+      "Kategori": "Finansal Rapor Bildirimi",
+      "Başlık": "Europower Enerji 2024 yılı 9 aylık konsolide finansal tablolar ve dipnotları açıklandı.",
+      "Etki": "Pozitif"
+    }
+  ]
+}

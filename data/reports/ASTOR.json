@@ -1,0 +1,37 @@
+{
+  "ticker": "ASTOR",
+  "company_name": "Astor Enerji",
+  "report_date": "2024-12-31",
+  "fundamental_summary": "Şirket, kısa vadeli yükümlülüklerini ve borçlanmalarını önemli ölçüde azaltarak finansal yapısını güçlendirmiştir. Bu durum, likidite yönetiminde iyileşmeye işaret etmektedir. Ancak, dönem net kârında gözlemlenen düşüş, kârlılık üzerinde baskı olduğunu göstermektedir. Uzun vadeli varlık yatırımları devam ederken, genel varlık büyümesi karışık bir tablo çizmektedir.",
+  "sentiment_score": -0.2,
+  "sentiment_label": "Nötr",
+  "key_metrics": {
+    "pe_ratio": null,
+    "pb_ratio": null,
+    "net_profit_margin_trend": "Azalış",
+    "debt_to_equity": "Düşük/Yönetilebilir",
+    "extra_metrics": {}
+  },
+  "catalysts": [
+    "Süregelen uzun vadeli varlık yatırımları ve kapasite artırımı potansiyeli, gelecekteki büyüme için temel oluşturabilir.",
+    "Azalan kısa vadeli borç yükü sayesinde artan finansal esneklik, şirketin yeni yatırım fırsatlarını değerlendirmesine olanak tanıyabilir."
+  ],
+  "risk_factors": [
+    "Dönem net kârındaki düşüş trendi, şirketin kârlılık marjları üzerinde devam eden bir baskı oluşturabilir.",
+    "Genel ekonomik yavaşlama, enerji fiyatlarındaki dalgalanmalar veya sektördeki rekabetin artması operasyonel performansı olumsuz etkileyebilir."
+  ],
+  "recent_disclosures": [
+    {
+      "Tarih": "2026-11-06",
+      "Kategori": "Yeni İş İlişkisi",
+      "Başlık": "Avrupa merkezli dağıtım şebekesinden 19.8 Milyon Euro transformatör siparişi kesinleşti.",
+      "Etki": "Pozitif"
+    },
+    {
+      "Tarih": "2026-10-26",
+      "Kategori": "Finansal Rapor Bildirimi",
+      "Başlık": "9 aylık ihracat gelirleri ve finansal performans raporu yayımlandı.",
+      "Etki": "Pozitif"
+    }
+  ]
+}

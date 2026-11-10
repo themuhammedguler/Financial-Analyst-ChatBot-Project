@@ -175,6 +175,39 @@ class TestGeneratedReportFiles:
         assert len(report.fundamental_summary) > 20
         assert len(report.catalysts) > 0
         assert len(report.risk_factors) > 0
+        assert hasattr(report, "recent_disclosures")
+        assert len(report.recent_disclosures) >= 2
+        for disc in report.recent_disclosures:
+            assert hasattr(disc, "Tarih")
+            assert hasattr(disc, "Kategori")
+            assert hasattr(disc, "Başlık")
+            assert hasattr(disc, "Etki")
+
+    def test_garan_and_eregl_recent_disclosures_valid(self):
+        for ticker in ["GARAN", "EREGL"]:
+            rep_path = REPORTS_DIR / f"{ticker}_latest.json"
+            assert rep_path.exists()
+            report = FundamentalReport.load_from_file(rep_path)
+            assert len(report.recent_disclosures) >= 2
+            for disc in report.recent_disclosures:
+                assert disc.Tarih is not None
+                assert disc.Kategori is not None
+                assert disc.Başlık is not None
+                assert disc.Etki in ["Pozitif", "Nötr", "Negatif"]
+
+    def test_recent_disclosures_catalog_and_fallback(self):
+        from src.kap_feed import get_company_recent_disclosures
+        thyao_disclosures = get_company_recent_disclosures("THYAO")
+        assert len(thyao_disclosures) >= 2
+        assert thyao_disclosures[0]["Tarih"] == "2026-11-05"
+        assert "filo" in thyao_disclosures[0]["Başlık"].lower()
+
+        fallback_disclosures = get_company_recent_disclosures("XYZ99")
+        assert len(fallback_disclosures) >= 1
+        assert "Tarih" in fallback_disclosures[0]
+        assert "Kategori" in fallback_disclosures[0]
+        assert "Başlık" in fallback_disclosures[0]
+        assert "Etki" in fallback_disclosures[0]
 
     def test_akbnk_latest_report_valid(self):
         akbnk_path = REPORTS_DIR / "AKBNK_latest.json"
@@ -222,6 +255,12 @@ class TestFastAPIIntegration:
         assert "key_metrics" in data
         assert "catalysts" in data
         assert "risk_factors" in data
+        assert "recent_disclosures" in data
+        assert len(data["recent_disclosures"]) >= 2
+        assert "Tarih" in data["recent_disclosures"][0]
+        assert "Kategori" in data["recent_disclosures"][0]
+        assert "Başlık" in data["recent_disclosures"][0]
+        assert "Etki" in data["recent_disclosures"][0]
 
     def test_sentiment_summary_endpoint(self, client):
         response = client.get("/api/v1/sentiment/summary")

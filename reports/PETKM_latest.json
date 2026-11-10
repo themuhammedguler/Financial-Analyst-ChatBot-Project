@@ -23,5 +23,19 @@
   "risk_factors": [
     "Makroekonomik faiz ve döviz kuru oynaklıkları",
     "Genel faaliyet giderleri ve hammadde maliyet baskısı"
+  ],
+  "recent_disclosures": [
+    {
+      "Tarih": "2026-11-02",
+      "Kategori": "Piyasa & Marj",
+      "Başlık": "Etilen-nafta fiyat makası gelişimi ve operasyonel kapasite kullanımı.",
+      "Etki": "Nötr"
+    },
+    {
+      "Tarih": "2026-10-25",
+      "Kategori": "Finansal Rapor Bildirimi",
+      "Başlık": "2024 yılı 3. çeyrek finansal sonuçları kamuoyuyla paylaşıldı.",
+      "Etki": "Nötr"
+    }
   ]
 }

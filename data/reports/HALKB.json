@@ -1,0 +1,41 @@
+{
+  "ticker": "HALKB",
+  "company_name": "Türkiye Halk Bankası A.Ş.",
+  "report_date": "2026-11-09",
+  "fundamental_summary": "Türkiye Halk Bankası A.Ş., 2024 yılı bilançosunda güçlü sermaye yeterlilik rasyosu (%18+) ve sağlam aktif kalitesi sergilemiştir. Net faiz marjındaki sıkı para politikası kaynaklı baskıya rağmen, komisyon gelirlerindeki kuvvetli büyüme kârlılığı desteklemektedir.",
+  "sentiment_score": 0.65,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": 4.2,
+    "pb_ratio": 0.95,
+    "net_profit_margin_trend": "Yatay",
+    "debt_to_equity": "Düşük/Yönetilebilir",
+    "extra_metrics": {
+      "sector": "Bankacılık",
+      "data_source": "BIST-100 Fundamental Engine & KAP Reports"
+    }
+  },
+  "catalysts": [
+    "Güçlü sermaye yeterlilik rasyosu ve yüksek özkaynak kârlılığı",
+    "Mevduat maliyetlerinin zirve yapmasıyla birlikte önümüzdeki dönemde beklenen net faiz marjı toparlanması",
+    "Dijital bankacılık penetrasyonu sayesinde operasyonel gider/gelir oranında verimlilik artışı"
+  ],
+  "risk_factors": [
+    "Yüksek politika faizinin fonlama ve mevduat maliyetleri üzerindeki dönemsel baskısı",
+    "Sıkılaşan makroihtiyati tedbirlerin kredi büyüme ivmesini sınırlama riski"
+  ],
+  "recent_disclosures": [
+    {
+      "Tarih": "2026-11-03",
+      "Kategori": "Özel Durum Açıklaması",
+      "Başlık": "Halkbank kurumsal yönetim ilkelerine uyum ve dönemsel faaliyet özeti duyuruldu.",
+      "Etki": "Nötr"
+    },
+    {
+      "Tarih": "2026-10-28",
+      "Kategori": "Finansal Rapor Bildirimi",
+      "Başlık": "Halkbank 2024 yılı 9 aylık konsolide finansal tablolar ve dipnotları açıklandı.",
+      "Etki": "Pozitif"
+    }
+  ]
+}

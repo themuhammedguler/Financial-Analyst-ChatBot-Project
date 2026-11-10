@@ -1,0 +1,41 @@
+{
+  "ticker": "PGSUS",
+  "company_name": "Pegasus Hava Taşımacılığı A.Ş.",
+  "report_date": "2026-11-09",
+  "fundamental_summary": "Pegasus, düşük birim maliyet (CASK) liderliği ve artan filo büyüklüğü ile uluslararası yolcu trafiğinde çift haneli büyüme sergilemiştir. Yan gelirlerin toplam cirodaki payının %35'i aşması operasyonel kâr marjlarını güçlü kılmaktadır.",
+  "sentiment_score": 0.77,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": 5.2,
+    "pb_ratio": 1.35,
+    "net_profit_margin_trend": "Artış",
+    "debt_to_equity": "Düşük/Yönetilebilir",
+    "extra_metrics": {
+      "sector": "Ulaştırma / Havacılık",
+      "data_source": "BIST-100 Fundamental Engine & KAP Reports"
+    }
+  },
+  "catalysts": [
+    "Yeni teslim alınan A321neo uçaklarıyla düşen koltuk-kilometre başına yakıt tüketimi",
+    "Döviz bazlı uluslararası hatların ve transit yolcu payının hızla artması",
+    "Yüksek kârlılığa sahip yan gelirlerdeki kesintisiz büyüme"
+  ],
+  "risk_factors": [
+    "Jeopolitik gerilimlerin bölgesel hava trafiği üzerindeki olası kısıtları",
+    "Havacılık sektöründe artan personel ve yer hizmetleri maliyetleri"
+  ],
+  "recent_disclosures": [
+    {
+      "Tarih": "2026-11-03",
+      "Kategori": "Özel Durum Açıklaması",
+      "Başlık": "Pegasus kurumsal yönetim ilkelerine uyum ve dönemsel faaliyet özeti duyuruldu.",
+      "Etki": "Nötr"
+    },
+    {
+      "Tarih": "2026-10-28",
+      "Kategori": "Finansal Rapor Bildirimi",
+      "Başlık": "Pegasus 2024 yılı 9 aylık konsolide finansal tablolar ve dipnotları açıklandı.",
+      "Etki": "Pozitif"
+    }
+  ]
+}

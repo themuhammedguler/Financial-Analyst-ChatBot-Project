@@ -19,5 +19,25 @@
   "risk_factors": [
     "Toplam risk tutarındaki önemli artışın etkin bir şekilde yönetilememesi riski.",
     "Döviz kuru ve faiz oranlarındaki dalgalanmalara bağlı olarak kur ve faiz oranı riski."
+  ],
+  "recent_disclosures": [
+    {
+      "Tarih": "2026-11-04",
+      "Kategori": "Temettü & Kâr Payı",
+      "Başlık": "Olağanüstü Genel Kurul kâr dağıtım ve temettü teklifi açıklandı.",
+      "Etki": "Pozitif"
+    },
+    {
+      "Tarih": "2026-10-25",
+      "Kategori": "Finansal Rapor Bildirimi",
+      "Başlık": "Konsolide 3Ç finansal sonuçları ve net faiz marjı sunumu.",
+      "Etki": "Pozitif"
+    },
+    {
+      "Tarih": "2026-10-10",
+      "Kategori": "Finansman & İhraç",
+      "Başlık": "Yurtdışı ipotek teminatlı menkul kıymet ihraç belgesi onaylandı.",
+      "Etki": "Nötr"
+    }
   ]
 }

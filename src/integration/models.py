@@ -14,6 +14,14 @@ class KeyMetrics(BaseModel):
     extra_metrics: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Ek rasyolar (FAVÖK marjı, ROE, cari oran vb.)")
 
 
+class RecentDisclosure(BaseModel):
+    """Şirketin son dönemde yayımladığı dikkat çeken KAP bildirimi."""
+    Tarih: str = Field(..., description="Bildirim tarihi (YYYY-MM-DD)")
+    Kategori: str = Field(..., description="Bildirim kategorisi (Özel Durum Açıklaması, Finansal Rapor vb.)")
+    Başlık: str = Field(..., description="Bildirim başlığı veya kısa özeti")
+    Etki: str = Field(default="Nötr", description="Piyasa etkisi: Pozitif | Nötr | Negatif")
+
+
 class FundamentalReport(BaseModel):
     """
     BIST-Trend-Forecaster entegrasyonu için standart yapılandırılmış temel analiz çıktısı.
@@ -36,6 +44,10 @@ class FundamentalReport(BaseModel):
     key_metrics: KeyMetrics = Field(..., description="Temel finansal göstergeler")
     catalysts: List[str] = Field(default_factory=list, description="Hisse için yukarı yönlü katalizörler ve büyüme faktörleri")
     risk_factors: List[str] = Field(default_factory=list, description="Faaliyet ve finansal risk faktörleri")
+    recent_disclosures: List[RecentDisclosure] = Field(
+        default_factory=list,
+        description="Şirketin son dönemde yayımladığı dikkat çeken KAP bildirimleri"
+    )
 
     @field_validator("ticker")
     @classmethod
@@ -69,6 +81,7 @@ class SentimentRankItem(BaseModel):
     key_metrics: KeyMetrics = Field(..., description="Temel rasyolar")
     catalysts: List[str] = Field(default_factory=list, description="Katalizörler")
     risk_factors: List[str] = Field(default_factory=list, description="Risk faktörleri")
+    recent_disclosures: Optional[List[RecentDisclosure]] = Field(default_factory=list, description="Son dönem KAP bildirimleri")
     report_date: str = Field(..., description="Rapor üretim tarihi")
 
 

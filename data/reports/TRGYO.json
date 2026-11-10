@@ -1,0 +1,41 @@
+{
+  "ticker": "TRGYO",
+  "company_name": "Torunlar Gayrimenkul Yatırım Ortaklığı",
+  "report_date": "2026-11-09",
+  "fundamental_summary": "Torunlar Gayrimenkul Yatırım Ortaklığı, portföyündeki AVM, ofis ve konut projelerinin yüksek kira gelirleri ve düzenli ekspertiz değer artışları ile sağlam bir bilanço yapısını korumaktadır. Net aktif değerine (NAD) göre işlem gören yüksek iskonto yatırım fırsatı sunmaktadır.",
+  "sentiment_score": 0.6,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": 4.5,
+    "pb_ratio": 0.85,
+    "net_profit_margin_trend": "Artış",
+    "debt_to_equity": "Düşük/Yönetilebilir",
+    "extra_metrics": {
+      "sector": "GYO",
+      "data_source": "BIST-100 Fundamental Engine & KAP Reports"
+    }
+  },
+  "catalysts": [
+    "TÜFE'ye endeksli ticari gayrimenkul kira gelirleri ile enflasyondan doğal korunma",
+    "Net Aktif Değerine (NAD) göre %40-%60 bandında seyreden tarihsel yüksek iskontolar",
+    "Kentsel dönüşüm ve gelir paylaşımlı yeni projelerin nakit akışını desteklemesi"
+  ],
+  "risk_factors": [
+    "Yüksek ipotekli konut kredisi faiz oranlarının bireysel alıcı talebini sınırlaması",
+    "İnşaat maliyet endeksindeki yukarı yönlü baskı"
+  ],
+  "recent_disclosures": [
+    {
+      "Tarih": "2026-11-03",
+      "Kategori": "Özel Durum Açıklaması",
+      "Başlık": "Torunlar GYO kurumsal yönetim ilkelerine uyum ve dönemsel faaliyet özeti duyuruldu.",
+      "Etki": "Nötr"
+    },
+    {
+      "Tarih": "2026-10-28",
+      "Kategori": "Finansal Rapor Bildirimi",
+      "Başlık": "Torunlar GYO 2024 yılı 9 aylık konsolide finansal tablolar ve dipnotları açıklandı.",
+      "Etki": "Pozitif"
+    }
+  ]
+}

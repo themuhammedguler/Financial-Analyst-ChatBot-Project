@@ -1,0 +1,41 @@
+{
+  "ticker": "MGROS",
+  "company_name": "Migros Ticaret A.Ş.",
+  "report_date": "2026-11-09",
+  "fundamental_summary": "Migros, fiziksel mağaza genişlemesi ile Migros Sanal Market ve Yemek online kanallarının sinerjisi sayesinde pazar payını sürekli artırmaktadır. Güçlü işletme sermayesi yönetimi ve negatif işletme sermayesi döngüsü şirkete muazzam nakit üretimi sağlamaktadır.",
+  "sentiment_score": 0.75,
+  "sentiment_label": "Pozitif",
+  "key_metrics": {
+    "pe_ratio": 11.8,
+    "pb_ratio": 3.2,
+    "net_profit_margin_trend": "Artış",
+    "debt_to_equity": "Düşük/Yönetilebilir",
+    "extra_metrics": {
+      "sector": "Perakende Market",
+      "data_source": "BIST-100 Fundamental Engine & KAP Reports"
+    }
+  },
+  "catalysts": [
+    "Online gıda perakendeciliğindeki tartışmasız pazar liderliği",
+    "Migen Enerji ve şarj istasyonları gibi yeni büyüme dikeyleri",
+    "Hızlı mağaza açılış temposu ve yüksek özkaynak kârlılığı (%50+)"
+  ],
+  "risk_factors": [
+    "Gıda enflasyonu ve satın alma gücü kaynaklı sepet kompozisyonu değişimleri",
+    "Asgari ücret düzenlemelerinin faaliyet giderlerine yansıması"
+  ],
+  "recent_disclosures": [
+    {
+      "Tarih": "2026-11-03",
+      "Kategori": "Özel Durum Açıklaması",
+      "Başlık": "Migros kurumsal yönetim ilkelerine uyum ve dönemsel faaliyet özeti duyuruldu.",
+      "Etki": "Nötr"
+    },
+    {
+      "Tarih": "2026-10-28",
+      "Kategori": "Finansal Rapor Bildirimi",
+      "Başlık": "Migros 2024 yılı 9 aylık konsolide finansal tablolar ve dipnotları açıklandı.",
+      "Etki": "Pozitif"
+    }
+  ]
+}

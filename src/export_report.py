@@ -68,6 +68,28 @@ def generate_executive_html_report(
     catalysts_html = "".join(f"<li style='margin-bottom: 6px;'>{c}</li>" for c in report.catalysts)
     risks_html = "".join(f"<li style='margin-bottom: 6px;'>{r}</li>" for r in report.risk_factors)
 
+    # Son KAP Bildirimleri HTML
+    disclosures_html = ""
+    if report.recent_disclosures:
+        disc_rows = "".join(
+            f"""<div style="background: #111A2E; border: 1px solid #1E293B; border-radius: 6px; padding: 10px 14px; margin-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.78rem; margin-bottom: 4px;">
+                    <span style="color: #38BDF8; font-weight: 600;">{d.Kategori}</span>
+                    <span style="color: #94A3B8;">📅 {d.Tarih} | Etki: <strong style="color: {'#10B981' if d.Etki == 'Pozitif' else ('#EF4444' if d.Etki == 'Negatif' else '#F59E0B')};">{d.Etki}</strong></span>
+                </div>
+                <div style="font-size: 0.84rem; color: #E2E8F0;">{d.Başlık}</div>
+            </div>"""
+            for d in report.recent_disclosures
+        )
+        disclosures_html = f"""
+        <div class="section-box" style="margin-top: 20px;">
+            <div class="section-header" style="color: #38BDF8;">
+                <span>📢</span> Son Dönem KAP Bildirimleri & Gelişmeler
+            </div>
+            {disc_rows}
+        </div>
+        """
+
     # 5 Boyutlu Karne Barları HTML
     score_bars_html = ""
     for dim_name, dim_val in scores.items():
@@ -314,6 +336,9 @@ def generate_executive_html_report(
                 </ul>
             </div>
         </div>
+
+        <!-- Son Dönem KAP Bildirimleri -->
+        {disclosures_html}
 
         <!-- Decision Banner -->
         <div class="decision-banner">

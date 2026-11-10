@@ -1,0 +1,37 @@
+{
+  "ticker": "ASELS",
+  "company_name": "Aselsan",
+  "report_date": "2026-11-09",
+  "fundamental_summary": "Şirketin son dönem finansal tabloları, net dönem karında bir düşüş ve borçluluk seviyelerinde artış eğilimi göstermektedir. Özellikle ticari alacaklardaki değer düşüklüğü karşılıkları ve temerrüt eden alacaklardaki yükseliş, kredi risklerinin arttığına işaret etmektedir. Özkaynaklarda artış görülse de, genel karlılık ve finansal risk göstergeleri olumsuz bir tablo çizmektedir.",
+  "sentiment_score": -0.45,
+  "sentiment_label": "Negatif",
+  "key_metrics": {
+    "pe_ratio": null,
+    "pb_ratio": null,
+    "net_profit_margin_trend": "Azalış",
+    "debt_to_equity": "Orta",
+    "extra_metrics": {}
+  },
+  "catalysts": [
+    "Yeni savunma projeleri ve ihracat anlaşmaları ile gelir ve karlılıkta artış potansiyeli",
+    "Ar-Ge yatırımlarıyla teknolojik üstünlük ve yeni ürün geliştirme kapasitesinin pazar payını artırması"
+  ],
+  "risk_factors": [
+    "Artan kredi riski ve temerrüt eden alacaklardaki yükselişin finansal performansı olumsuz etkileme potansiyeli",
+    "Yüksek borçluluk seviyesi ve finansman maliyetlerindeki artışın şirketin karlılığı üzerindeki baskısı"
+  ],
+  "recent_disclosures": [
+    {
+      "Tarih": "2026-11-07",
+      "Kategori": "Yeni İş İlişkisi",
+      "Başlık": "Savunma Sanayii Başkanlığı ile 58.2 Milyon USD tutarında yeni ihracat sözleşmesi imzalandı.",
+      "Etki": "Pozitif"
+    },
+    {
+      "Tarih": "2026-10-29",
+      "Kategori": "Finansal Rapor Bildirimi",
+      "Başlık": "Bakiye siparişler (backlog) ve 3Ç finansal göstergeleri duyuruldu.",
+      "Etki": "Pozitif"
+    }
+  ]
+}

@@ -23,5 +23,19 @@
   "risk_factors": [
     "Avrupa inşaat ve otomotiv sektörlerindeki geçici durgunluk",
     "Enerji yoğun üretim süreçleri kaynaklı doğalgaz fiyat oynaklığı"
+  ],
+  "recent_disclosures": [
+    {
+      "Tarih": "2026-10-31",
+      "Kategori": "Operasyonel & Bakım",
+      "Başlık": "Eskişehir 2 no'lu cam fırını soğuk tamir süreci tamamlanarak devreye alındı.",
+      "Etki": "Nötr"
+    },
+    {
+      "Tarih": "2026-10-26",
+      "Kategori": "Finansal Rapor Bildirimi",
+      "Başlık": "Konsolide 9 aylık finansal tablolar ve dipnotları yayımlandı.",
+      "Etki": "Nötr"
+    }
   ]
 }
