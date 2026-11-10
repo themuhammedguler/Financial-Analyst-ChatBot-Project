@@ -22,16 +22,17 @@ logger = logging.getLogger(__name__)
 USER_DATA_DIR = ROOT_DIR / "user_data"
 WATCHLIST_FILE = USER_DATA_DIR / "watchlist.json"
 NOTES_FILE = USER_DATA_DIR / "saved_notes.json"
-MODEL_SETTINGS_FILE = USER_DATA_DIR / "model_settings.json"
 
 DEFAULT_WATCHLIST: List[str] = ["THYAO", "ASELS", "TUPRS", "EREGL", "BIMAS"]
+
+BROWSER_MODEL_COOKIE = "bist_user_llm_prefs"
 
 DEFAULT_MODEL_SETTINGS: Dict[str, str] = {
     "provider": "gemini",
     "gemini_model": "gemini-3.1-flash-lite",
     "ollama_url": "http://localhost:11434/v1",
     "ollama_model": "qwen2.5:7b",
-    "colab_url": "https://attentive-uncanny-usual.ngrok-free.dev/v1",
+    "colab_url": "",
     "colab_model": "bist-financial-llm",
 }
 
@@ -179,28 +180,44 @@ def delete_saved_note(note_id: str) -> bool:
 
 
 def load_model_settings() -> Dict[str, str]:
-    """Kalıcı model sağlayıcı ve sunucu URL ayarlarını diskten okur."""
-    _ensure_dir()
+    """
+    Sadece o anki kullanıcının kendi tarayıcısındaki (cookie / session)
+    model ve URL tercihlerini okur. Sunucu üzerindeki diğer kullanıcılarla paylaşılmaz.
+    """
     settings = dict(DEFAULT_MODEL_SETTINGS)
-    if not MODEL_SETTINGS_FILE.exists():
-        return settings
-
     try:
-        with open(MODEL_SETTINGS_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        import streamlit as st
+        from urllib.parse import unquote
+
+        # 1. Mevcut oturumda (session_state) güncellenmiş değer varsa onu kullan
+        if "user_browser_llm_prefs" in st.session_state and isinstance(st.session_state.user_browser_llm_prefs, dict):
+            for k, v in st.session_state.user_browser_llm_prefs.items():
+                if k in settings and isinstance(v, str):
+                    settings[k] = v.strip()
+            return settings
+
+        # 2. Sayfa yenilendiğinde (F5) kullanıcının kendi tarayıcı çerezinden (st.context.cookies) oku
+        cookies = getattr(st.context, "cookies", None)
+        if cookies and BROWSER_MODEL_COOKIE in cookies:
+            raw_val = unquote(cookies[BROWSER_MODEL_COOKIE])
+            data = json.loads(raw_val)
             if isinstance(data, dict):
                 for k, v in data.items():
                     if k in settings and isinstance(v, str):
                         settings[k] = v.strip()
+                st.session_state.user_browser_llm_prefs = dict(settings)
     except Exception as e:
-        logger.warning(f"Model ayarları okunamadı ({e}), varsayılana dönülüyor.")
+        logger.debug(f"Tarayıcı model çerezi okunamadı: {e}")
 
     return settings
 
 
 def save_model_settings(updates: Dict[str, str]) -> Dict[str, str]:
-    """Model sağlayıcı ve URL seçimlerini kalıcı olarak diske kaydeder."""
-    _ensure_dir()
+    """
+    Model sağlayıcı ve URL seçimlerini sunucu diskine DEĞİL,
+    yalnızca o kullanıcının kendi tarayıcısına (cookie) kaydeder.
+    Böylece başka bir cihazdan/tarayıcıdan giren kişiler bu ayarları ve linki göremez.
+    """
     current = load_model_settings()
     changed = False
     for k, v in updates.items():
@@ -210,12 +227,28 @@ def save_model_settings(updates: Dict[str, str]) -> Dict[str, str]:
                 current[k] = val
                 changed = True
 
-    if changed or not MODEL_SETTINGS_FILE.exists():
-        try:
-            with open(MODEL_SETTINGS_FILE, "w", encoding="utf-8") as f:
-                json.dump(current, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            logger.error(f"Model ayarları kaydedilemedi: {e}")
+    try:
+        import streamlit as st
+        import streamlit.components.v1 as components
+        from urllib.parse import quote
+
+        st.session_state.user_browser_llm_prefs = dict(current)
+        if changed:
+            encoded = quote(json.dumps(current, ensure_ascii=False))
+            # Yalnızca bu kullanıcının kendi tarayıcısına 1 yıl geçerli çerez (cookie) yaz
+            components.html(
+                f"""<script>
+                (function() {{
+                    var cookieStr = "{BROWSER_MODEL_COOKIE}={encoded}; path=/; max-age=31536000; SameSite=Lax";
+                    document.cookie = cookieStr;
+                    try {{ window.parent.document.cookie = cookieStr; }} catch(e) {{}}
+                }})();
+                </script>""",
+                height=0,
+                width=0,
+            )
+    except Exception as e:
+        logger.debug(f"Tarayıcı model çerezi yazılamadı: {e}")
 
     return current
 

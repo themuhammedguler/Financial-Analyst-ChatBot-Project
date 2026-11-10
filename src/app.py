@@ -439,6 +439,13 @@ st.markdown("""
     [data-testid="stSidebar"] [data-testid="stRadio"] label[data-baseweb="radio"] > div:first-child {
         display: none !important;
     }
+    /* Tarayıcı çerezi (cookie) yazıcı gizli bileşen boşluğunu sıfırla */
+    [data-testid="stSidebar"] iframe[height="0"] {
+        display: none !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
