@@ -103,5 +103,48 @@ def test_colab_notebook_valid_json():
         nb_data = json.load(f)
 
     assert "cells" in nb_data
-    assert len(nb_data["cells"]) >= 8
+    assert len(nb_data["cells"]) >= 10
     assert nb_data["nbformat"] == 4
+
+
+def test_dpo_dataset_valid():
+    dpo_file = ROOT_DIR / "data" / "finetune_bist_dpo.jsonl"
+    assert dpo_file.exists(), "finetune_bist_dpo.jsonl mevcut olmalıdır."
+
+    with open(dpo_file, "r", encoding="utf-8") as f:
+        lines = [f.readline() for _ in range(5)]
+
+    assert len(lines) == 5
+    for l in lines:
+        item = json.loads(l)
+        assert "prompt" in item
+        assert "chosen" in item
+        assert "rejected" in item
+        assert "<think>" in item["chosen"]
+        assert "</think>" in item["chosen"]
+
+
+def test_financial_tools_dispatch():
+    from src.tools.financial_tools import execute_financial_tool, FINANCIAL_TOOL_DEFINITIONS
+    assert len(FINANCIAL_TOOL_DEFINITIONS) >= 7
+
+    res = execute_financial_tool("calculate_dupont", {"ticker": "THYAO"})
+    assert "roe_pct" in res
+    assert "net_profit_margin_pct" in res
+
+    alt_res = execute_financial_tool("tool_calculate_altman_z", {"ticker": "THYAO"})
+    assert "z_score" in alt_res
+    assert "zone" in alt_res
+
+    kelly_res = execute_financial_tool("calculate_kelly_allocation", {"ticker": "THYAO", "win_rate": 0.65, "win_loss_ratio": 2.0})
+    assert "recommended_portfolio_allocation_pct" in kelly_res
+    assert "full_kelly_pct" in kelly_res
+
+
+def test_parse_cot_response_helper():
+    from src.app import parse_cot_response
+    sample = "<think>\n1. DuPont Hesabı: %12.5\n</think>\n**Sonuç Raporu:** DuPont harikadır."
+    thought, clean = parse_cot_response(sample)
+    assert thought == "1. DuPont Hesabı: %12.5"
+    assert clean == "**Sonuç Raporu:** DuPont harikadır."
+

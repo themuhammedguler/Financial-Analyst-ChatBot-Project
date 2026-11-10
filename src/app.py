@@ -513,6 +513,38 @@ def get_company_badge(company_name: str) -> str:
     return f'<span style="background:rgba(148, 163, 184, 0.12); color:#CBD5E1; border:1px solid rgba(148, 163, 184, 0.25); padding:2px 8px; border-radius:6px; font-size:0.78rem;">{company_name}</span>'
 
 
+def parse_cot_response(text: str) -> tuple[Optional[str], str]:
+    """
+    Model yanıtındaki <think>...</think> düşünme zincirini ayıklar.
+    Döner: (thought_content, clean_executive_response)
+    """
+    if not text:
+        return None, ""
+    import re
+    match = re.search(r"<think>(.*?)</think>", text, flags=re.DOTALL | re.IGNORECASE)
+    if match:
+        thought = match.group(1).strip()
+        clean = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL | re.IGNORECASE).strip()
+        return thought, clean
+    # Model kapanış etiketini eksik bırakmışsa (<think> açılmış ama kapanmamış)
+    if "<think>" in text and "</think>" not in text:
+        parts = text.split("<think>", 1)
+        return parts[1].strip(), parts[0].strip() or parts[1].strip()
+    return None, text
+
+
+def render_analyst_response(content: str):
+    """Asistan mesajını CoT (Düşünce Süreci) expander'ı ve temiz analist metni olarak çizer."""
+    thought, clean_text = parse_cot_response(content)
+    if thought:
+        with st.expander("💭 Analistin Akıl Yürütme Süreci (Chain of Thought)", expanded=False):
+            st.markdown(
+                f"""<div style="font-size:0.84rem; color:#94A3B8; background:rgba(15,23,42,0.65); padding:12px 14px; border-radius:8px; border-left:3px solid #38BDF8; font-family:monospace; white-space:pre-wrap; line-height:1.6;">{thought}</div>""",
+                unsafe_allow_html=True
+            )
+    st.markdown(clean_text, unsafe_allow_html=True)
+
+
 # --- KENAR ÇUBUĞU (SIDEBAR) ---
 with st.sidebar:
     sidebar_brand_icon = f'<img src="data:image/png;base64,{LOGO_B64}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1.5px solid rgba(56, 189, 248, 0.45); box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);">' if LOGO_B64 else '<span style="font-size: 1.5rem;">📊</span>'
@@ -721,7 +753,10 @@ if active_module == "💬 AI Analist Terminali":
         for m_idx, msg in enumerate(st.session_state.messages):
             msg_avatar = USER_AVATAR if msg.get("role") == "user" else ASSISTANT_AVATAR
             with st.chat_message(msg["role"], avatar=msg_avatar):
-                st.markdown(msg["content"], unsafe_allow_html=True)
+                if msg.get("role") == "assistant":
+                    render_analyst_response(msg["content"])
+                else:
+                    st.markdown(msg["content"], unsafe_allow_html=True)
                 # Eğer kaydedilmiş kaynaklar varsa göster
                 if "sources" in msg and msg["sources"]:
                     with st.expander("📌 Referans Alınan KAP Raporları & Sayfalar"):
@@ -741,10 +776,11 @@ if active_module == "💬 AI Analist Terminali":
                     note_save_col1, _ = st.columns([1.2, 3.8])
                     with note_save_col1:
                         if st.button("💾 Notlarıma Kaydet", key=f"btn_save_note_{m_idx}", help="Bu analizi kalıcı not defterinize ekler"):
+                            _, clean_note_text = parse_cot_response(msg["content"])
                             add_saved_note(
                                 ticker=active_ticker if active_ticker != "BIST" else "BIST",
                                 title=f"{active_ticker} Analist Değerlendirmesi",
-                                content=msg["content"]
+                                content=clean_note_text or msg["content"]
                             )
                             st.toast("✅ Analist değerlendirmesi kalıcı not defterinize kaydedildi!")
                             st.rerun()
@@ -786,9 +822,11 @@ if active_module == "💬 AI Analist Terminali":
                 # Status kutusunu tamamlandı olarak sonlandır
                 status_box.update(label="✅ Finansal Analiz Tamamlandı", state="complete", expanded=False)
 
-                # İmleci kaldır ve nihai cevabı yerleştir
+                # İmleci kaldır ve nihai cevabı yerleştir (CoT expander + Temiz Yönetici Çıktısı)
                 if full_response.strip():
-                    stream_placeholder.markdown(full_response, unsafe_allow_html=True)
+                    stream_placeholder.empty()
+                    with stream_placeholder.container():
+                        render_analyst_response(full_response)
                 else:
                     fallback_msg = "⚠️ Finansal raporlardan veri getirilirken bir aksaklık oluştu. Lütfen sorunuzu tekrar iletiniz."
                     stream_placeholder.markdown(fallback_msg, unsafe_allow_html=True)
