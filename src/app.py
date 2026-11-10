@@ -3,6 +3,7 @@ import sys
 import json
 import io
 import base64
+from typing import Optional, List, Dict, Any
 from pathlib import Path
 from datetime import datetime
 from PIL import Image, ImageDraw
