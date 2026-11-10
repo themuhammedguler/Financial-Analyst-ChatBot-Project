@@ -595,41 +595,14 @@ with st.sidebar:
                 else:
                     st.warning(msg)
 
-    # 🏢 3. ŞİRKET VE YIL FİLTRESİ
-    st.markdown("### 🏢 Filtreler")
-    _tr_order = "aAbBcCçÇdDeEfFgGğĞhHıIİijJkKlLmMnNoOöÖpPrRsSşŞtTuUüÜvVyYzZ"
-    _tr_dict = {c: i for i, c in enumerate(_tr_order)}
-    def _tr_sort_key(text: str):
-        return [_tr_dict.get(c, ord(c) + 1000) for c in text]
-
-    sorted_company_names = sorted(list(COMPANIES.keys()), key=_tr_sort_key)
-    company_options = ["Tümü"] + sorted_company_names
-    
-    target_comp = st.session_state.get("user_selected_ticker_company", url_company_name)
-    default_company_index = 0
-    if target_comp and target_comp in company_options:
-        default_company_index = company_options.index(target_comp)
-
-    selected_company = st.selectbox(
-        "Şirket",
-        options=company_options,
-        index=default_company_index,
-        help="Sorguyu belirli bir şirketle sınırlandırabilir veya 'Tümü' seçeneğini seçebilirsiniz."
-    )
-
-    active_ticker = url_ticker if url_ticker else get_ticker_for_company(selected_company)
-
-    year_options = ["Tümü"] + [str(y) for y in reversed(SUPPORTED_YEARS)]
-    selected_year = st.selectbox(
-        "Mali Yıl",
-        options=year_options,
-        index=0,
-        help="Belirli bir faaliyet veya bilanço yılına odaklanın."
-    )
+    # Aktif Şirket / Varsayılan Ticker Belirleme
+    active_ticker = url_ticker if url_ticker else "THYAO"
+    selected_company = "Tümü"
+    selected_year = "Tümü"
 
     st.divider()
 
-    # 🗑️ 4. HIZLI EYLEMLER
+    # 🗑️ HIZLI EYLEMLER
     if st.button("🔄 Sohbeti & Önbelleği Sıfırla", use_container_width=True, help="Sohbet geçmişini ve bellek önbelleğini temizler"):
         st.cache_resource.clear()
         st.session_state.messages = []
@@ -1557,8 +1530,21 @@ elif active_module == "📌 İzleme Listesi & Not Defteri":
 
 
 elif active_module == "📑 Temel Analiz & Rapor Merkezi":
-    st.markdown(f"### 📑 {active_ticker} Temel Analiz & Kurumsal Rapor Merkezi")
-    st.caption("BIST 100 hisselerinin yapılandırılmış JSON araştırma modelleri, 5D finansal sağlık radarı, BIST-Trend-Forecaster hibrit karar köprüsü ve RAG benchmark karnesi.")
+    all_bist_tickers = sorted(list(BIST_100_COMPANIES.keys()))
+    def_rep_idx = all_bist_tickers.index(active_ticker) if active_ticker in all_bist_tickers else 0
+
+    col_rep_head, col_rep_pick = st.columns([3, 2])
+    with col_rep_head:
+        st.markdown(f"### 📑 {active_ticker} Temel Analiz & Kurumsal Rapor Merkezi")
+        st.caption("BIST 100 hisselerinin yapılandırılmış JSON araştırma modelleri, 5D finansal sağlık radarı, BIST-Trend-Forecaster hibrit karar köprüsü ve RAG benchmark karnesi.")
+    with col_rep_pick:
+        active_ticker = st.selectbox(
+            "🏢 Raporu Görüntülenecek Şirket",
+            options=all_bist_tickers,
+            index=def_rep_idx,
+            format_func=lambda x: f"{x} - {BIST_100_COMPANIES.get(x, {}).get('name', x)}",
+            key="rep_center_active_ticker"
+        )
     
     rep_file = REPORTS_DIR / f"{active_ticker}_latest.json"
     active_report_obj = None
