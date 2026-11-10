@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 USER_DATA_DIR = ROOT_DIR / "user_data"
 WATCHLIST_FILE = USER_DATA_DIR / "watchlist.json"
 NOTES_FILE = USER_DATA_DIR / "saved_notes.json"
+CLIENT_PREFS_FILE = USER_DATA_DIR / "client_model_prefs.json"
 
 DEFAULT_WATCHLIST: List[str] = ["THYAO", "ASELS", "TUPRS", "EREGL", "BIMAS"]
 
@@ -179,76 +180,171 @@ def delete_saved_note(note_id: str) -> bool:
     return False
 
 
+def _get_client_fingerprint() -> str:
+    """
+    O anki kullanıcının tarayıcı ve ağ bilgilerine (IP + User-Agent + Dil)
+    dayalı benzersiz bir SHA-256 parmak izi üretir.
+    Böylece her kullanıcının ayarı yalnızca kendi cihazında/tarayıcısında hatırlanır,
+    başka bir bilgisayardan veya tarayıcıdan giren kişilere kesinlikle görünmez.
+    """
+    import hashlib
+    try:
+        import streamlit as st
+        ip = getattr(st.context, "ip_address", None) or "local_ip"
+        headers = getattr(st.context, "headers", {}) or {}
+        ua = headers.get("User-Agent", headers.get("user-agent", "unknown_ua"))
+        lang = headers.get("Accept-Language", headers.get("accept-language", "tr"))
+        sec_ch = headers.get("Sec-Ch-Ua", headers.get("sec-ch-ua", ""))
+        raw = f"{ip}|{ua}|{lang}|{sec_ch}"
+        return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:24]
+    except Exception:
+        return "default_local_client"
+
+
 def load_model_settings() -> Dict[str, str]:
     """
-    Sadece o anki kullanıcının kendi tarayıcısındaki (cookie / session)
+    Sadece o anki kullanıcının kendi tarayıcısındaki (cookie / parmak izi)
     model ve URL tercihlerini okur. Sunucu üzerindeki diğer kullanıcılarla paylaşılmaz.
     """
+    _ensure_dir()
     settings = dict(DEFAULT_MODEL_SETTINGS)
     try:
         import streamlit as st
         from urllib.parse import unquote
 
-        # 1. Mevcut oturumda (session_state) güncellenmiş değer varsa onu kullan
+        # 1. Mevcut aktif çalışma döngüsünde (session_state) güncellenmiş değer varsa onu baz al
         if "user_browser_llm_prefs" in st.session_state and isinstance(st.session_state.user_browser_llm_prefs, dict):
             for k, v in st.session_state.user_browser_llm_prefs.items():
                 if k in settings and isinstance(v, str):
                     settings[k] = v.strip()
             return settings
 
-        # 2. Sayfa yenilendiğinde (F5) kullanıcının kendi tarayıcı çerezinden (st.context.cookies) oku
+        # 2. Önce bu kullanıcının tarayıcı/IP parmak izine (fingerprint) kayıtlı senkron veriyi oku
+        fp = _get_client_fingerprint()
+        if CLIENT_PREFS_FILE.exists():
+            try:
+                with open(CLIENT_PREFS_FILE, "r", encoding="utf-8") as f:
+                    all_clients = json.load(f)
+                    if isinstance(all_clients, dict) and fp in all_clients:
+                        client_data = all_clients[fp]
+                        if isinstance(client_data, dict):
+                            for k, v in client_data.items():
+                                if k in settings and isinstance(v, str) and v.strip():
+                                    settings[k] = v.strip()
+            except Exception:
+                pass
+
+        # 3. Tarayıcı çerezini (st.context.cookies) üzerine uygula (Enter'a basmadan yapılan yapıştırmaları da yakalar)
         cookies = getattr(st.context, "cookies", None)
         if cookies and BROWSER_MODEL_COOKIE in cookies:
             raw_val = unquote(cookies[BROWSER_MODEL_COOKIE])
             data = json.loads(raw_val)
             if isinstance(data, dict):
                 for k, v in data.items():
-                    if k in settings and isinstance(v, str):
+                    if k in settings and isinstance(v, str) and v.strip():
                         settings[k] = v.strip()
-                st.session_state.user_browser_llm_prefs = dict(settings)
+
+        st.session_state.user_browser_llm_prefs = dict(settings)
     except Exception as e:
-        logger.debug(f"Tarayıcı model çerezi okunamadı: {e}")
+        logger.debug(f"Kullanıcı model tercihi okunamadı: {e}")
 
     return settings
 
 
 def save_model_settings(updates: Dict[str, str]) -> Dict[str, str]:
     """
-    Model sağlayıcı ve URL seçimlerini sunucu diskine DEĞİL,
-    yalnızca o kullanıcının kendi tarayıcısına (cookie) kaydeder.
-    Böylece başka bir cihazdan/tarayıcıdan giren kişiler bu ayarları ve linki göremez.
+    Model sağlayıcı ve URL seçimlerini yalnızca o kullanıcının kendi tarayıcısına
+    ve tarayıcı parmak izine özel olarak kaydeder.
+    Ayrıca metin kutusuna link yapıştırıldığı anda (Enter'a basılmasa bile) çereze yazar.
     """
+    _ensure_dir()
     current = load_model_settings()
-    changed = False
     for k, v in updates.items():
         if k in current and isinstance(v, str):
             val = v.strip()
-            if current[k] != val:
+            # Eğer kullanıcı kutuyu bilerek değiştirmişse veya dolu bir değer girmişse güncelle
+            if k == "colab_url" and not val and current.get("colab_url"):
+                pass
+            else:
                 current[k] = val
-                changed = True
 
     try:
         import streamlit as st
         import streamlit.components.v1 as components
-        from urllib.parse import quote
 
         st.session_state.user_browser_llm_prefs = dict(current)
-        if changed:
-            encoded = quote(json.dumps(current, ensure_ascii=False))
-            # Yalnızca bu kullanıcının kendi tarayıcısına 1 yıl geçerli çerez (cookie) yaz
-            components.html(
-                f"""<script>
-                (function() {{
-                    var cookieStr = "{BROWSER_MODEL_COOKIE}={encoded}; path=/; max-age=31536000; SameSite=Lax";
-                    document.cookie = cookieStr;
+
+        # 1. Senkron olarak sadece bu kullanıcının parmak izine (fingerprint) kaydet
+        fp = _get_client_fingerprint()
+        all_clients: Dict[str, Any] = {}
+        if CLIENT_PREFS_FILE.exists():
+            try:
+                with open(CLIENT_PREFS_FILE, "r", encoding="utf-8") as f:
+                    loaded = json.load(f)
+                    if isinstance(loaded, dict):
+                        all_clients = loaded
+            except Exception:
+                all_clients = {}
+
+        if all_clients.get(fp) != current:
+            all_clients[fp] = dict(current)
+            with open(CLIENT_PREFS_FILE, "w", encoding="utf-8") as f:
+                json.dump(all_clients, f, ensure_ascii=False, indent=2)
+
+        # 2. Tarayıcı çerezini güncelle ve Enter'a basmadan yapılan yapıştırmaları (paste/input) anında yakala
+        prefs_json = json.dumps(current, ensure_ascii=False)
+        components.html(
+            f"""<script>
+            (function() {{
+                var cookieName = "{BROWSER_MODEL_COOKIE}";
+                var prefs = {prefs_json};
+                function writeCookie(obj) {{
+                    var encoded = encodeURIComponent(JSON.stringify(obj));
+                    var cookieStr = cookieName + "=" + encoded + "; path=/; max-age=31536000; SameSite=Lax";
                     try {{ window.parent.document.cookie = cookieStr; }} catch(e) {{}}
-                }})();
-                </script>""",
-                height=0,
-                width=0,
-            )
+                    try {{ document.cookie = cookieStr; }} catch(e) {{}}
+                }}
+                writeCookie(prefs);
+
+                try {{
+                    var parentDoc = window.parent.document;
+                    var sidebar = parentDoc.querySelector('[data-testid="stSidebar"]');
+                    if (sidebar) {{
+                        var inputs = sidebar.querySelectorAll('input[type="text"]');
+                        inputs.forEach(function(inp) {{
+                            var syncInput = function() {{
+                                var wrap = inp.closest('[data-testid="stTextInput"]');
+                                var lbl = wrap ? wrap.innerText : "";
+                                if (lbl.indexOf("Colab") !== -1 || lbl.indexOf("ngrok") !== -1) {{
+                                    prefs.colab_url = inp.value.trim();
+                                }} else if (lbl.indexOf("Model Etiketi") !== -1) {{
+                                    prefs.colab_model = inp.value.trim();
+                                }} else if (lbl.indexOf("Ollama API") !== -1) {{
+                                    prefs.ollama_url = inp.value.trim();
+                                }} else if (lbl.indexOf("Model Adı") !== -1) {{
+                                    prefs.ollama_model = inp.value.trim();
+                                }}
+                                writeCookie(prefs);
+                            }};
+                            if (inp.value && inp.value.trim()) {{
+                                syncInput();
+                            }}
+                            if (!inp.dataset.bistCookieBound) {{
+                                inp.dataset.bistCookieBound = "1";
+                                inp.addEventListener("input", syncInput);
+                                inp.addEventListener("paste", function() {{ setTimeout(syncInput, 15); }});
+                                inp.addEventListener("change", syncInput);
+                            }}
+                        }});
+                    }}
+                }} catch(err) {{}}
+            }})();
+            </script>""",
+            height=1,
+            width=1,
+        )
     except Exception as e:
-        logger.debug(f"Tarayıcı model çerezi yazılamadı: {e}")
+        logger.debug(f"Kullanıcı model tercihi yazılamadı: {e}")
 
     return current
 

@@ -439,10 +439,16 @@ st.markdown("""
     [data-testid="stSidebar"] [data-testid="stRadio"] label[data-baseweb="radio"] > div:first-child {
         display: none !important;
     }
-    /* Tarayıcı çerezi (cookie) yazıcı gizli bileşen boşluğunu sıfırla */
-    [data-testid="stSidebar"] iframe[height="0"] {
-        display: none !important;
-        height: 0 !important;
+    /* Tarayıcı çerezi (cookie) yazıcı gizli bileşen: display:none OLMAMALI (yoksa tarayıcı scripti çalıştırmaz) */
+    [data-testid="stSidebar"] iframe[height="1"] {
+        opacity: 0 !important;
+        pointer-events: none !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        width: 1px !important;
+        height: 1px !important;
+        border: none !important;
         margin: 0 !important;
         padding: 0 !important;
     }
@@ -640,7 +646,7 @@ with st.sidebar:
     saved_prov = saved_model_cfg.get("provider", "gemini")
     default_prov_idx = provider_options.index(saved_prov) if saved_prov in provider_options else 0
 
-    with st.expander("⚙️ Model & Çıkarım Sağlayıcısı", expanded=False):
+    with st.expander("⚙️ Model & Çıkarım Sağlayıcısı", expanded=(saved_prov != "gemini")):
         provider_choice = st.selectbox(
             "🧠 Model Sağlayıcısı",
             options=provider_options,

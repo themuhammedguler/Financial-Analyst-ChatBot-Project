@@ -208,3 +208,8 @@ __marimo__/
 
 # Vectorstore backups
 vectorstore/*backup*/
+
+# Per-client private model & server URL settings
+user_data/client_model_prefs.json
+user_data/model_settings.json
+
