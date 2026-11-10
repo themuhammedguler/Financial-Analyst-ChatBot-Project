@@ -366,53 +366,75 @@ st.markdown("""
         transform: scale(1.05) !important;
     }
 
-    /* Sidebar Navigation Menüsü (Bloomberg / Refinitiv Fintech Terminal Kalibresi) */
-    [data-testid="stSidebar"] [data-testid="stRadio"] > div {
-        gap: 6px !important;
+    /* Sidebar Navigation Menüsü: Aktif Menü Aydınlık, Diğerleri Karanlık (Check/Daire Yok) */
+    [data-testid="stSidebar"] .stButton {
+        margin-bottom: -6px !important;
     }
-    [data-testid="stSidebar"] [data-testid="stRadio"] label {
-        background: #0D1629 !important;
-        border: 1px solid rgba(30, 41, 59, 0.8) !important;
-        border-radius: 8px !important;
-        padding: 9px 12px !important;
-        cursor: pointer !important;
-        transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    /* Aktif Olmayan (Diğer) Menüler -> KARANLIK & SÖNÜK */
+    [data-testid="stSidebar"] [data-testid="stBaseButton-secondary"],
+    [data-testid="stSidebar"] button[kind="secondary"] {
+        background: #060A12 !important;
+        color: #64748B !important;
+        border: 1px solid #111827 !important;
+        border-radius: 9px !important;
+        padding: 9px 14px !important;
+        font-weight: 500 !important;
+        font-size: 0.87rem !important;
+        justify-content: flex-start !important;
+        text-align: left !important;
         width: 100% !important;
-        margin-bottom: 2px !important;
-        color: #94A3B8 !important;
-        font-size: 0.86rem !important;
-        border-left: 3px solid transparent !important;
-        display: flex !important;
-        align-items: center !important;
+        box-shadow: none !important;
+        opacity: 0.62 !important;
+        transition: all 0.18s ease-in-out !important;
     }
-    [data-testid="stSidebar"] [data-testid="stRadio"] label:hover {
-        background: #132240 !important;
-        border-color: rgba(56, 189, 248, 0.45) !important;
-        color: #E2E8F0 !important;
-        border-left: 3px solid #38BDF8 !important;
-        transform: translateX(4px) !important;
-        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.35) !important;
-    }
-    [data-testid="stSidebar"] [data-testid="stRadio"] label:has(input:checked),
-    [data-testid="stSidebar"] [data-testid="stRadio"] label[data-checked="true"],
-    [data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) {
-        background: linear-gradient(90deg, rgba(37, 99, 235, 0.32) 0%, rgba(13, 22, 41, 0.95) 100%) !important;
-        border-color: rgba(56, 189, 248, 0.55) !important;
-        border-left: 3.5px solid #38BDF8 !important;
-        color: #FFFFFF !important;
-        font-weight: 600 !important;
-        box-shadow: 0 4px 16px rgba(14, 165, 233, 0.18), inset 0 0 0 1px rgba(56, 189, 248, 0.25) !important;
-        transform: translateX(4px) !important;
-    }
-    [data-testid="stSidebar"] [data-testid="stRadio"] [data-testid="stMarkdownContainer"] p {
+    [data-testid="stSidebar"] [data-testid="stBaseButton-secondary"] p,
+    [data-testid="stSidebar"] button[kind="secondary"] p {
+        color: #64748B !important;
+        font-weight: 500 !important;
+        font-size: 0.87rem !important;
         margin: 0 !important;
-        font-size: 0.86rem !important;
-        line-height: 1.35 !important;
-        color: inherit !important;
-        letter-spacing: 0.01em !important;
     }
-    [data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] input,
-    [data-testid="stSidebar"] [data-testid="stRadio"] div[data-testid="stRadioCircle"] {
+    [data-testid="stSidebar"] [data-testid="stBaseButton-secondary"]:hover,
+    [data-testid="stSidebar"] button[kind="secondary"]:hover {
+        background: #0F172A !important;
+        color: #CBD5E1 !important;
+        border-color: #1E293B !important;
+        opacity: 0.92 !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stBaseButton-secondary"]:hover p,
+    [data-testid="stSidebar"] button[kind="secondary"]:hover p {
+        color: #CBD5E1 !important;
+    }
+
+    /* Olduğumuz (Aktif) Menü -> AYDINLIK & PARLAK */
+    [data-testid="stSidebar"] [data-testid="stBaseButton-primary"],
+    [data-testid="stSidebar"] button[kind="primary"] {
+        background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 55%, #0284C7 100%) !important;
+        color: #FFFFFF !important;
+        border: 1px solid #38BDF8 !important;
+        border-radius: 9px !important;
+        padding: 10px 14px !important;
+        font-weight: 700 !important;
+        font-size: 0.88rem !important;
+        justify-content: flex-start !important;
+        text-align: left !important;
+        width: 100% !important;
+        box-shadow: 0 0 16px rgba(56, 189, 248, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+        opacity: 1 !important;
+        transition: all 0.18s ease-in-out !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stBaseButton-primary"] p,
+    [data-testid="stSidebar"] button[kind="primary"] p {
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
+        font-size: 0.88rem !important;
+        margin: 0 !important;
+    }
+
+    /* Radio kullanılırsa yanındaki check/daire ikonunu tamamen gizle */
+    [data-testid="stSidebar"] [data-testid="stRadio"] input,
+    [data-testid="stSidebar"] [data-testid="stRadio"] div[data-testid="stRadioCircle"],
+    [data-testid="stSidebar"] [data-testid="stRadio"] label[data-baseweb="radio"] > div:first-child {
         display: none !important;
     }
 </style>
@@ -564,45 +586,16 @@ def render_analyst_response(content: str):
 with st.sidebar:
     sidebar_brand_icon = f'<img src="data:image/png;base64,{LOGO_B64}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1.5px solid rgba(56, 189, 248, 0.45); box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);">' if LOGO_B64 else '<span style="font-size: 1.5rem;">📊</span>'
     st.markdown(f"""
-    <div style="padding: 13px 15px; margin-bottom: 10px; background: linear-gradient(135deg, #0F172A 0%, #17243B 100%); border: 1px solid rgba(56, 189, 248, 0.28); border-radius: 12px; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45); display: flex; align-items: center; justify-content: space-between;">
-        <div style="display: flex; align-items: center; gap: 11px;">
-            {sidebar_brand_icon}
-            <div>
-                <div style="font-weight: 800; font-size: 0.98rem; color: #F8FAFC; letter-spacing: -0.01em;">BIST ANALYTICS</div>
-                <div style="font-size: 0.72rem; color: #38BDF8; font-weight: 600; letter-spacing: 0.02em;">KAP RAG & Finans Terminali</div>
-            </div>
-        </div>
-        <span style="display: inline-flex; align-items: center; gap: 5px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(52, 211, 153, 0.35); color: #34D399; font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px;">
-            <span style="width: 6px; height: 6px; border-radius: 50%; background-color: #34D399; box-shadow: 0 0 6px #34D399;"></span>
-            CANLI
-        </span>
-    </div>
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 12px;">
-        <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(30, 41, 59, 0.8); border-radius: 7px; padding: 5px 6px; text-align: center;">
-            <div style="font-size: 0.64rem; color: #64748B; font-weight: 600;">BIST 100</div>
-            <div style="font-size: 0.76rem; font-weight: 700; color: #34D399;">9.840 ▲</div>
-        </div>
-        <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(30, 41, 59, 0.8); border-radius: 7px; padding: 5px 6px; text-align: center;">
-            <div style="font-size: 0.64rem; color: #64748B; font-weight: 600;">USD/TRY</div>
-            <div style="font-size: 0.76rem; font-weight: 700; color: #CBD5E1;">34.35 ⏸</div>
-        </div>
-        <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(30, 41, 59, 0.8); border-radius: 7px; padding: 5px 6px; text-align: center;">
-            <div style="font-size: 0.64rem; color: #64748B; font-weight: 600;">XU030</div>
-            <div style="font-size: 0.76rem; font-weight: 700; color: #34D399;">10.720 ▲</div>
+    <div style="padding: 12px 14px; margin-bottom: 12px; background: linear-gradient(135deg, #0F172A, #1E293B); border: 1px solid #1E293B; border-radius: 10px; display: flex; align-items: center; gap: 12px;">
+        {sidebar_brand_icon}
+        <div>
+            <div style="font-weight: 700; font-size: 0.96rem; color: #F8FAFC; letter-spacing: -0.01em;">BIST ANALYTICS</div>
+            <div style="font-size: 0.73rem; color: #38BDF8; font-weight: 600;">KAP RAG & Finans Terminali</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # 🧭 1. ANA NAVİGASYON MENÜSÜ
-    st.markdown("""
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding: 0 2px;">
-        <span style="font-size: 0.74rem; font-weight: 800; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.08em; display: flex; align-items: center; gap: 6px;">
-            <span>🧭</span> TERMİNAL MENÜSÜ
-        </span>
-        <span style="background: rgba(56, 189, 248, 0.12); color: #38BDF8; font-size: 0.66rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.25);">8 Modül</span>
-    </div>
-    """, unsafe_allow_html=True)
-
+    # 🧭 1. ANA NAVİGASYON MENÜSÜ (Başlık ve Check/Daire Yok: Olduğumuz Menü Aydınlık, Diğerleri Karanlık)
     MENU_OPTIONS = [
         "💬 AI Analist Terminali",
         "📈 Fiyat & Mum Grafiği",
@@ -613,12 +606,22 @@ with st.sidebar:
         "📌 İzleme Listesi & Not Defteri",
         "📑 Temel Analiz & Rapor Merkezi",
     ]
-    active_module = st.radio(
-        "Terminal Menüsü",
-        options=MENU_OPTIONS,
-        index=0,
-        label_visibility="collapsed"
-    )
+    if "active_module" not in st.session_state or st.session_state.active_module not in MENU_OPTIONS:
+        st.session_state.active_module = MENU_OPTIONS[0]
+
+    for nav_idx, nav_item in enumerate(MENU_OPTIONS):
+        is_current = (st.session_state.active_module == nav_item)
+        if st.button(
+            nav_item,
+            key=f"sidebar_nav_{nav_idx}",
+            use_container_width=True,
+            type="primary" if is_current else "secondary",
+        ):
+            if st.session_state.active_module != nav_item:
+                st.session_state.active_module = nav_item
+                st.rerun()
+
+    active_module = st.session_state.active_module
 
     st.divider()
 
@@ -684,32 +687,11 @@ with st.sidebar:
         st.rerun()
 
     # BIST-Trend-Forecaster Köprü Linki
-    st.markdown(f'''
-    <div style="margin-top: 10px; background: linear-gradient(135deg, rgba(29, 78, 216, 0.22), rgba(15, 23, 42, 0.85)); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 9px; padding: 10px 12px;">
-        <div style="font-size: 0.67rem; color: #93C5FD; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
-            <span>📈 TEKNİK MODEL TAHMİNİ</span>
-            <span style="background: rgba(56, 189, 248, 0.2); color: #38BDF8; padding: 1px 6px; border-radius: 4px; font-size: 0.62rem;">KÖPRÜ</span>
-        </div>
-        <a href="{FORECASTER_BASE_URL}/?ticker={active_ticker if active_ticker != 'BIST' else ''}" target="_blank" style="display: flex; align-items: center; justify-content: space-between; text-decoration: none; color: #F8FAFC; font-weight: 600; font-size: 0.83rem; margin-top: 4px;">
-            <span>{active_ticker} Trend Modeli</span>
-            <span style="background: #2563EB; color: white; font-size: 0.70rem; font-weight: 600; padding: 3px 8px; border-radius: 5px; box-shadow: 0 2px 6px rgba(37,99,235,0.4);">Aç ↗</span>
-        </a>
-    </div>
-    <div style="margin-top: 14px; padding: 10px 12px; background: rgba(13, 22, 41, 0.55); border-radius: 8px; border: 1px solid rgba(30, 41, 59, 0.65); font-size: 0.71rem; color: #64748B;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-            <span>Kapsam:</span>
-            <span style="color: #CBD5E1; font-weight: 600;">BIST 100 & KAP</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-            <span>Akıl Yürütme:</span>
-            <span style="color: #38BDF8; font-weight: 600;">CoT & DPO Hizalama</span>
-        </div>
-        <div style="display: flex; justify-content: space-between;">
-            <span>Terminal Motoru:</span>
-            <span style="color: #34D399; font-weight: 600;">● Aktif / Çevrimiçi</span>
-        </div>
-    </div>
-    ''', unsafe_allow_html=True)
+    st.markdown(f'''<div style="text-align: center; margin-top: 8px;">
+<a href="{FORECASTER_BASE_URL}/?ticker={active_ticker if active_ticker != "BIST" else ""}" target="_blank" style="display: block; background: #172554; color: #93C5FD; padding: 7px 10px; border-radius: 6px; text-decoration: none; font-size: 0.78rem; font-weight: 600; border: 1px solid rgba(56, 189, 248, 0.25);">
+BIST-Trend-Forecaster ↗
+</a>
+</div>''', unsafe_allow_html=True)
 
 # --- ANA EKRAN VE BAŞLIK ---
 main_header_icon = f'<img src="data:image/png;base64,{LOGO_B64}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 12px; border: 2px solid rgba(56, 189, 248, 0.45); box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);">' if LOGO_B64 else '<span style="font-size: 2.1rem; margin-right: 8px;">📈</span>'
