@@ -101,6 +101,7 @@ class LLMProviderHub:
                 temperature=temperature,
                 streaming=streaming,
                 max_retries=max_retries,
+                model_kwargs={"repetition_penalty": 1.15},
             )
 
         # 3. GOOGLE GEMINI (Varsayılan Bulut)
