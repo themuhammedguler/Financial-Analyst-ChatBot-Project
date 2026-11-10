@@ -10,9 +10,11 @@
 [![Vector Store](https://img.shields.io/badge/FAISS%20%2B%20BM25-Hybrid%20Search-10B981?logo=meta&logoColor=white)](https://github.com/facebookresearch/faiss)
 [![BIST 100](https://img.shields.io/badge/BIST%20100-100%2F100%20Coverage-F59E0B?logo=cachet&logoColor=white)](https://www.kap.org.tr/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-REST%20Endpoints-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![LLM Providers](https://img.shields.io/badge/LLM%20Providers-Gemini%20%7C%20Ollama%20%7C%20Colab%20vLLM-8B5CF6?logo=openai&logoColor=white)](#-kendi-modelimiz--yerel-ve-colab-pro-llm-mimarisi)
+[![Fine-Tuning](https://img.shields.io/badge/Fine--Tuning-QLoRA%20%7C%20Unsloth%20BIST%20100-FF6F00?logo=googlecolab&logoColor=white)](notebooks/)
 [![CI](https://github.com/themuhammedguler/Financial-Analyst-ChatBot-Project/actions/workflows/ci.yml/badge.svg)](https://github.com/themuhammedguler/Financial-Analyst-ChatBot-Project/actions/workflows/ci.yml)
 [![Docker](https://img.shields.io/badge/Docker-Multi--Container-2496ED?logo=docker&logoColor=white)](docker-compose.yml)
-[![Tests](https://img.shields.io/badge/Tests-65%2F65%20Passing-success?logo=pytest&logoColor=white)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-75%2F75%20Passing-success?logo=pytest&logoColor=white)](tests/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 <br/>
@@ -41,6 +43,7 @@ Platform, teknik analiz ve kantitatif tahmin motoru olan **[BIST-Trend-Forecaste
 
 | Özellik | Açıklama |
 | :--- | :--- |
+| **🤖 Özel BIST LLM & Çoklu Model Sağlayıcı (Gemini / Ollama / Colab Pro)** | Dış API bağımlılığını sonlandıran bağımsız mimari: 500 BIST finansal talimatıyla ince ayar (Fine-Tuning), Google Colab Pro QLoRA Unsloth notebook'u, yerel Ollama ve canlı vLLM/ngrok köprüsü. |
 | **🧠 Bağlamsal Vektör Hafızası (Contextual RAG)** | Tablo ve dipnot bütünlüğünü koruyan **Table-Aware Parser** ve her parçaya şirket/yıl/bölüm üstbilgisi enjekte eden **Contextual Chunking** mimarisi. |
 | **🔍 Hibrit Belge Arama (Dense + Sparse)** | Anlamsal benzerlik için **FAISS** vektör aramasını, rasyo, sayı ve dipnot numaraları tam eşleşmesi için **BM25** aramasını **Reciprocal Rank Fusion (RRF)** ile harmanlar. |
 | **📈 Canlı Piyasa & Mum Grafiği** | Yahoo Finance canlı BIST (.IS) entegrasyonu: Plotly interaktif Candlestick (mum) grafiği, işlem hacmi, SMA 20/50/200 trend çizgileri ve 14 günlük RSI. |
@@ -232,6 +235,60 @@ python -m uvicorn src.integration.api:app --host 0.0.0.0 --port 8000
 
 ---
 
+## 🧠 Kendi Modelimiz & Yerel ve Colab Pro LLM Mimarisi
+
+Sadece harici bir API sağlayıcısına (Google Gemini vb.) bağımlı kalmak yerine, projeyi **kendi açık kaynaklı yapay zeka modelini eğitebilen, yerel sunucularda (Ollama) sıfır API maliyeti ve KVKK uyumluluğuyla çalıştırabilen veya Google Colab Pro GPU'ları üzerinde fine-tune edip canlı FastAPI/vLLM uç noktası olarak bağlayabilen** kurumsal bir mimariye yükselttik.
+
+```mermaid
+flowchart LR
+    subgraph DatasetPrep ["1. Finansal Veri Seti"]
+        D1["📊 BIST 100 KAP & Bilanço"] --> D2["⚙️ scripts/generate_bist_finetune_dataset.py"]
+        D2 --> D3["📄 data/finetune_bist_dataset.jsonl (500 Çift)"]
+        D2 --> D4["📄 data/finetune_bist_sharegpt.jsonl"]
+    end
+
+    subgraph ColabFineTune ["2. Colab Pro QLoRA Fine-Tuning"]
+        D3 --> C1["🚀 notebooks/BIST_Finans_LLM_Colab_FineTuning.ipynb"]
+        C1 --> C2["🦙 Qwen 2.5 7B / Llama 3.1 8B + Unsloth (4-bit)"]
+        C2 --> C3["💾 LoRA Ağırlıkları / GGUF Export"]
+        C2 --> C4["🌐 FastAPI + ngrok Canlı İnferans Sunucusu"]
+    end
+
+    subgraph InferenceHub ["3. LLM Hub & Hibrit RAG"]
+        M1["☁️ Google Gemini 3.5 Flash"]
+        M2["💻 Yerel Ollama (localhost:11434)"]
+        C4 --> M3["🚀 Colab Pro GPU / vLLM (ngrok)"]
+        M1 & M2 & M3 --> HUB["src/llm_provider.py (LLMProviderHub)"]
+        HUB --> APP["💼 Streamlit Arayüzü & RAG Motoru"]
+    end
+```
+
+### 3 Farklı Çalıştırma Modu
+
+| Çalıştırma Modu | Sağlayıcı | Altyapı | Avantajları & Kullanım Alanı |
+| :--- | :---: | :---: | :--- |
+| **☁️ Bulut Gemini (Varsayılan)** | `gemini` | Google AI Studio | Hızlı kurulum, sıfır donanım ihtiyacı, streaming hız rekoru. |
+| **💻 Yerel Ollama (On-Premise)** | `ollama` | `localhost:11434` | **Sıfır API maliyeti**, şirket içi gizlilik (KVKK/GDPR uyumlu), internetsiz hava boşluklu (air-gapped) çalışma. |
+| **🚀 Colab Pro GPU (Fine-Tuned)** | `colab` | Google Colab Pro (A100/L4/T4) + ngrok / vLLM | BIST finansal jargonu ve KAP dipnotlarına özel 500 talimatla eğitilmiş **kendi modelimiz**, canlı OpenAI uyumlu REST uç noktası. |
+
+### 🚀 Google Colab Pro Fine-Tuning Nasıl Çalıştırılır?
+
+1. **Jupyter Notebook'u Açın:** `notebooks/BIST_Finans_LLM_Colab_FineTuning.ipynb` dosyasını [Google Colab](https://colab.research.google.com)'a yükleyin.
+2. **GPU Seçin:** Çalışma Zamanı > Çalışma zamanı türünü değiştir > **T4, L4 veya A100 GPU** seçin.
+3. **Veri Kümesini Yükleyin:** `data/finetune_bist_dataset.jsonl` dosyasını Colab sol panelindeki dosya alanına yükleyin.
+4. **Hücreleri Sırasıyla Çalıştırın:**
+   - Unsloth ve bağımlılıkların kurulumu (~1 dk).
+   - Qwen 2.5 7B (veya Llama 3.1 8B) 4-bit modelinin yüklenmesi.
+   - QLoRA (Rank=16, Alpha=16) ile ~8 dakikalık eğitim.
+   - Önce/sonra finansal muhakeme testi.
+   - Son hücredeki **FastAPI + ngrok** canlı inferans sunucusunu başlatın.
+5. **ChatBot Terminaline Bağlayın:**
+   - ngrok çıktısındaki genel URL'yi kopyalayın (örn: `https://xyz-123.ngrok-free.app/v1`).
+   - ChatBot web arayüzünde kenar çubuğundaki **🚀 Colab Pro GPU** sekmesini seçin.
+   - ngrok URL'sini yapıştırıp **"📡 Sunucu Bağlantısını Test Et"** butonuna tıklayın. Tebrikler, RAG motorunuz artık kendi eğittiğiniz modelle çalışıyor!
+
+---
+
 ## 🔗 BIST-Trend-Forecaster Çift Yönlü Köprüsü
 
 Platform, kardeş projesi olan **BIST-Trend-Forecaster** ile URL seviyesinde çift yönlü konuşur:
@@ -269,13 +326,15 @@ pytest tests/ -v
 ```
 
 ```
-collected 54 items
-tests/test_features.py ......................... [ 16%]
-tests/test_heatmap_screener_surprise.py ........ [ 27%]
-tests/test_integration.py ...................... [ 74%]
-tests/test_parser_and_ingestion.py ............. [ 85%]
+collected 75 items
+tests/test_dividends_macro_storage.py .......... [ 14%]
+tests/test_features.py ......................... [ 26%]
+tests/test_heatmap_screener_surprise.py ........ [ 34%]
+tests/test_integration.py ...................... [ 70%]
+tests/test_llm_provider_and_dataset.py ......... [ 81%]
+tests/test_parser_and_ingestion.py ............. [ 89%]
 tests/test_portfolio_dupont.py ................ [100%]
-======================= 54 passed, 1 warning in 140s =======================
+======================= 75 passed, 1 warning in 101s =======================
 ```
 
 ---

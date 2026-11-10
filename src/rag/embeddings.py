@@ -109,3 +109,56 @@ class GeminiEmbeddings(Embeddings):
                     time.sleep((2 ** attempt) + 1)
                 else:
                     raise RuntimeError(f"Sorgu embedding hatası: {e}")
+
+
+class LocalHuggingFaceEmbeddings(Embeddings):
+    """
+    Yerel veya on-premise çalışan HuggingFace tabanlı embedding motoru (KVKK / Air-Gapped Uyumlu).
+    İnternet veya harici API anahtarı gerektirmeden BAAI/bge-m3 veya multilingual-e5 ile çalışır.
+    """
+
+    def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2", dimension: int = 384):
+        self.model_name = model_name
+        self.dimension = dimension
+        self._hf_embed = None
+
+    def _get_hf(self):
+        if self._hf_embed is None:
+            try:
+                from langchain_community.embeddings import HuggingFaceEmbeddings
+                self._hf_embed = HuggingFaceEmbeddings(
+                    model_name=self.model_name,
+                    encode_kwargs={"normalize_embeddings": True}
+                )
+            except Exception as e:
+                raise RuntimeError(f"HuggingFace embedding modeli yüklenemedi: {e}")
+        return self._hf_embed
+
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        safe_texts = [t if t and t.strip() else " " for t in texts]
+        return self._get_hf().embed_documents(safe_texts)
+
+    def embed_query(self, text: str) -> List[float]:
+        safe_text = text if text and text.strip() else " "
+        return self._get_hf().embed_query(safe_text)
+
+
+def get_embedding_provider(provider: str = "auto") -> Embeddings:
+    """
+    Kullanıcının tercihine veya ortam değişkenine göre uygun embedding motorunu döner.
+    - 'gemini': Google Gemini Embeddings (768-D)
+    - 'local' / 'huggingface': Yerel HuggingFace Embeddings (On-Premises / Air-Gapped)
+    - 'auto': GOOGLE_API_KEY varsa Gemini, yoksa Yerel
+    """
+    prov = (provider or "auto").lower().strip()
+    if prov in ("local", "huggingface"):
+        return LocalHuggingFaceEmbeddings()
+    elif prov == "gemini":
+        return GeminiEmbeddings()
+    else:
+        if GOOGLE_API_KEY:
+            try:
+                return GeminiEmbeddings()
+            except Exception:
+                return LocalHuggingFaceEmbeddings()
+        return LocalHuggingFaceEmbeddings()

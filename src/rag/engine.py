@@ -68,10 +68,16 @@ class FinancialRAGEngine:
         vectorstore_path: Optional[str] = None,
         model_name: str = DEFAULT_LLM_MODEL,
         temperature: float = 0.2,
+        provider: str = "gemini",
+        base_url: Optional[str] = None,
+        api_key: Optional[str] = None,
     ):
         self.vectorstore_path = vectorstore_path or VECTORSTORE_PATH_STR
         self.model_name = model_name
         self.temperature = temperature
+        self.provider = provider or "gemini"
+        self.base_url = base_url
+        self.api_key = api_key
         self.embeddings = GeminiEmbeddings()
         self.rewriter = QueryRewriter(model=DEFAULT_LLM_MODEL)
         self.guard = HallucinationGuard()
@@ -106,14 +112,19 @@ class FinancialRAGEngine:
         self, 
         model: Optional[str] = None, 
         streaming: bool = True, 
-        max_retries: int = 1
-    ) -> ChatGoogleGenerativeAI:
-        """İlgili LLM modelini yapılandırır."""
-        return ChatGoogleGenerativeAI(
-            model=model or self.model_name,
+        max_retries: int = 1,
+        provider: Optional[str] = None,
+        base_url: Optional[str] = None,
+    ):
+        """İlgili LLM modelini yapılandırır (Gemini, Ollama, Colab)."""
+        from src.llm_provider import LLMProviderHub
+        return LLMProviderHub.get_chat_model(
+            provider=provider or self.provider,
+            model_name=model or self.model_name,
             temperature=self.temperature,
-            google_api_key=GOOGLE_API_KEY,
             streaming=streaming,
+            base_url=base_url or self.base_url,
+            api_key=self.api_key,
             max_retries=max_retries,
         )
 
@@ -314,14 +325,17 @@ class FinancialRAGEngine:
         context_str = "\n".join(context_parts)
         prompt_text = FINANCIAL_PROMPT.format(context=context_str, question=question)
 
-        # Aktif ve kotasız çalışan ultra hızlı modeller (v1 ve v1beta tam uyumlu)
-        active_models = ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite"]
-        models_to_try = []
-        if self.model_name in active_models:
-            models_to_try.append(self.model_name)
-        for m in active_models:
-            if m not in models_to_try:
-                models_to_try.append(m)
+        # Model listesi (Gemini için yedekli fallback, yerel/özel sunucu için doğrudan seçilen model)
+        if self.provider == "gemini":
+            active_models = ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite"]
+            models_to_try = []
+            if self.model_name in active_models:
+                models_to_try.append(self.model_name)
+            for m in active_models:
+                if m not in models_to_try:
+                    models_to_try.append(m)
+        else:
+            models_to_try = [self.model_name or "qwen2.5:7b"]
 
         answer_text = ""
         for model_to_use in models_to_try:
@@ -400,14 +414,17 @@ class FinancialRAGEngine:
 
         yield {"type": "status", "message": "⚡ Finansal analist yanıtı hazırlanıyor ve doğrulanıyor..."}
 
-        # Aktif ve kotasız çalışan ultra hızlı modeller (v1 ve v1beta tam uyumlu)
-        active_models = ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite"]
-        models_to_try = []
-        if self.model_name in active_models:
-            models_to_try.append(self.model_name)
-        for m in active_models:
-            if m not in models_to_try:
-                models_to_try.append(m)
+        # Model listesi (Gemini için yedekli fallback, yerel/özel sunucu için doğrudan seçilen model)
+        if self.provider == "gemini":
+            active_models = ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite"]
+            models_to_try = []
+            if self.model_name in active_models:
+                models_to_try.append(self.model_name)
+            for m in active_models:
+                if m not in models_to_try:
+                    models_to_try.append(m)
+        else:
+            models_to_try = [self.model_name or "qwen2.5:7b"]
 
         full_answer = ""
         stream_success = False

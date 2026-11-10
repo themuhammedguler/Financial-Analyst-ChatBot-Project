@@ -326,8 +326,19 @@ def get_vectorstore_version() -> float:
     return idx_p.stat().st_mtime if idx_p.exists() else 0.0
 
 @st.cache_resource(show_spinner=False)
-def load_rag_engine(model_choice: str, vs_version: float = 0.0):
-    return FinancialRAGEngine(model_name=model_choice)
+def load_rag_engine(
+    model_choice: str,
+    provider: str = "gemini",
+    base_url: Optional[str] = None,
+    api_key: Optional[str] = None,
+    vs_version: float = 0.0
+):
+    return FinancialRAGEngine(
+        model_name=model_choice,
+        provider=provider,
+        base_url=base_url,
+        api_key=api_key,
+    )
 
 @st.cache_resource(show_spinner=False)
 def load_report_generator():
@@ -432,14 +443,52 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     st.markdown("### ⚙️ Analiz & Filtre Paneli")
     
-    # 1. Model Seçimi
-    model_option = st.selectbox(
-        "🧠 Yapay Zeka Modeli",
-        options=[DEFAULT_LLM_MODEL, ADVANCED_LLM_MODEL],
-        format_func=lambda x: "Gemini 3.1 Flash Lite (Ultra Hızlı ~1s)" if "3.1" in x else "Gemini 3.5 Flash Lite (Derin Finansal Muhakeme)",
+    # 1. Model & Sağlayıcı Mimarisi
+    provider_choice = st.selectbox(
+        "🧠 Model Sağlayıcısı & Mimarisi",
+        options=["gemini", "ollama", "colab"],
+        format_func=lambda x: {
+            "gemini": "☁️ Google Gemini Flash (Bulut API)",
+            "ollama": "💻 Yerel Model (Ollama / On-Premises)",
+            "colab": "🚀 Google Colab Pro / vLLM (Özel GPU)"
+        }.get(x, x),
         index=0,
-        help="Finansal analizler için Gemini model versiyonu."
+        help="Modelin nerede koşulacağını belirler. Bulut, KVKK uyumlu yerel donanım veya Colab Pro GPU'nuzu bağlayabilirsiniz."
     )
+
+    custom_base_url = None
+    custom_model_name = None
+
+    if provider_choice == "gemini":
+        model_option = st.selectbox(
+            "Gemini Versiyonu",
+            options=[DEFAULT_LLM_MODEL, ADVANCED_LLM_MODEL],
+            format_func=lambda x: "Gemini 3.1 Flash Lite (Ultra Hızlı ~1s)" if "3.1" in x else "Gemini 3.5 Flash Lite (Derin Finansal Muhakeme)",
+            index=0,
+            help="Finansal analizler için Gemini model versiyonu."
+        )
+    elif provider_choice == "ollama":
+        custom_base_url = st.text_input("Ollama API URL", value="http://localhost:11434/v1", help="Yerel Ollama OpenAI uyumlu API adresi")
+        custom_model_name = st.text_input("Model Adı", value="qwen2.5:7b", help="Ollama'da kurulu model adı (örn: qwen2.5:7b, llama3.1:8b, deepseek-r1:8b)")
+        model_option = custom_model_name
+        if st.button("🔌 Yerel Sunucuyu Test Et", use_container_width=True):
+            from src.llm_provider import LLMProviderHub
+            ok, msg = LLMProviderHub.test_connection(provider="ollama", base_url=custom_base_url, model_name=custom_model_name)
+            if ok:
+                st.success(msg)
+            else:
+                st.warning(msg)
+    elif provider_choice == "colab":
+        custom_base_url = st.text_input("Colab / ngrok URL", placeholder="https://xxxx.ngrok-free.app/v1", help="Colab notebook'undaki ngrok API adresi")
+        custom_model_name = st.text_input("Model Etiketi", value="bist-financial-llm", help="Colab'da eğitilen model adı")
+        model_option = custom_model_name or "bist-financial-llm"
+        if st.button("🔌 Colab Sunucusunu Test Et", use_container_width=True):
+            from src.llm_provider import LLMProviderHub
+            ok, msg = LLMProviderHub.test_connection(provider="colab", base_url=custom_base_url, model_name=custom_model_name)
+            if ok:
+                st.success(msg)
+            else:
+                st.warning(msg)
 
     # 2. Şirket Filtresi (Deep-linking ile otomatik eşleşme - Türkçe Alfabetik Sıralı)
     _tr_order = "aAbBcCçÇdDeEfFgGğĞhHıIİijJkKlLmMnNoOöÖpPrRsSşŞtTuUüÜvVyYzZ"
@@ -810,10 +859,22 @@ else:
 if url_ticker:
     badge_html += f'<span class="deep-link-badge">🔗 Entegrasyon Modu: {url_ticker} ({url_company_name or url_ticker})</span>'
 
+if provider_choice == "gemini":
+    badge_html += f'<span class="status-badge" style="background: rgba(56, 189, 248, 0.15); color: #38BDF8;">☁️ Bulut: {model_option}</span>'
+elif provider_choice == "ollama":
+    badge_html += f'<span class="status-badge" style="background: rgba(16, 185, 129, 0.15); color: #10B981;">💻 Yerel Model: {model_option}</span>'
+elif provider_choice == "colab":
+    badge_html += f'<span class="status-badge" style="background: rgba(168, 85, 247, 0.15); color: #A855F7;">🚀 Colab GPU: {model_option}</span>'
+
 st.markdown(badge_html, unsafe_allow_html=True)
 
 # --- RAG MOTORUNU YÜKLE ---
-engine = load_rag_engine(model_option, vs_version=get_vectorstore_version())
+engine = load_rag_engine(
+    model_choice=model_option,
+    provider=provider_choice,
+    base_url=custom_base_url,
+    vs_version=get_vectorstore_version()
+)
 
 # --- SOHBET GEÇMİŞİNİ BAŞLAT (DEEP-LINKING UYARLAMASI - 1. ADIM) ---
 if "messages" not in st.session_state or not st.session_state.messages:
