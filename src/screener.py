@@ -14,6 +14,7 @@ from src.data_collection.kap_downloader import BIST_100_COMPANIES
 from src.integration.models import FundamentalReport
 from src.config import REPORTS_DIR
 from src.dupont_analysis import calculate_dupont_model, calculate_altman_z_score
+from src.dividend_analysis import DEFAULT_DIVIDEND_PROFILES
 
 logger = logging.getLogger(__name__)
 
@@ -76,12 +77,16 @@ def build_screener_universe() -> pd.DataFrame:
         else:
             decision = "TUT"
 
+        div_prof = DEFAULT_DIVIDEND_PROFILES.get(ticker, {"yield_pct": 0.0})
+        div_yield = div_prof.get("yield_pct", 0.0)
+
         rows.append({
             "ticker": ticker,
             "company_name": comp_name,
             "sector": sector,
             "roe_pct": round(roe, 1),
             "net_margin_pct": round(net_margin, 1),
+            "dividend_yield_pct": round(div_yield, 1),
             "z_score": round(z_score, 2),
             "zone": zone,
             "pe_ratio": round(pe_ratio, 2),

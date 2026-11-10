@@ -12,7 +12,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-REST%20Endpoints-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![CI](https://github.com/themuhammedguler/Financial-Analyst-ChatBot-Project/actions/workflows/ci.yml/badge.svg)](https://github.com/themuhammedguler/Financial-Analyst-ChatBot-Project/actions/workflows/ci.yml)
 [![Docker](https://img.shields.io/badge/Docker-Multi--Container-2496ED?logo=docker&logoColor=white)](docker-compose.yml)
-[![Tests](https://img.shields.io/badge/Tests-54%2F54%20Passing-success?logo=pytest&logoColor=white)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-65%2F65%20Passing-success?logo=pytest&logoColor=white)](tests/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 <br/>
@@ -45,6 +45,10 @@ Platform, teknik analiz ve kantitatif tahmin motoru olan **[BIST-Trend-Forecaste
 | **🔍 Hibrit Belge Arama (Dense + Sparse)** | Anlamsal benzerlik için **FAISS** vektör aramasını, rasyo, sayı ve dipnot numaraları tam eşleşmesi için **BM25** aramasını **Reciprocal Rank Fusion (RRF)** ile harmanlar. |
 | **📈 Canlı Piyasa & Mum Grafiği** | Yahoo Finance canlı BIST (.IS) entegrasyonu: Plotly interaktif Candlestick (mum) grafiği, işlem hacmi, SMA 20/50/200 trend çizgileri ve 14 günlük RSI. |
 | **🎯 Bilanço & Kâr Sürprizi Analizörü** | Son dönem bilanço net kâr ve hasılatının önceki yılla karşılaştırılması (YoY Growth %), FAVÖK marj trendi ve **Kâr Sürprizi Tespiti**. |
+| **💰 Temettü & FCF Güvenliği** | Temettü verimi, kâr dağıtım oranı (payout ratio), FCF marjı, **Temettü Güvenlik Skoru (0-100)** ve interaktif Plotly karne grafiği. |
+| **📌 Kalıcı İzleme Listesi & Not Defteri** | Sayfa yenilense veya kapatılsa dahi silinmeyen yerel JSON (`user_data/`) tabanlı **İzleme Listesi (Watchlist)** ve **Analist Not Defteri**. |
+| **🌍 Makroekonomik Senaryo & Tornado** | USD/TRY kuru, TCMB Politika Faizi ve Brent Petrol şoklarının şirket kârlılığına etkisini simüle eden **Duyarlılık Kasırga (Tornado) Grafiği**. |
+| **📥 Sohbet Seansını Rapor Olarak İndirme** | Analist soru-cevap seansını ve KAP referanslarını tek tıkla **Markdown (.md)** ve yazdırılabilir profesyonel **HTML (.html)** olarak dışa aktarma. |
 | **🗺️ Sektörel Piyasa Isı Haritası (Treemap)** | BIST 100 sektörleri ve şirketlerinin piyasa değeri kutu büyüklüğü ve anlık değişim yüzdesi (% Yeşil / Kırmızı) ile **Finviz/TradingView tarzı interaktif haritası**. |
 | **📊 BIST Screener / Liderlik Sıralaması** | Sektör filtreleme, asgari DuPont ROE, asgari Altman Z-Skoru ve çarpanlara göre hisseleri sıralayan dinamik **Lider Tablosu (Leaderboard)**. |
 | **🔬 DuPont & Altman Z-Skoru** | **3 Aşamalı DuPont Modeli** (Net Kâr Marjı × Aktif Devir Hızı × Finansal Kaldıraç) ve **Altman Z-Skoru** ile iflas/stres dayanıklılık analizi. |

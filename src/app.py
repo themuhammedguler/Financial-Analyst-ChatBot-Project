@@ -43,6 +43,17 @@ from src.dupont_analysis import calculate_dupont_model, calculate_altman_z_score
 from src.market_heatmap import get_heatmap_dataset, create_bist_treemap
 from src.screener import build_screener_universe, filter_and_rank_screener
 from src.earnings_surprise import analyze_earnings_surprise, create_growth_comparison_chart
+from src.dividend_analysis import calculate_dividend_metrics, create_dividend_chart
+from src.macro_sensitivity import analyze_macro_sensitivity, create_sensitivity_tornado_chart
+from src.user_storage import (
+    load_watchlist,
+    add_to_watchlist,
+    remove_from_watchlist,
+    load_saved_notes,
+    add_saved_note,
+    delete_saved_note,
+)
+from src.chat_export import export_chat_history_markdown, export_chat_history_html
 
 # --- CHATBOT LOGO VE AVATAR YAPILANDIRMASI ---
 AVATAR_ORIGINAL_PATH = project_root / "png" / "Chatbot_avatar_logo_design_ae724d6f.jpg"
@@ -439,10 +450,11 @@ with st.sidebar:
     sorted_company_names = sorted(list(COMPANIES.keys()), key=_tr_sort_key)
     company_options = ["Tümü"] + sorted_company_names
     
-    # Eğer URL'den geçerli bir şirket geldiyse varsayılan indeks olarak onu seç
+    # Eğer URL'den veya izleme listesinden geçerli bir şirket geldiyse varsayılan indeks olarak onu seç
+    target_comp = st.session_state.get("user_selected_ticker_company", url_company_name)
     default_company_index = 0
-    if url_company_name and url_company_name in company_options:
-        default_company_index = company_options.index(url_company_name)
+    if target_comp and target_comp in company_options:
+        default_company_index = company_options.index(target_comp)
 
     selected_company = st.selectbox(
         "🏢 Şirket Filtresi",
@@ -469,6 +481,78 @@ with st.sidebar:
         st.rerun()
 
     st.divider()
+
+    # --- 📌 KALICI İZLEME LİSTESİ (WATCHLIST) ---
+    st.markdown("#### 📌 Kalıcı İzleme Listem")
+    st.caption("Tarayıcı kapatılsa veya sayfa yenilense de kalıcı olarak diskte saklanır (`user_data/watchlist.json`).")
+    user_wl = load_watchlist()
+
+    if user_wl:
+        # Hisseleri tıklanabilir etiket butonları olarak 3 sütunda diz
+        cols_wl = st.columns(min(3, len(user_wl)))
+        for i, sym in enumerate(user_wl):
+            col_i = cols_wl[i % len(cols_wl)]
+            with col_i:
+                if st.button(f"{sym}", key=f"wl_btn_{sym}", use_container_width=True, help=f"{sym} hissesini filtreye al"):
+                    comp_for_sym = get_company_for_ticker(sym)
+                    if comp_for_sym and comp_for_sym in company_options:
+                        st.session_state["user_selected_ticker_company"] = comp_for_sym
+                        st.rerun()
+
+    with st.expander("⚙️ İzleme Listesini Düzenle"):
+        all_bist_symbols = sorted(list(BIST_100_COMPANIES.keys()))
+        new_sym_choice = st.selectbox("➕ Listeye Hisse Ekle", options=all_bist_symbols, key="wl_new_sym")
+        if st.button("Hisse Ekle", key="btn_add_to_wl", use_container_width=True):
+            add_to_watchlist(new_sym_choice)
+            st.toast(f"✅ {new_sym_choice} kalıcı izleme listenize eklendi!")
+            st.rerun()
+
+        if user_wl:
+            st.markdown("---")
+            rem_sym = st.selectbox("➖ Listeden Çıkar", options=user_wl, key="wl_rem_sym")
+            if st.button("Hisse Çıkar", key="btn_rem_from_wl", use_container_width=True):
+                remove_from_watchlist(rem_sym)
+                st.toast(f"🗑️ {rem_sym} izleme listesinden çıkarıldı.")
+                st.rerun()
+
+    st.divider()
+
+    # --- 📝 ANALİST NOT DEFTERİM (PERSISTENT SAVED NOTES) ---
+    saved_notes_list = load_saved_notes()
+    with st.expander(f"📝 Analist Not Defterim ({len(saved_notes_list)})", expanded=False):
+        st.caption("Sohbetten kaydettiğiniz kritik finansal değerlendirmeler (`user_data/saved_notes.json`).")
+        
+        # Hızlı Manuel Not Ekleme
+        with st.form("quick_note_form", clear_on_submit=True):
+            st.markdown("##### ✍️ Yeni Not Oluştur")
+            cur_note_sym = active_ticker if (active_ticker and active_ticker != "BIST") else "GENEL"
+            note_title_input = st.text_input("Başlık", placeholder=f"Örn: {cur_note_sym} 2024 Bilanço Özeti")
+            note_content_input = st.text_area("Not İçeriği", placeholder="Örn: FAVÖK marjı güçlü, net borç/FAVÖK 0.8x seviyesinde...")
+            submitted_note = st.form_submit_button("💾 Notu Kaydet", use_container_width=True)
+            if submitted_note and note_content_input.strip():
+                add_saved_note(ticker=cur_note_sym, title=note_title_input, content=note_content_input)
+                st.toast("✅ Analist notu kalıcı olarak kaydedildi!")
+                st.rerun()
+
+        st.markdown("---")
+        if saved_notes_list:
+            for n in saved_notes_list:
+                st.markdown(f"""
+                <div style="background: #080C14; border: 1px solid #1E293B; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <span style="font-weight: 700; color: #38BDF8; font-size: 0.85rem;">{n.get('ticker', 'GENEL')}</span>
+                        <span style="font-size: 0.72rem; color: #64748B;">{n.get('created_at', '')}</span>
+                    </div>
+                    <div style="font-weight: 600; font-size: 0.82rem; color: #F8FAFC; margin-bottom: 4px;">{n.get('title', '')}</div>
+                    <div style="font-size: 0.78rem; color: #CBD5E1; line-height: 1.4; white-space: pre-wrap;">{n.get('content', '')}</div>
+                </div>
+                """, unsafe_allow_html=True)
+                if st.button("🗑️ Sil", key=f"del_note_{n.get('id')}", use_container_width=True):
+                    delete_saved_note(n.get("id"))
+                    st.toast("🗑️ Not silindi.")
+                    st.rerun()
+        else:
+            st.info("Kayıtlı not bulunmuyor. Sohbet ekranındaki '💾 Notlarıma Kaydet' butonuyla analizleri buraya aktarabilirsiniz.")
 
     # --- 3. ADIM: BIST-TREND-FORECASTER ÇİFT YÖNLÜ KÖPRÜ VE HİBRİT KARAR MOTORU ---
     is_specific_ticker = bool(active_ticker and active_ticker != "BIST")
@@ -793,7 +877,7 @@ with tab_chat:
 
     # --- GEÇMİŞ VE YENİ MESAJLARI KONTEYNER İÇİNDE RENDER ET ---
     with chat_container:
-        for msg in st.session_state.messages:
+        for m_idx, msg in enumerate(st.session_state.messages):
             msg_avatar = USER_AVATAR if msg.get("role") == "user" else ASSISTANT_AVATAR
             with st.chat_message(msg["role"], avatar=msg_avatar):
                 st.markdown(msg["content"], unsafe_allow_html=True)
@@ -811,6 +895,43 @@ with tab_chat:
                                 </div>""",
                                 unsafe_allow_html=True
                             )
+                # Asistan mesajı için 'Notlarıma Kaydet' butonu
+                if msg.get("role") == "assistant" and m_idx > 0:
+                    note_save_col1, _ = st.columns([1.2, 3.8])
+                    with note_save_col1:
+                        if st.button("💾 Notlarıma Kaydet", key=f"btn_save_note_{m_idx}", help="Bu analizi kalıcı not defterinize ekler"):
+                            add_saved_note(
+                                ticker=active_ticker if active_ticker != "BIST" else "BIST",
+                                title=f"{active_ticker} Analist Değerlendirmesi",
+                                content=msg["content"]
+                            )
+                            st.toast("✅ Analist değerlendirmesi kalıcı not defterinize kaydedildi!")
+                            st.rerun()
+
+        # Sohbet İndirme ve Dışa Aktarma Eylem Çubuğu
+        if len(st.session_state.messages) > 1:
+            st.markdown("---")
+            exp_col1, exp_col2, _ = st.columns([1.1, 1.3, 2.0])
+            with exp_col1:
+                md_export = export_chat_history_markdown(st.session_state.messages, current_ticker=active_ticker or "BIST")
+                st.download_button(
+                    "📥 Seansı İndir (.md)",
+                    data=md_export,
+                    file_name=f"BIST_Sohbet_{active_ticker}_{datetime.now().strftime('%Y%m%d_%H%M')}.md",
+                    mime="text/markdown",
+                    use_container_width=True,
+                    help="Tüm araştırma ve analiz seansını Markdown olarak indir"
+                )
+            with exp_col2:
+                html_export = export_chat_history_html(st.session_state.messages, current_ticker=active_ticker or "BIST")
+                st.download_button(
+                    "📄 Raporu İndir (.html / Yazdır)",
+                    data=html_export,
+                    file_name=f"BIST_Sohbet_{active_ticker}_{datetime.now().strftime('%Y%m%d_%H%M')}.html",
+                    mime="text/html",
+                    use_container_width=True,
+                    help="Profesyonel antetli araştırma formatında yazdırılabilir HTML raporu"
+                )
 
         if prompt_to_process:
             # 1. Kullanıcı mesajını ekle ve ekrana yazdır
@@ -1068,6 +1189,104 @@ with tab_chart:
         </div>
         """, unsafe_allow_html=True)
 
+    # --- 💰 TEMETTÜ ŞAMPİYONLARI & SERBEST NAKİT AKIŞI (FCF) GÜVENLİĞİ ---
+    st.markdown("---")
+    st.markdown(f"#### 💰 {chart_ticker} Temettü Gücü & Serbest Nakit Akışı (FCF) Güvenliği")
+    st.caption("Temettü verimi, kâr dağıtım oranı (Payout Ratio), Serbest Nakit Akış Marjı (FCF Margin) ve Temettü Sürdürülebilirlik Skoru.")
+
+    div_metrics = calculate_dividend_metrics(chart_ticker)
+
+    col_d1, col_d2, col_d3, col_d4 = st.columns(4)
+    col_d1.metric(
+        "Temettü Güvenlik Skoru",
+        f"{div_metrics['dividend_safety_score']:.0f} / 100",
+        help="0-100 arası; FCF gücü, dağıtım oranı dengesi ve düzenli ödeme geçmişine göre hesaplanır"
+    )
+    col_d2.metric(
+        "Temettü Verimi",
+        f"%{div_metrics['yield_pct']:.2f}",
+        help="Yıllık hisse başına ödenen temettünün güncel hisse fiyatına oranı"
+    )
+    col_d3.metric(
+        "Kâr Dağıtım Oranı",
+        f"%{div_metrics['payout_pct']:.1f}",
+        help="Net kârın yüzde kaçının temettü olarak ortaklara dağıtıldığı (%30-%75 arası dengeli kabul edilir)"
+    )
+    col_d4.metric(
+        "Serbest Nakit Akış (FCF) Marjı",
+        f"%{div_metrics['fcf_margin_pct']:.1f}",
+        help="Toplam gelire oranla net nakit yaratma gücü; temettünün borçlanmadan ödenebilirliğini güvenceler"
+    )
+
+    col_chart_d, col_text_d = st.columns([1.2, 1])
+    with col_chart_d:
+        fig_div = create_dividend_chart(div_metrics, chart_ticker)
+        st.plotly_chart(fig_div, use_container_width=True, config={"displayModeBar": False})
+
+    with col_text_d:
+        st.markdown(f"""
+        <div style="background: #0D1422; border-left: 4px solid {div_metrics['badge_color']}; padding: 14px 16px; border-radius: 8px; margin-top: 25px;">
+            <div style="font-size: 0.95rem; font-weight: 700; color: #F8FAFC; margin-bottom: 8px;">
+                {div_metrics['category']}
+            </div>
+            <p style="font-size: 0.85rem; color: #CBD5E1; line-height: 1.5; margin-bottom: 10px;">
+                {div_metrics['takeaway']}
+            </p>
+            <div style="font-size: 0.78rem; color: #94A3B8;">
+                ● Düzenli Temettü Geçmişi: <b>{div_metrics['consecutive_years']} Yıl</b><br>
+                ● Sermaye Koruma Puanı: <b>{div_metrics['dividend_safety_score']:.0f} Puan</b>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # --- 🌍 MAKROEKONOMİK SENARYO & DUYARLILIK ANALİZÖRÜ (TORNADO) ---
+    st.markdown("---")
+    st.markdown(f"#### 🌍 {chart_ticker} Makroekonomik Duyarlılık & Senaryo Analizörü (Tornado)")
+    st.caption("Döviz Kuru (USD/TRY), TCMB Politika Faizi ve Brent Petrol şoklarının şirket kârlılığı üzerindeki duyarlılık simülasyonu.")
+
+    col_m1, col_m2, col_m3 = st.columns(3)
+    with col_m1:
+        macro_usd = st.slider("💵 USD/TRY Şoku (%)", min_value=-20.0, max_value=30.0, value=10.0, step=2.5, key="macro_usd_sl")
+    with col_m2:
+        macro_rate = st.slider("🏦 TCMB Faiz Şoku (bps)", min_value=-1000, max_value=1000, value=250, step=50, key="macro_rate_sl", help="+250 bps = +%2.5 faiz artışı")
+    with col_m3:
+        macro_oil = st.slider("🛢️ Brent Petrol Şoku (%)", min_value=-30.0, max_value=50.0, value=15.0, step=5.0, key="macro_oil_sl")
+
+    sens_data = analyze_macro_sensitivity(chart_ticker, usd_change_pct=macro_usd, rate_change_bps=macro_rate, oil_change_pct=macro_oil)
+
+    col_res1, col_res2, col_res3, col_res4 = st.columns(4)
+    u_sc = sens_data["scenarios"]["usd_try"]
+    r_sc = sens_data["scenarios"]["interest_rate"]
+    o_sc = sens_data["scenarios"]["brent_oil"]
+
+    col_res1.metric("USD/TRY Kâr Etkisi", f"%{u_sc['impact_pct']:+.2f}", delta=f"{macro_usd:+.1f}% Kur")
+    col_res2.metric("Faiz Kâr Etkisi", f"%{r_sc['impact_pct']:+.2f}", delta=f"{macro_rate:+d} bps Faiz")
+    col_res3.metric("Brent Petrol Kâr Etkisi", f"%{o_sc['impact_pct']:+.2f}", delta=f"{macro_oil:+.1f}% Emtia")
+    tot_delta = f"%{sens_data['total_impact_pct']:+.2f}"
+    col_res4.metric("Bileşik Net Kâr Etkisi", tot_delta, delta=tot_delta)
+
+    col_chart_m, col_text_m = st.columns([1.2, 1])
+    with col_chart_m:
+        fig_tornado = create_sensitivity_tornado_chart(sens_data, chart_ticker)
+        st.plotly_chart(fig_tornado, use_container_width=True, config={"displayModeBar": False})
+
+    with col_text_m:
+        st.markdown(f"""
+        <div style="background: #0D1422; border-left: 4px solid {sens_data['badge_color']}; padding: 14px 16px; border-radius: 8px; margin-top: 25px;">
+            <div style="font-size: 0.95rem; font-weight: 700; color: #F8FAFC; margin-bottom: 8px;">
+                {sens_data['resilience_badge']}
+            </div>
+            <p style="font-size: 0.85rem; color: #CBD5E1; line-height: 1.5; margin-bottom: 12px;">
+                {sens_data['verdict']}
+            </p>
+            <div style="font-size: 0.76rem; color: #94A3B8; line-height: 1.45; background: #080C14; padding: 10px; border-radius: 6px;">
+                <div><b>💵 Kur Dinamiği:</b> {u_sc['driver']}</div>
+                <div style="margin-top: 4px;"><b>🏦 Faiz Dinamiği:</b> {r_sc['driver']}</div>
+                <div style="margin-top: 4px;"><b>🛢️ Emtia/Enerji:</b> {o_sc['driver']}</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
 
 # --- 3. SEKME: ÇİFT ŞİRKET KIYASLAMA ---
 with tab_compare:
@@ -1315,6 +1534,7 @@ with tab_map:
                 "Sektör": r["sector"],
                 "DuPont ROE": f"%{r['roe_pct']:.1f}",
                 "Net Marj": f"%{r['net_margin_pct']:.1f}",
+                "Temettü": f"%{r.get('dividend_yield_pct', 0.0):.1f}",
                 "Altman Z": f"{r['z_score']:.2f}",
                 "Risk Bölgesi": r["zone"].split(" ")[0] if " " in r["zone"] else r["zone"],
                 "F/K": f"{r['pe_ratio']:.2f}",
