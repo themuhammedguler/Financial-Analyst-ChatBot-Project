@@ -459,7 +459,7 @@ st.markdown("""
 # --- ENGINE VE REPORT GENERATOR ÖNBELLEKLEME ---
 def get_vectorstore_version() -> float:
     idx_p = Path("vectorstore/db_faiss/index.faiss")
-    return (idx_p.stat().st_mtime if idx_p.exists() else 0.0) + 2.3
+    return (idx_p.stat().st_mtime if idx_p.exists() else 0.0) + 2.4
 
 @st.cache_resource(show_spinner=False)
 def load_rag_engine(

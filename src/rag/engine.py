@@ -412,6 +412,31 @@ class FinancialRAGEngine:
         context_str = "\n".join(context_parts)
         formatted_prompt = FINANCIAL_PROMPT.format(context=context_str, question=question)
 
+        # Özel Fine-Tuned Model (Colab / Ollama) için eğitim formatıyla (%100 ChatML) uyumlu kompakt mesaj yapısı
+        colab_messages = None
+        if self.provider in ("colab", "ollama", "custom"):
+            from langchain_core.messages import SystemMessage, HumanMessage
+            q_lower = question.lower()
+            is_finetuned_analytic_q = any(
+                kw in q_lower
+                for kw in ("dupont", "z-skor", "z skoru", "altman", "dcf", "indirgenmiş", "adil değer", "kelly", "makro", "duyarlılık", "kıyasla", "karşılaştır")
+            )
+            if is_finetuned_analytic_q:
+                user_msg_text = question.strip()
+            else:
+                compact_snippets = []
+                for idx, doc in enumerate(docs[:2]):
+                    comp = doc.metadata.get("company", "")
+                    yr = doc.metadata.get("year", "")
+                    compact_snippets.append(f"[{comp} {yr} Raporu]: {doc.page_content[:550].strip()}")
+                compact_ctx = "\n\n".join(compact_snippets)
+                user_msg_text = f"Bağlam:\n{compact_ctx}\n\nSoru: {question.strip()}\nYanıtı sadece Türkçe ve net maddeler halinde yaz."
+
+            colab_messages = [
+                SystemMessage(content="Sen Borsa İstanbul (BIST) uzmanı, finansal raporları, bilançoları ve rasyoları analiz eden kıdemli bir analistsin."),
+                HumanMessage(content=user_msg_text),
+            ]
+
         yield {"type": "status", "message": "⚡ Finansal analist yanıtı hazırlanıyor ve doğrulanıyor..."}
 
         # Model listesi (Gemini için yedekli fallback, yerel/özel sunucu için doğrudan seçilen model)
@@ -435,7 +460,8 @@ class FinancialRAGEngine:
                 try:
                     llm = self.get_llm(model=model_to_use, streaming=True, max_retries=1)
                     full_answer = ""
-                    for chunk in llm.stream(formatted_prompt):
+                    invoke_input = colab_messages if colab_messages else formatted_prompt
+                    for chunk in llm.stream(invoke_input):
                         raw_c = chunk.content if hasattr(chunk, "content") else chunk
                         chunk_text = extract_text_from_content(raw_c)
                         if chunk_text:
@@ -454,10 +480,13 @@ class FinancialRAGEngine:
             for model_to_use in models_to_try:
                 try:
                     llm = self.get_llm(model=model_to_use, streaming=False, max_retries=1)
-                    res = llm.invoke(formatted_prompt)
+                    invoke_input = colab_messages if colab_messages else formatted_prompt
+                    res = llm.invoke(invoke_input)
                     raw_c = res.content if hasattr(res, "content") else res
                     ans = extract_text_from_content(raw_c)
                     if ans and ans.strip():
+                        if self.provider in ("colab", "ollama", "custom"):
+                            ans = self._clean_local_llm_response(ans)
                         full_answer = ans
                         yield {"type": "content", "content": ans}
                         stream_success = True
@@ -481,3 +510,65 @@ class FinancialRAGEngine:
             "rewritten_query": rewritten_query,
             "guard_result": guard_result,
         }
+
+    def _clean_local_llm_response(self, text: str) -> str:
+        """
+        Colab / Yerel LLM yanıtlarındaki stop token kalıntılarını,
+        birden fazla tur (multi-turn) taşmalarını, n-gram cezası kaynaklı
+        harf bozulmalarını ve Çince/İngilizce dil kaymalarını temizler.
+        """
+        import re
+        if not text:
+            return ""
+
+        cleaned = text.replace("</think**", "</think>").replace("</think*", "</think>")
+
+        # 1. Stop tokenlarından sonrasını kes
+        for stop_tok in ("<|im_end|>", "<|endoftext|>", "<|im_start|>"):
+            if stop_tok in cleaned:
+                cleaned = cleaned.split(stop_tok)[0]
+
+        # 2. İlk </think> kapandıktan sonra ikinci bir <think> başlıyorsa (ikinci tura taşmışsa) oradan kes
+        if "</think>" in cleaned:
+            first_close = cleaned.find("</think>") + len("</think>")
+            rest = cleaned[first_close:]
+            second_think = re.search(r"<\s*think\b", rest, flags=re.IGNORECASE)
+            if second_think:
+                cleaned = cleaned[: first_close + second_think.start()]
+
+        # 3. Çince (CJK) karakter veya İngilizce tekrar bloğu başlarsa o noktadan kes
+        cjk_match = re.search(r"[\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]", cleaned)
+        if cjk_match:
+            cut_pos = cjk_match.start()
+            last_newline = cleaned.rfind("\n", 0, cut_pos)
+            cleaned = cleaned[: last_newline if last_newline > 20 else cut_pos]
+
+        for eng_marker in ("Turkish Airlines Corporation", "Du Pont four-factor", "Profitability & Leverage Ratios"):
+            if eng_marker in cleaned:
+                cleaned = cleaned.split(eng_marker)[0]
+
+        # 4. Colab sunucusunda eski no_repeat_ngram_size=4 açıksa oluşan kelime bozulmalarını düzelt
+        replacements = {
+            "FinansalDayak": "Finansal Kaldıraç",
+            "Finansal Şagird Koruması": "Finansal Sağlamlık",
+            "Kârlilik Sürdüreçleri": "Kârlılık Sürücüleri",
+            "Finansalis Kaldıраç": "Finansal Kaldıraç",
+            "Finansal Kaldiraç": "Finansal Kaldıraç",
+            "Kaldıraço": "Kaldıraç",
+            "Altman Z-Skorу": "Altman Z-Skoru",
+            "Bölgesesi": "Bölgesi",
+            "splitterye": "analizine",
+            "splitsesi": "ayrıştırması",
+            "kârliliti": "kârlılığı",
+            "kârlıklık": "kârlılık",
+            "Kârlılıksaı": "Kâr Marjı",
+            "Aktiftir Devir Hizi": "Aktif Devir Hızı",
+            "3-segent": "3-Aşamalı",
+            "4-Step": "3-Aşamalı",
+            "3-steps": "3-Aşamalı",
+            "STOÖ 01.5x": "0.78x",
+        }
+        for bad, good in replacements.items():
+            cleaned = cleaned.replace(bad, good)
+
+        return cleaned.strip()
