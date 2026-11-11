@@ -715,6 +715,18 @@ class FinancialRAGEngine:
                     raw_c = res.content if hasattr(res, "content") else res
                     ans = extract_text_from_content(raw_c)
                     if ans and ans.strip():
+                        # finish_reason denetimi (Token tavanına takılma kontrolü)
+                        finish_reason = None
+                        if hasattr(res, "response_metadata") and isinstance(res.response_metadata, dict):
+                            finish_reason = res.response_metadata.get("finish_reason")
+                        elif hasattr(res, "additional_kwargs") and isinstance(res.additional_kwargs, dict):
+                            finish_reason = res.additional_kwargs.get("finish_reason")
+
+                        if finish_reason == "length":
+                            logger.warning("[RAGEngine] Model yanıtı token tavanına takıldı (finish_reason='length')!")
+                            if not ans.endswith((".", "!", "?", "```", "---", "\n")):
+                                ans = ans.rstrip() + "..."
+
                         if self.provider in ("colab", "ollama", "custom"):
                             ans = self._clean_local_llm_response(ans)
                             ans = self._ensure_institutional_quality_response(ans, question, docs, analytic_ctx)
