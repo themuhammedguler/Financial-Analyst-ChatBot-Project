@@ -776,6 +776,10 @@ class FinancialRAGEngine:
         for bad, good in replacements.items():
             cleaned = cleaned.replace(bad, good)
 
+        # Markdown madde işaretlerinin aynı satıra yapışmasını önle
+        cleaned = re.sub(r"(?<!\n)\s*[•●]\s+", "\n\n- ", cleaned)
+        cleaned = re.sub(r"^\s*[•●]\s+", "- ", cleaned, flags=re.MULTILINE)
+
         return cleaned.strip()
 
     def _ensure_institutional_quality_response(
@@ -798,17 +802,17 @@ class FinancialRAGEngine:
             if len(cleaned_ans) < 220 or "130" not in cleaned_ans or "338" not in cleaned_ans:
                 return (
                     "**Türk Hava Yolları A.O. (THYAO) 2024 Yıl Sonu Filo ve Uçak Sayısı Analizi (KAP Faaliyet Raporu - Sayfa 24):**\n\n"
-                    "• **Toplam Filo Büyüklüğü (31.12.2024):** **492 adet uçak** (Ortalama filo yaşı: **10,0 yıl**, toplam koltuk kapasitesi: **101,4 bin**).\n"
-                    "• **Gövde Tipine Göre Filo Dağılımı:**\n"
+                    "- **Toplam Filo Büyüklüğü (31.12.2024):** **492 adet uçak** (Ortalama filo yaşı: **10,0 yıl**, toplam koltuk kapasitesi: **101,4 bin**).\n\n"
+                    "- **Gövde Tipine Göre Filo Dağılımı:**\n"
                     "  - **Dar Gövde Yolcu Uçakları:** **338 adet** (109 adet B737-8/9, 90 adet A321/320/319, 82 adet A321/320 NEO, 25 adet B737-8/9 MAX, 18 adet A321/320 WL, 14 adet B737-8 MAX WL — Ortalama yaş: 10,2 yıl).\n"
                     "  - **Geniş Gövde Yolcu Uçakları:** **130 adet** (49 adet A330-2/3, 34 adet B777-3ER, 24 adet A350-9, 23 adet B787-9 — Ortalama yaş: 8,7 yıl).\n"
-                    "  - **Kargo Uçakları:** **24 adet** (10 adet A330-200F, 8 adet B777F, 6 adet Wet Lease — Ortalama yaş: 13,7 yıl).\n"
-                    "• **Mülkiyet Yapısına Göre Dağılım:**\n"
+                    "  - **Kargo Uçakları:** **24 adet** (10 adet A330-200F, 8 adet B777F, 6 adet Wet Lease — Ortalama yaş: 13,7 yıl).\n\n"
+                    "- **Mülkiyet Yapısına Göre Dağılım:**\n"
                     "  - **Finansal Kiralama:** **199 adet**\n"
                     "  - **Operasyonel Kira / Wet Lease:** **148 adet**\n"
-                    "  - **Sahip Olunan (Özmal):** **145 adet**\n"
-                    "• **AnadoluJet (AJet) Operasyonu:** 2024 yılı Aralık ayı itibarıyla **119 adet uçak** ile 160 hatta faaliyet göstermektedir.\n"
-                    "• **Gelecek Dönem Uçak Sipariş Taahhütleri (2024–2045):** 288 adedi kesin ve 125 adedi opsiyonlu olmak üzere toplam **413 adet** yeni uçak alım taahhüdü bulunmaktadır."
+                    "  - **Sahip Olunan (Özmal):** **145 adet**\n\n"
+                    "- **AnadoluJet (AJet) Operasyonu:** 2024 yılı Aralık ayı itibarıyla **119 adet uçak** ile 160 hatta faaliyet göstermektedir.\n\n"
+                    "- **Gelecek Dönem Uçak Sipariş Taahhütleri (2024–2045):** 288 adedi kesin ve 125 adedi opsiyonlu olmak üzere toplam **413 adet** yeni uçak alım taahhüdü bulunmaktadır."
                 )
 
         # 2. Analitik / Rasyo Sorularında Doğrulanmış BIST Analist Referansı ve Sayısal Sadakat (Numerical Fidelity) Kontrolü
@@ -818,6 +822,7 @@ class FinancialRAGEngine:
                 if "--- [DETERMİNİSTİK" in ref_block:
                     ref_block = ref_block.split("--- [DETERMİNİSTİK")[0]
                 ref_block = ref_block.strip()
+                ref_block = re.sub(r"^\s*[•●]\s+", "- ", ref_block, flags=re.MULTILINE)
                 ref_nums = re.findall(r"\d+\.\d+", ref_block)
                 matched_nums = sum(1 for n in ref_nums[:4] if n in cleaned_ans)
                 if not cleaned_ans or len(cleaned_ans) < 180 or "Colab Sunucu İçi Hata" in cleaned_ans or (len(ref_nums) >= 2 and matched_nums < 2):
