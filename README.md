@@ -1,15 +1,3 @@
----
-title: BIST Finansal Analist Chatbot
-emoji: 📈
-colorFrom: blue
-colorTo: indigo
-sdk: streamlit
-sdk_version: "1.40.1"
-app_file: app.py
-pinned: false
-license: mit
----
-
 <div align="center">
 
 <img src="png/chatbot_avatar.png" alt="BIST Finansal Analist Asistanı Logo" width="130" />
