@@ -630,8 +630,12 @@ class FinancialRAGEngine:
             from langchain_core.messages import SystemMessage, HumanMessage
             compact_snippets = []
             if analytic_ctx:
-                compact_snippets.append(analytic_ctx[:1800])
-                if docs:
+                compact_snippets.append(analytic_ctx[:2200])
+                # Bağlam hijyeni: Kıyaslama, makro veya deterministik rasyo analizlerinde,
+                # soruda açıkça faaliyet raporu detayı (ör. filo, yönetim, geri alım, sermaye tavanı) istenmiyorsa,
+                # rastgele PDF parçalarını eklemeyip bağlamı temiz tutuyoruz (alakasız veri sızıntısını engeller).
+                is_comparison_or_macro = any(k in question.lower() for k in ("kıyas", "karşılaştır", "vs", "hangisi", "makro", "şok", "döviz", "kur", "faiz", "petrol"))
+                if docs and not is_comparison_or_macro:
                     comp = docs[0].metadata.get("company", "")
                     yr = docs[0].metadata.get("year", "")
                     pg = docs[0].metadata.get("page", "")
@@ -786,6 +790,25 @@ class FinancialRAGEngine:
 
         # 5. DPO / n-gram kaynaklı kelime bozulmalarını düzelt
         replacements = {
+            "Finansal Gösterörgereler": "Finansal Göstergeler",
+            "Gösterörgereler": "Göstergeler",
+            "Gösterörge": "Gösterge",
+            "Devir Hıza": "Devir Hızı",
+            "Gri Bö)": "Gri Bölge)",
+            "Gri Bö\n": "Gri Bölge\n",
+            "Gri Bö ": "Gri Bölge ",
+            "Güvenl)": "Güvenli Bölge)",
+            "Güvenl\n": "Güvenli Bölge\n",
+            "Güvenl ": "Güvenli Bölge ",
+            "finansal kalkıç": "finansal kaldıraç",
+            "kalkıç": "kaldıraç",
+            "2 20": "2020",
+            "2 21": "2021",
+            "2 22": "2022",
+            "2 23": "2023",
+            "2 24": "2024",
+            "2 25": "2025",
+            "2 26": "2026",
             "FinansalDayak": "Finansal Kaldıraç",
             "Finansal Şagird Koruması": "Finansal Sağlamlık",
             "Finansal Şagımlık": "Finansal Sağlamlık",
