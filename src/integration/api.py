@@ -1,6 +1,7 @@
 from typing import Dict, Any, List, Optional
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
 
 from src.config import TICKER_TO_COMPANY, REPORTS_DIR, get_company_for_ticker
 from src.integration.models import (
@@ -11,11 +12,21 @@ from src.integration.models import (
     HybridSignalResponse,
 )
 from src.integration.report_generator import FundamentalReportGenerator
+from src.tools.financial_tools import (
+    tool_calculate_dupont,
+    tool_calculate_altman_z,
+    tool_calculate_dcf,
+    tool_calculate_kelly_allocation,
+    tool_calculate_macro_sensitivity,
+    tool_compare_peers,
+    tool_get_kap_disclosures,
+)
+from src.dividend_analysis import calculate_dividend_metrics
 
 app = FastAPI(
     title="BIST Temel Analiz & RAG Entegrasyon Servisi",
-    description="BIST-Trend-Forecaster karar destek sistemi için KAP ve finansal rapor özetlerini JSON formatında sağlayan API.",
-    version="1.0.0",
+    description="BIST-Trend-Forecaster karar destek sistemi için KAP, hibrit RAG, DuPont, Altman Z-Skoru, DCF, Makro Stres Testi ve Kelly portföy tahsisini JSON formatında sağlayan API.",
+    version="2.0.0",
 )
 
 # Cross-origin desteği (BIST-Trend-Forecaster Streamlit ve web istemcileri için)
@@ -294,6 +305,116 @@ def get_hybrid_signal(
         rationale=rationale,
         report_date=date.today().isoformat()
     )
+
+
+class AskRequest(BaseModel):
+    """BIST-Trend-Forecaster üzerinden gönderilen doğal dil analiz sorgusu."""
+    question: str = Field(..., description="Analist sorusu (Örn: THY 2024 uçak sayısı kaçtır?)")
+    company_filter: Optional[str] = Field(default=None, description="Şirket filtresi (Örn: Türk Hava Yolları)")
+    year_filter: Optional[int] = Field(default=None, description="Mali yıl filtresi (Örn: 2024)")
+    provider: str = Field(default="gemini", description="LLM sağlayıcısı: gemini | colab | ollama")
+    base_url: Optional[str] = Field(default=None, description="Colab / Özel sunucu API adresi")
+
+
+@app.get(
+    "/api/v1/quant/{ticker}",
+    tags=["Quantitative & Valuation Engine"]
+)
+def get_quantitative_metrics(
+    ticker: str,
+    growth_rate_pct: float = Query(default=15.0, description="DCF büyüme beklentisi (%)"),
+    discount_rate_pct: float = Query(default=24.0, description="DCF WACC iskonto oranı (%)"),
+) -> Dict[str, Any]:
+    """
+    BIST-Trend-Forecaster için tek çağrıda tüm deterministik kantitatif metrikleri döner:
+    - DuPont 3-Aşamalı ROE Ayrıştırması
+    - Altman Z-Skoru İflas & Dayanıklılık Analizi
+    - İndirgenmiş Nakit Akımları (DCF) Adil Değerleme
+    - Temettü & Serbest Nakit Akışı (FCF) Güvenlik Skoru
+    - Kelly Kriteri Optimal Sermaye Tahsisi
+    - Resmi KAP Bildirimleri
+    """
+    sym = ticker.upper().replace(".IS", "").strip()
+    return {
+        "ticker": sym,
+        "company_name": get_company_for_ticker(sym),
+        "dupont": tool_calculate_dupont(sym),
+        "altman_z": tool_calculate_altman_z(sym),
+        "dcf_valuation": tool_calculate_dcf(sym, growth_rate_pct=growth_rate_pct, discount_rate_pct=discount_rate_pct),
+        "dividend_safety": calculate_dividend_metrics(sym),
+        "kelly_allocation": tool_calculate_kelly_allocation(sym),
+        "kap_disclosures": tool_get_kap_disclosures(sym, limit=3),
+    }
+
+
+@app.get(
+    "/api/v1/macro-stress/{ticker}",
+    tags=["Quantitative & Valuation Engine"]
+)
+def get_macro_stress_test(
+    ticker: str,
+    usd_change_pct: float = Query(default=10.0, description="USD/TRY şok yüzdesi (%)"),
+    rate_change_bps: float = Query(default=250.0, description="Politika faizi değişimi (baz puan)"),
+    oil_change_pct: float = Query(default=15.0, description="Brent petrol değişimi (%)"),
+) -> Dict[str, Any]:
+    """
+    Döviz kuru, TCMB politika faizi ve Brent petrol şoklarının hisse net kârı üzerindeki
+    etkisini (Tornado duyarlılık simülasyonu) hesaplar.
+    """
+    sym = ticker.upper().replace(".IS", "").strip()
+    return tool_calculate_macro_sensitivity(
+        ticker=sym,
+        usd_change_pct=usd_change_pct,
+        rate_change_bps=rate_change_bps,
+        oil_change_pct=oil_change_pct,
+    )
+
+
+@app.get(
+    "/api/v1/compare/{ticker_a}/{ticker_b}",
+    tags=["Quantitative & Valuation Engine"]
+)
+def compare_two_stocks(ticker_a: str, ticker_b: str) -> Dict[str, Any]:
+    """
+    İki BIST hissesini DuPont kârlılık marjları, finansal kaldıraç ve Altman Z-skoru
+    açısından eşler arası (peer-to-peer) kıyaslar.
+    """
+    return tool_compare_peers(ticker_a, ticker_b)
+
+
+@app.post(
+    "/api/v1/ask",
+    tags=["RAG & Hybrid Analyst Q&A"]
+)
+def ask_financial_analyst(req: AskRequest) -> Dict[str, Any]:
+    """
+    Hibrit RAG (FAISS + BM25 + Aynı Sayfa Tablo Birleştirme) ve Deterministik Finansal Motoru
+    kullanarak doğal dildeki soruları kaynak kanıtlarıyla yanıtlar.
+    """
+    from src.rag.engine import FinancialRAGEngine
+    engine = FinancialRAGEngine(
+        provider=req.provider,
+        base_url=req.base_url,
+    )
+    res = engine.answer_query(
+        question=req.question,
+        company_filter=req.company_filter,
+        year_filter=req.year_filter,
+    )
+    return {
+        "question": req.question,
+        "answer": res.get("answer", ""),
+        "guard_result": res.get("guard_result", {}),
+        "sources": [
+            {
+                "company": d.metadata.get("company"),
+                "year": d.metadata.get("year"),
+                "file_name": d.metadata.get("file_name"),
+                "page": d.metadata.get("page"),
+            }
+            for d in res.get("docs", [])
+        ],
+    }
 
 
 if __name__ == "__main__":

@@ -402,3 +402,32 @@ class TestHybridSignalAndComparison:
         assert any("Türk Hava Yolları" in c for c in filters["companies"])
         assert any("Tüpraş" in c for c in filters["companies"])
         assert filters["year"] == 2024
+
+    def test_v2_quant_endpoint(self):
+        client = TestClient(app)
+        response = client.get("/api/v1/quant/THYAO")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["ticker"] == "THYAO"
+        assert "dupont" in data
+        assert "altman_z" in data
+        assert "dcf_valuation" in data
+        assert "dividend_safety" in data
+        assert "kelly_allocation" in data
+
+    def test_v2_macro_stress_endpoint(self):
+        client = TestClient(app)
+        response = client.get("/api/v1/macro-stress/EREGL?usd_change_pct=10&rate_change_bps=250&oil_change_pct=15")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["ticker"] == "EREGL"
+        assert "net_impact_pct" in data
+
+    def test_v2_compare_endpoint(self):
+        client = TestClient(app)
+        response = client.get("/api/v1/compare/THYAO/PGSUS")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["company_a"]["ticker"] == "THYAO"
+        assert data["company_b"]["ticker"] == "PGSUS"
+        assert "quality_leader" in data
