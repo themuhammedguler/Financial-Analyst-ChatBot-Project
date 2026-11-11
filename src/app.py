@@ -765,7 +765,7 @@ has_index = (VECTORSTORE_DIR / "index.faiss").exists()
 
 badge_html = ""
 if has_index:
-    badge_html += '<span class="status-badge">● Finansal Bilgi Bankası Aktif (2020-2024 KAP Raporları)</span>'
+    badge_html += '<span class="status-badge">● Finansal Bilgi Bankası Aktif (2020-2026 KAP Raporları & Projeksiyonları)</span>'
 else:
     badge_html += '<span style="background: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.35); padding: 4px 12px; border-radius: 9999px; font-size: 0.80rem; font-weight: 600;">⚠️ Vektör indeksi senkronize ediliyor</span>'
 
@@ -1751,7 +1751,37 @@ elif active_module == "📑 Temel Analiz & Rapor Merkezi":
             st.plotly_chart(fig_rad, use_container_width=True, config={"displayModeBar": False})
         else:
             st.info(f"{active_ticker} için henüz finansal karne oluşturulmadı.")
-            
+
+    st.divider()
+
+    # 2020-2026 Çoklu Yıl Trend Evrimi & Projeksiyon Tablosu
+    st.markdown(f"#### 📅 {active_ticker} 2020–2026 Çoklu Yıl Finansal Trend Evrimi & Projeksiyon Tablosu")
+    st.caption("2020–2024 KAP gerçekleşen mali verileri ve 2025T–2026T ileriye dönük analist projeksiyon serisi.")
+    try:
+        from src.tools.financial_tools import tool_get_multiyear_trend
+        trend_res = tool_get_multiyear_trend(active_ticker, start_year=2020, end_year=2026)
+        t_c1, t_c2, t_c3 = st.columns(3)
+        t_c1.metric("Analiz Ufku", "2020 – 2026 (7 Yıl)")
+        t_c2.metric("2020–2026 Hasılat YBBO (CAGR)", f"%{trend_res['cagr_revenue_pct']:.1f}")
+        t_c3.metric("2020–2026 Net Kâr YBBO (CAGR)", f"%{trend_res['cagr_net_profit_pct']:.1f}")
+
+        trend_df = pd.DataFrame([
+            {
+                "Yıl": r["year_label"],
+                "Dönem Türü": r["status"],
+                "Satış Hasılatı (Milyar TL)": f"{r['revenue_billion_tl']:,.1f}",
+                "Net Dönem Kârı (Milyar TL)": f"{r['net_profit_billion_tl']:,.1f}",
+                "Net Kâr Marjı (%)": f"%{r['net_margin_pct']:.1f}",
+                "Özkaynak Kârlılığı (ROE %)": f"%{r['roe_pct']:.1f}",
+                "Borç / Özkaynak": f"{r['debt_to_equity']:.2f}x",
+            }
+            for r in trend_res.get("yearly_series", [])
+        ])
+        st.dataframe(trend_df, use_container_width=True, hide_index=True)
+        st.info(f"📌 **2020–2026 Trend Değerlendirmesi:** {trend_res['analyst_summary']}")
+    except Exception as e:
+        st.caption(f"Çoklu yıl trend tablosu oluşturulamadı: {e}")
+
     st.divider()
     
     # Alt Bölüm 1: Yapılandırılmış JSON Şeması

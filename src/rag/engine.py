@@ -363,6 +363,7 @@ class FinancialRAGEngine:
             tool_calculate_kelly_allocation,
             tool_calculate_macro_sensitivity,
             tool_compare_peers,
+            tool_get_multiyear_trend,
         )
 
         q_lower = question.lower()
@@ -373,7 +374,8 @@ class FinancialRAGEngine:
                 "değerleme", "kelly", "portföy", "tahsis", "makro", "duyarlılık", "şok",
                 "döviz", "kur", "faiz", "petrol", "enflasyon", "kıyas", "karşılaştır",
                 "roe", "kaldıraç", "iflas", "temettü", "rasyo", "performans", "görünüm",
-                "risk", "borç", "kârlılı", "karlılı", "marj",
+                "risk", "borç", "kârlılı", "karlılı", "marj", "trend", "evrim", "projeksiyon",
+                "2020-2026", "2025", "2026", "yıllara göre",
             )
         )
 
@@ -471,6 +473,19 @@ class FinancialRAGEngine:
                     if any(k in q_lower for k in ("makro", "döviz", "kur", "faiz", "petrol", "şok", "duyarlılık")):
                         macro = tool_calculate_macro_sensitivity(primary)
                         calc_lines.append(f"• Makro Duyarlılık: {json.dumps(macro, ensure_ascii=False)}")
+                    if any(k in q_lower for k in ("trend", "evrim", "projeksiyon", "2020-2026", "2025", "2026", "yıllara göre", "çoklu yıl")):
+                        tr = tool_get_multiyear_trend(primary, start_year=2020, end_year=2026)
+                        rows_md = [
+                            f"• **{primary} 2020–2026 Çoklu Yıl Finansal Trend & Projeksiyon Tablosu:**",
+                            "| Yıl | Dönem | Hasılat (Milyar TL) | Net Kâr (Milyar TL) | Net Marj (%) | ROE (%) | Borç/Özkaynak |",
+                            "| :--- | :--- | :---: | :---: | :---: | :---: | :---: |",
+                        ]
+                        for r in tr.get("yearly_series", []):
+                            rows_md.append(
+                                f"| **{r['year_label']}** | {r['status']} | {r['revenue_billion_tl']} | {r['net_profit_billion_tl']} | %{r['net_margin_pct']} | %{r['roe_pct']} | {r['debt_to_equity']}x |"
+                            )
+                        rows_md.append(f"• **2020–2026 Özet:** {tr['analyst_summary']}")
+                        calc_lines.append("\n".join(rows_md))
                     blocks.append("\n".join(calc_lines))
             except Exception:
                 pass

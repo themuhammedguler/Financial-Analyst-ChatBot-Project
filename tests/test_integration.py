@@ -432,3 +432,18 @@ class TestHybridSignalAndComparison:
         assert data["company_a"]["ticker"] == "THYAO"
         assert data["company_b"]["ticker"] == "PGSUS"
         assert "quality_leader" in data
+
+    def test_v2_multiyear_trend_2020_2026_endpoint(self):
+        client = TestClient(app)
+        response = client.get("/api/v1/trend/THYAO?start_year=2020&end_year=2026")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["ticker"] == "THYAO"
+        assert data["horizon"] == "2020-2026"
+        assert data["start_year"] == 2020
+        assert data["end_year"] == 2026
+        assert len(data["yearly_series"]) == 7
+        years = [item["year"] for item in data["yearly_series"]]
+        assert years == [2020, 2021, 2022, 2023, 2024, 2025, 2026]
+        assert data["cagr_revenue_pct"] > 0
+        assert data["cagr_net_profit_pct"] > 0

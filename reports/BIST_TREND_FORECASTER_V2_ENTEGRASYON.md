@@ -21,6 +21,7 @@
    - **Makroekonomik Şok & Tornado Simülatörü:** USD/TRY (`+%10`), TCMB politika faizi (`+250 bps`) ve Brent petrol (`+%15`) şoklarının net kâr üzerindeki bileşik etkisi.
    - **Kelly Kriteri Sermaye Tahsisi:** `f* = p - (1 - p) / b` formülüyle Half-Kelly portföy ağırlığı.
    - **Eşler Arası (Peer) Kıyaslama Matrisi:** İki BIST hissesinin yan yana DuPont ve Z-Skoru mukayesesi.
+   - **2020–2026 Çoklu Yıl Trend Evrimi & Projeksiyonu:** 2020–2024 KAP gerçekleşen verileri ve 2025T–2026T analist projeksiyon serisi (Hasılat, Net Kâr, ROE, Borç/Özkaynak ve 7 Yıllık CAGR).
 4. **Kullanıcıya (Tarayıcıya) Özel Model & Sunucu Hafızası (`src/user_storage.py`):**
    - Seçilen LLM sağlayıcısı ve özel Colab/ngrok URL'si tarayıcı çerezi + istemci parmak izi ile **yalnızca ilgili kullanıcı için** `F5` sonrasında hatırlanır; diğer ziyaretçilere sızmaz.
 
@@ -28,11 +29,12 @@
 
 ## 🔌 2. `BIST-Trend-Forecaster` İçin Yeni REST API Uç Noktaları (`v2.0.0`)
 
-Mevcut `/api/v1/fundamental/{ticker}` ve `/api/v1/signal/{ticker}` uç noktalarına ek olarak 4 yeni uç nokta devreye alınmıştır:
+Mevcut `/api/v1/fundamental/{ticker}` ve `/api/v1/signal/{ticker}` uç noktalarına ek olarak 5 yeni uç nokta devreye alınmıştır:
 
 | Metot | Uç Nokta (Endpoint) | Açıklama |
 | :--- | :--- | :--- |
 | `GET` | `/api/v1/quant/{ticker}` | Tek çağrıda DuPont ROE, Altman Z-Skoru, DCF Adil Değer, Temettü Güvenliği, Kelly Tahsisi ve KAP bildirimlerini döner. |
+| `GET` | `/api/v1/trend/{ticker}` | `2020-2026` (7 Yıllık) KAP gerçekleşen verileri + `2025T-2026T` projeksiyon serisini ve YBBO (CAGR) oranlarını döner. |
 | `GET` | `/api/v1/macro-stress/{ticker}` | `usd_change_pct`, `rate_change_bps`, `oil_change_pct` parametreleriyle makro şok simülasyonu döner. |
 | `GET` | `/api/v1/compare/{ticker_a}/{ticker_b}` | İki BIST hissesini DuPont marjları, kaldıraç ve Altman Z-Skoru bazında karşılaştırır ve kalite liderini belirler. |
 | `POST` | `/api/v1/ask` | Doğal dildeki finansal soruları Hibrit RAG + Deterministik Motor ile kaynak belirterek yanıtlar. |

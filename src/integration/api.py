@@ -20,6 +20,7 @@ from src.tools.financial_tools import (
     tool_calculate_macro_sensitivity,
     tool_compare_peers,
     tool_get_kap_disclosures,
+    tool_get_multiyear_trend,
 )
 from src.dividend_analysis import calculate_dividend_metrics
 
@@ -380,6 +381,22 @@ def compare_two_stocks(ticker_a: str, ticker_b: str) -> Dict[str, Any]:
     açısından eşler arası (peer-to-peer) kıyaslar.
     """
     return tool_compare_peers(ticker_a, ticker_b)
+
+
+@app.get(
+    "/api/v1/trend/{ticker}",
+    tags=["Quantitative & Valuation Engine"]
+)
+def get_multiyear_trend_analysis(
+    ticker: str,
+    start_year: int = Query(default=2020, ge=2020, le=2026, description="Başlangıç yılı (2020)"),
+    end_year: int = Query(default=2026, ge=2020, le=2026, description="Bitiş yılı (2026)"),
+) -> Dict[str, Any]:
+    """
+    Belirtilen BIST hissesinin 2020–2026 (7 Yıllık) KAP gerçekleşen verilerini ve
+    2025T–2026T analist projeksiyon serisini (Hasılat, Net Kâr, ROE, Borç/Özkaynak ve CAGR) döner.
+    """
+    return tool_get_multiyear_trend(ticker=ticker, start_year=start_year, end_year=end_year)
 
 
 @app.post(

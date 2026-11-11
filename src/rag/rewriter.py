@@ -9,7 +9,7 @@ Görevin, eğer son soru önceki konuşmaya atıfta bulunuyorsa (zamirler, eksik
 
 Kurallar:
 - Eğer soru zaten tek başına net ve bağımsızsa, aynen veya sadece hafifçe optimize ederek bırak.
-- Şirket adı (Akbank, THY, Tüpraş vb.) ve ilgili mali yıl (2020, 2021, 2022, 2023, 2024 vb.) bağlamdan biliniyorsa mutlaka sorguya dahil et.
+- Şirket adı (Akbank, THY, Tüpraş vb.) ve ilgili mali yıl (2020, 2021, 2022, 2023, 2024, 2025, 2026 vb.) bağlamdan biliniyorsa mutlaka sorguya dahil et.
 - Sadece yeniden yazılmış sorguyu döndür, açıklama veya ek metin yazma.
 
 Sohbet Geçmişi:
