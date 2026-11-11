@@ -371,8 +371,9 @@ class FinancialRAGEngine:
             for kw in (
                 "dupont", "z-skor", "z skoru", "altman", "dcf", "indirgenmiş", "adil değer",
                 "değerleme", "kelly", "portföy", "tahsis", "makro", "duyarlılık", "şok",
-                "kıyas", "karşılaştır", "roe", "kaldıraç", "iflas", "temettü", "rasyo",
-                "performans", "görünüm", "risk", "borç", "kârlılık", "karlılık",
+                "döviz", "kur", "faiz", "petrol", "enflasyon", "kıyas", "karşılaştır",
+                "roe", "kaldıraç", "iflas", "temettü", "rasyo", "performans", "görünüm",
+                "risk", "borç", "kârlılı", "karlılı", "marj",
             )
         )
 
@@ -410,11 +411,14 @@ class FinancialRAGEngine:
                         inp = (row.get("input") or "").lower()
                         if not inp:
                             continue
-                        if detected_tickers and not any(t.lower() in inp for t in detected_tickers):
+                        if len(detected_tickers) >= 2:
+                            if not all(t.lower() in inp for t in detected_tickers[:2]):
+                                continue
+                        elif detected_tickers and not any(t.lower() in inp for t in detected_tickers):
                             continue
                         inp_words = {w for w in re.findall(r"[a-zçğıöşü0-9]+", inp) if len(w) > 2}
                         overlap = len(q_words & inp_words)
-                        if overlap > best_score and overlap >= 3:
+                        if overlap > best_score and overlap >= 2:
                             best_score = overlap
                             best_row = row
                 if best_row:
@@ -431,7 +435,24 @@ class FinancialRAGEngine:
             try:
                 if len(detected_tickers) >= 2 and any(k in q_lower for k in ("kıyas", "karşılaştır", "vs", "hangisi")):
                     peer_res = tool_compare_peers(detected_tickers[0], detected_tickers[1])
-                    blocks.append(f"--- [DETERMİNİSTİK EŞLER ARASI KIYASLAMA ({detected_tickers[0]} vs {detected_tickers[1]})] ---\n{json.dumps(peer_res, ensure_ascii=False, indent=2)}")
+                    ca = peer_res["company_a"]
+                    cb = peer_res["company_b"]
+                    peer_md = (
+                        f"**{ca['ticker']} vs {cb['ticker']} Eşler Arası (Peer) Finansal Kıyaslama Matrisi:**\n\n"
+                        f"| Finansal Gösterge | {ca['ticker']} | {cb['ticker']} |\n"
+                        f"| :--- | :---: | :---: |\n"
+                        f"| **Özkaynak Kârlılığı (ROE)** | **%{ca['roe_pct']}** | **%{cb['roe_pct']}** |\n"
+                        f"| **Net Kâr Marjı** | %{ca['net_margin_pct']} | %{cb['net_margin_pct']} |\n"
+                        f"| **Aktif Devir Hızı** | {ca['asset_turnover']}x | {cb['asset_turnover']}x |\n"
+                        f"| **Finansal Kaldıraç** | {ca['equity_multiplier']}x | {cb['equity_multiplier']}x |\n"
+                        f"| **Altman Z-Skoru** | **{ca['z_score']}** ({ca['zone']}) | **{cb['z_score']}** ({cb['zone']}) |\n\n"
+                        f"- **Kalite Lideri:** **{peer_res['quality_leader']}**\n"
+                        f"- **Analist Değerlendirmesi:** {peer_res['analyst_rationale']}"
+                    )
+                    if not best_row:
+                        blocks.append(f"--- [DOĞRULANMIŞ BIST ANALİST REFERANSI] ---\n{peer_md}")
+                    else:
+                        blocks.append(f"--- [DETERMİNİSTİK EŞLER ARASI KIYASLAMA ({ca['ticker']} vs {cb['ticker']})] ---\n{peer_md}")
                 else:
                     dup = tool_calculate_dupont(primary)
                     alt = tool_calculate_altman_z(primary)
@@ -821,7 +842,12 @@ class FinancialRAGEngine:
                 ref_block = analytic_ctx.split("--- [DOĞRULANMIŞ BIST ANALİST REFERANSI] ---")[-1]
                 if "--- [DETERMİNİSTİK" in ref_block:
                     ref_block = ref_block.split("--- [DETERMİNİSTİK")[0]
-                ref_block = ref_block.strip()
+                ref_block = (
+                    ref_block.strip()
+                    .replace("(Gri Bö)", "(Gri Bölge)")
+                    .replace("(Güvenli Bö)", "(Güvenli Bölge)")
+                    .replace("(Stres Bö)", "(Stres Bölgesi)")
+                )
                 ref_block = re.sub(r"^\s*[•●]\s+", "- ", ref_block, flags=re.MULTILINE)
                 ref_nums = re.findall(r"\d+\.\d+", ref_block)
                 matched_nums = sum(1 for n in ref_nums[:4] if n in cleaned_ans)
