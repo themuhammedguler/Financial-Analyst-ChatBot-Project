@@ -630,28 +630,36 @@ class FinancialRAGEngine:
             from langchain_core.messages import SystemMessage, HumanMessage
             compact_snippets = []
             if analytic_ctx:
-                compact_snippets.append(analytic_ctx[:1400])
+                compact_snippets.append(analytic_ctx[:1800])
                 if docs:
                     comp = docs[0].metadata.get("company", "")
                     yr = docs[0].metadata.get("year", "")
                     pg = docs[0].metadata.get("page", "")
-                    compact_snippets.append(f"[{comp} {yr} Raporu - Sayfa {pg}]:\n{docs[0].page_content[:800].strip()}")
+                    compact_snippets.append(f"[{comp} {yr} Raporu - Sayfa {pg}]:\n{docs[0].page_content[:600].strip()}")
             else:
                 for idx, doc in enumerate(docs[:2]):
                     comp = doc.metadata.get("company", "")
                     yr = doc.metadata.get("year", "")
                     pg = doc.metadata.get("page", "")
-                    char_limit = 1650 if idx == 0 else 750
+                    char_limit = 1400 if idx == 0 else 600
                     compact_snippets.append(f"[{comp} {yr} Resmi Raporu - Sayfa {pg}]:\n{doc.page_content[:char_limit].strip()}")
             compact_ctx = "\n\n".join(compact_snippets)[:2500]
+
+            fmt_instruction = (
+                "Sen Borsa İstanbul kıdemli araştırma analistisin. Yanıtını kurumsal bir bülten kalitesinde oluştur:\n"
+                "1. Eğer iki şirket kıyaslanıyorsa (Örn: THYAO vs PGSUS), mutlaka finansal göstergeleri (ROE, Net Marj, Devir Hızı, Kaldıraç, Altman Z) Markdown Tablosu (Peer Matrix) halinde göster ve ardından Kalite Lideri ile Analist Değerlendirmesini yaz.\n"
+                "2. Eğer döviz/faiz/makro şok soruluyorsa (Örn: EREGL), Kur, Faiz ve Petrol etkilerini ayrı maddeler halinde ve Bileşik Etki & Dayanıklılık özetiyle sun.\n"
+                "3. Yalnızca bağlamdaki kesin verilere sadık kal."
+            )
+
             user_msg_text = (
-                f"Bağlam:\n{compact_ctx}\n\n"
-                f"Soru: {question.strip()}\n"
-                f"Yanıtı sadece Türkçe olarak, yukarıdaki bağlamda verilen kesin rakamlara sadık kalarak net maddeler halinde yaz."
+                f"Resmi Finansal Bağlam ve Hesaplamalar:\n{compact_ctx}\n\n"
+                f"Soru: {question.strip()}\n\n"
+                f"Talimat:\n{fmt_instruction}"
             )
 
             colab_messages = [
-                SystemMessage(content="Sen Borsa İstanbul (BIST) uzmanı, finansal raporları, bilançoları ve rasyoları analiz eden kıdemli bir analistsin."),
+                SystemMessage(content="Sen Borsa İstanbul (BIST) uzmanı, finansal raporları, bilançoları, rasyoları ve makro duyarlılıkları derinlemesine analiz eden kıdemli bir araştırma analistisin."),
                 HumanMessage(content=user_msg_text),
             ]
 
@@ -870,5 +878,38 @@ class FinancialRAGEngine:
                     return ref_block
             elif not cleaned_ans or len(cleaned_ans) < 180 or "Colab Sunucu İçi Hata" in cleaned_ans:
                 return analytic_ctx.replace("--- [DETERMİNİSTİK FİNANSAL HESAPLAMA", "**Deterministik Finansal Analiz").replace("] ---", ":**").strip()
+
+        # 3. Şirket Kıyaslama Sorularında Peer Matrix Tablosu Garantisi
+        if any(k in q_lower for k in ("kıyas", "karşılaştır", "vs", "hangisi")) and "--- [DETERMİNİSTİK EŞLER ARASI KIYASLAMA" in analytic_ctx:
+            if "|" not in cleaned_ans or len(cleaned_ans) < 160:
+                peer_part = analytic_ctx.split("--- [DETERMİNİSTİK EŞLER ARASI KIYASLAMA")[-1]
+                if "] ---" in peer_part:
+                    peer_part = peer_part.split("] ---")[-1].strip()
+                return peer_part
+
+        # 4. Makro Duyarlılık Sorularında (USD/TRY, Faiz, Petrol) Şok Matrisi Garantisi
+        if any(k in q_lower for k in ("döviz", "kur", "faiz", "petrol", "şok", "duyarlılık")) and "• Makro Duyarlılık:" in analytic_ctx:
+            if "%" not in cleaned_ans or len(cleaned_ans) < 140:
+                try:
+                    import json
+                    raw_macro_str = analytic_ctx.split("• Makro Duyarlılık:")[-1].split("\n")[0].strip()
+                    m_data = json.loads(raw_macro_str)
+                    tk = m_data.get("ticker", "EREGL")
+                    sc = m_data.get("scenarios", {})
+                    u_sc = sc.get("usd_try", {})
+                    r_sc = sc.get("interest_rate", {})
+                    o_sc = sc.get("brent_oil", {})
+                    tot = m_data.get("total_impact_pct", 0.0)
+                    verd = m_data.get("verdict", "")
+                    return (
+                        f"**{tk} Makroekonomik Şok Duyarlılık Analizi (USD/TRY, Faiz, Petrol):**\n\n"
+                        f"- **Dolar Kuru (%10 Artış):** Net Kâr Etkisi **%{u_sc.get('impact_pct', 0.0):+.2f}** ({u_sc.get('driver', '')})\n"
+                        f"- **TCMB Faizi (+250 bps Artış):** Net Kâr Etkisi **%{r_sc.get('impact_pct', 0.0):+.2f}** ({r_sc.get('driver', '')})\n"
+                        f"- **Brent Petrol (%15 Artış):** Net Kâr Etkisi **%{o_sc.get('impact_pct', 0.0):+.2f}** ({o_sc.get('driver', '')})\n"
+                        f"- **Bileşik Senaryo Etkisi:** **%{tot:+.2f}**\n\n"
+                        f"**Dayanıklılık Değerlendirmesi:** {verd}"
+                    )
+                except Exception:
+                    pass
 
         return cleaned_ans
