@@ -56,7 +56,7 @@ stress_data = requests.get(
     params={"usd_change_pct": 10.0, "rate_change_bps": 250.0, "oil_change_pct": 15.0},
     timeout=10,
 ).json()
-print("Bileşik Net Kâr Etkisi %:", stress_data["net_impact_pct"])
+print("Bileşik Net Kâr Etkisi %:", stress_data["total_impact_pct"])
 
 # 3. İki Hisse Eşler Arası (Peer) Kıyaslama
 peer_data = requests.get(f"{CHATBOT_API_URL}/api/v1/compare/THYAO/PGSUS", timeout=10).json()

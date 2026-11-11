@@ -421,7 +421,8 @@ class TestHybridSignalAndComparison:
         assert response.status_code == 200
         data = response.json()
         assert data["ticker"] == "EREGL"
-        assert "net_impact_pct" in data
+        assert "total_impact_pct" in data
+        assert "scenarios" in data
 
     def test_v2_compare_endpoint(self):
         client = TestClient(app)
